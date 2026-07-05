@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Working Genius Consulting — Web Companion & Sync Tool</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Styling scrollbars for sleek look */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+
+    /* Print styling to format perfect invoices/estimates */
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .print-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        background: white !important;
+      }
+    }
+
+    .print-only {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- TOP HEADER (NO-PRINT) -->
+  <header class="no-print border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="bg-indigo-600 text-white p-2 rounded-lg font-bold text-lg tracking-wider">WG</div>
+        <div>
+          <h1 class="text-md sm:text-lg font-extrabold text-slate-50 tracking-tight">Working Genius Consulting</h1>
+          <p class="text-[10px] text-slate-400 font-mono tracking-widest uppercase">Web Companion & Sync Portal</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-4">
+        <!-- Status Indicator -->
+        <span id="syncStatusBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Ready
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER (NO-PRINT) -->
+  <main class="no-print flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- CLOUD SYNC CONTROL CENTER -->
+    <section class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+      <div class="absolute top-0 right-0 p-4 opacity-10">
+        <svg class="w-32 h-32 text-indigo-500" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/>
+        </svg>
+      </div>
+
+      <div class="max-w-3xl">
+        <h2 class="text-lg font-bold text-slate-100 flex items-center space-x-2">
+          <span>☁️ Cloud Sync Center</span>
+        </h2>
+        <p class="text-sm text-slate-400 mt-1">
+          Synchronize scenarios, customized rates, and billing settings in real-time across your desktop browser and the mobile app using a unified Room Sync code.
+        </p>
+
+        <div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+          <div class="sm:col-span-2">
+            <label for="syncCode" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Sync Room Code</label>
+            <div class="relative rounded-lg shadow-sm">
+              <input type="text" id="syncCode" class="block w-full bg-slate-900 border border-slate-700 rounded-lg py-2.5 pl-3 pr-10 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent font-mono tracking-wider" placeholder="e.g. jeff-sync">
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button onclick="generateRandomCode()" class="text-slate-400 hover:text-indigo-400 transition" title="Generate Random Code">🎲</button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="flex space-x-2">
+              <button onclick="triggerPull()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-100 py-2.5 px-4 rounded-lg font-bold text-xs tracking-wider uppercase border border-slate-700 transition flex items-center justify-center space-x-1.5">
+                <span>📥</span> <span>Pull Sync</span>
+              </button>
+              <button onclick="triggerPush()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-slate-100 py-2.5 px-4 rounded-lg font-bold text-xs tracking-wider uppercase transition flex items-center justify-center space-x-1.5">
+                <span>📤</span> <span>Push Sync</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400 font-mono">
+          <div>Last Synced: <span id="lastSyncTime" class="text-slate-200">Never</span></div>
+          <div class="flex items-center space-x-2">
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="autoSync" class="sr-only peer" onchange="toggleAutoSync()">
+              <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-slate-100"></div>
+              <span class="ml-2 text-xs font-medium text-slate-400">Auto-Pull on Open</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CORE WORKSPACE GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- LEFT COLUMN: SETTINGS & BILLING PROFILE (5/12 COLS) -->
+      <div class="lg:col-span-5 space-y-8">
+        
+        <!-- BILLING PROFILE CARD -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <h2 class="text-md font-bold text-slate-100 border-b border-slate-800 pb-3 flex items-center justify-between">
+            <span>💼 Billing Profile</span>
+            <span class="text-xs font-normal text-slate-400">Your details as consultant</span>
+          </h2>
+          
+          <div class="space-y-4">
+            <div>
+              <label for="senderName" class="block text-xs font-semibold text-slate-400 mb-1">Company / Consultant Name</label>
+              <input type="text" id="senderName" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="saveLocalState()">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="senderEmail" class="block text-xs font-semibold text-slate-400 mb-1">Billing Email</label>
+                <input type="email" id="senderEmail" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="saveLocalState()">
+              </div>
+              <div>
+                <label for="senderPhone" class="block text-xs font-semibold text-slate-400 mb-1">Contact Phone</label>
+                <input type="text" id="senderPhone" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="saveLocalState()">
+              </div>
+            </div>
+
+            <div>
+              <label for="senderAddress" class="block text-xs font-semibold text-slate-400 mb-1">Mailing Address</label>
+              <textarea id="senderAddress" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="saveLocalState()"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- TUNED RATES CARD -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+          <h2 class="text-md font-bold text-slate-100 border-b border-slate-800 pb-3 flex items-center justify-between">
+            <span>⚙️ Customized Hourly & Flat Rates</span>
+            <span class="text-xs font-normal text-slate-400">Default fee defaults</span>
+          </h2>
+
+          <div class="space-y-4">
+            <h3 class="text-xs font-bold text-indigo-400 tracking-wider uppercase">Corporate / For-Profit</h3>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-400 mb-1">Hourly Consulting ($)</label>
+                <input type="number" id="rateFpHourly" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="recalculateAndSave()">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-400 mb-1">Prep Fee ($/12p)</label>
+                <input type="number" id="rateFpPrep" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="recalculateAndSave()">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-400 mb-1">Assessment ($/person)</label>
+                <input type="number" id="rateFpAdmin" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="recalculateAndSave()">
+              </div>
+            </div>
+
+            <h3 class="text-xs font-bold text-emerald-400 tracking-wider uppercase mt-2">Non-Profit / Government</h3>
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-400 mb-1">Hourly Consulting ($)</label>
+                <input type="number" id="rateNpHourly" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="recalculateAndSave()">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-400 mb-1">Prep Fee ($/12p)</label>
+                <input type="number" id="rateNpPrep" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="recalculateAndSave()">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-400 mb-1">Assessment ($/person)</label>
+                <input type="number" id="rateNpAdmin" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="recalculateAndSave()">
+              </div>
+            </div>
+
+            <h3 class="text-xs font-bold text-pink-400 tracking-wider uppercase mt-2">Individual Package</h3>
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-400 mb-1">Debrief & Debrief Session Flat Fee ($)</label>
+              <input type="number" id="rateIndivFlat" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="recalculateAndSave()">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: DYNAMIC CALCULATOR & EXPORTER (7/12 COLS) -->
+      <div class="lg:col-span-7 space-y-8">
+        
+        <!-- ESTIMATE / INVOICE CREATOR PANEL -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+          <h2 class="text-md font-bold text-slate-100 border-b border-slate-800 pb-3 flex items-center justify-between">
+            <span>🧮 Interactive Cost Calculator</span>
+            <span class="text-xs font-normal text-slate-400">Configure parameters dynamically</span>
+          </h2>
+
+          <!-- Configuration Fields -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Org Type -->
+            <div class="md:col-span-1">
+              <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase">Organization Type</label>
+              <div class="space-y-2">
+                <label class="flex items-center space-x-2 text-sm text-slate-300 hover:text-slate-100 cursor-pointer">
+                  <input type="radio" name="orgType" value="for_profit" checked onchange="onOrgTypeChanged()" class="text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900">
+                  <span>🏢 Corporate (For Profit)</span>
+                </label>
+                <label class="flex items-center space-x-2 text-sm text-slate-300 hover:text-slate-100 cursor-pointer">
+                  <input type="radio" name="orgType" value="non_profit" onchange="onOrgTypeChanged()" class="text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900">
+                  <span>🌱 Non-Profit / Gov</span>
+                </label>
+                <label class="flex items-center space-x-2 text-sm text-slate-300 hover:text-slate-100 cursor-pointer">
+                  <input type="radio" name="orgType" value="individual_debrief" onchange="onOrgTypeChanged()" class="text-indigo-600 focus:ring-indigo-500 focus:ring-offset-slate-900">
+                  <span>👤 Individual Debrief</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Parameters -->
+            <div class="md:col-span-2 space-y-4">
+              <!-- Participants Slider -->
+              <div id="participantsContainer">
+                <div class="flex justify-between items-center mb-1">
+                  <label for="participants" class="block text-xs font-semibold text-slate-400 uppercase">Participants</label>
+                  <span id="participantsVal" class="text-sm font-bold text-slate-100 bg-slate-800 px-2 py-0.5 rounded">12</span>
+                </div>
+                <input type="range" id="participants" min="3" max="30" value="12" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500" oninput="updateParticipantsVal()">
+              </div>
+
+              <!-- Duration selector -->
+              <div id="hoursContainer">
+                <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Consulting Duration</label>
+                <div class="flex space-x-3">
+                  <label class="flex-1 text-center bg-slate-900 border border-slate-700 hover:border-slate-500 py-1.5 px-3 rounded-lg text-sm text-slate-300 cursor-pointer has-[:checked]:bg-indigo-600/10 has-[:checked]:border-indigo-500">
+                    <input type="radio" name="hours" value="2" onchange="recalculateAndSave()" class="sr-only"> 2 Hours
+                  </label>
+                  <label class="flex-1 text-center bg-slate-900 border border-slate-700 hover:border-slate-500 py-1.5 px-3 rounded-lg text-sm text-slate-300 cursor-pointer has-[:checked]:bg-indigo-600/10 has-[:checked]:border-indigo-500">
+                    <input type="radio" name="hours" value="3" checked onchange="recalculateAndSave()" class="sr-only"> 3 Hours
+                  </label>
+                  <label class="flex-1 text-center bg-slate-900 border border-slate-700 hover:border-slate-500 py-1.5 px-3 rounded-lg text-sm text-slate-300 cursor-pointer has-[:checked]:bg-indigo-600/10 has-[:checked]:border-indigo-500">
+                    <input type="radio" name="hours" value="4" onchange="recalculateAndSave()" class="sr-only"> 4 Hours
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Discount Customizers -->
+          <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 space-y-4">
+            <h3 class="text-xs font-bold text-slate-400 tracking-wider uppercase">Promotional/Discount Overrides ($)</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label for="consultingDiscount" class="block text-[10px] font-semibold text-slate-500 mb-1">Consulting Discount</label>
+                <input type="number" id="consultingDiscount" placeholder="0" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="recalculateAndSave()">
+              </div>
+              <div id="prepDiscountContainer">
+                <label for="prepDiscount" class="block text-[10px] font-semibold text-slate-500 mb-1">Prep Fee Discount</label>
+                <input type="number" id="prepDiscount" placeholder="0" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="recalculateAndSave()">
+              </div>
+              <div id="assessmentDiscountContainer">
+                <label for="assessmentDiscount" class="block text-[10px] font-semibold text-slate-500 mb-1">Assessment Discount</label>
+                <input type="number" id="assessmentDiscount" placeholder="0" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none" oninput="recalculateAndSave()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Output Invoice Summary Card -->
+          <div class="bg-indigo-950/20 border border-indigo-500/20 rounded-2xl p-5 space-y-4">
+            <h3 class="text-sm font-bold text-indigo-400 flex justify-between items-center">
+              <span>📊 Dynamic Fee Estimate Summary</span>
+              <span id="outputTypeTag" class="text-xs uppercase bg-indigo-500/10 px-2 py-0.5 rounded tracking-wider text-indigo-300 border border-indigo-500/20">Corporate Workshop</span>
+            </h3>
+
+            <div class="space-y-2.5 text-sm">
+              <div class="flex justify-between text-slate-300">
+                <span>1. Working Genius Consulting / Faciliation:</span>
+                <span id="feeConsulting" class="font-mono">$0.00</span>
+              </div>
+              <div id="feePrepRow" class="flex justify-between text-slate-300">
+                <span>2. Comprehensive Materials Prep Fee:</span>
+                <span id="feePrep" class="font-mono">$0.00</span>
+              </div>
+              <div id="feeAdminRow" class="flex justify-between text-slate-300">
+                <span>3. Attendee Assessment Fee:</span>
+                <span id="feeAdmin" class="font-mono">$0.00</span>
+              </div>
+              
+              <div class="border-t border-indigo-500/20 pt-3 flex justify-between text-base font-extrabold text-slate-50">
+                <span>Total Fee Estimate:</span>
+                <span id="grandTotalVal" class="font-mono text-indigo-400 text-lg">$0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save / Export Actions -->
+          <div class="flex flex-col sm:flex-row gap-3">
+            <button onclick="promptSaveScenario()" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center space-x-2">
+              <span>💾</span> <span>Save as Estimate Scenario</span>
+            </button>
+            <button onclick="openInvoiceModal()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-slate-50 py-3 px-4 rounded-xl font-bold text-sm transition flex items-center justify-center space-x-2">
+              <span>📄</span> <span>Generate & Print Invoice</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- SAVED ELEMENTS TABS & ARCHIVE -->
+    <section class="bg-slate-950 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <div class="flex border-b border-slate-800 pb-px mb-6">
+        <button id="tabScenariosBtn" onclick="switchHistoryTab('scenarios')" class="text-sm font-bold pb-3 px-4 border-b-2 border-indigo-500 text-indigo-400 transition">
+          📂 Saved Estimates (Scenarios)
+        </button>
+        <button id="tabInvoicesBtn" onclick="switchHistoryTab('invoices')" class="text-sm font-semibold pb-3 px-4 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">
+          📄 Historic Saved Invoices
+        </button>
+      </div>
+
+      <!-- Scenarios Tab -->
+      <div id="tabScenarios" class="space-y-4">
+        <div id="scenariosList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Dynamically populated -->
+        </div>
+        <p id="noScenariosMsg" class="text-sm text-slate-500 text-center py-6">No saved scenarios. Use the cost calculator above to save your first estimate.</p>
+      </div>
+
+      <!-- Invoices Tab -->
+      <div id="tabInvoices" class="space-y-4 hidden">
+        <div id="invoicesList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Dynamically populated -->
+        </div>
+        <p id="noInvoicesMsg" class="text-sm text-slate-500 text-center py-6">No saved invoices in history. Generate a printed invoice above to record it here.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- GENERATE INVOICE MODAL (NO-PRINT) -->
+  <div id="invoiceModal" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative">
+      <h3 class="text-lg font-bold text-slate-100">Create Historic Invoice Record</h3>
+      <p class="text-xs text-slate-400">Provide the client details and invoice parameters below to prepare the official copy.</p>
+      
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="invNo" class="block text-xs font-semibold text-slate-400 mb-1">Invoice Number</label>
+            <input type="text" id="invNo" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+          </div>
+          <div>
+            <label for="invTerms" class="block text-xs font-semibold text-slate-400 mb-1">Terms / Due Days</label>
+            <select id="invTerms" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+              <option value="Due on Receipt">Due on Receipt</option>
+              <option value="Net 15">Net 15</option>
+              <option value="Net 30" selected>Net 30</option>
+              <option value="Net 45">Net 45</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="invClientName" class="block text-xs font-semibold text-slate-400 mb-1">Client Business/Contact Name</label>
+          <input type="text" id="invClientName" placeholder="Corporate Client Inc" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label for="invClientEmail" class="block text-xs font-semibold text-slate-400 mb-1">Client Email (Optional)</label>
+          <input type="email" id="invClientEmail" placeholder="client@company.com" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="invIssueDate" class="block text-xs font-semibold text-slate-400 mb-1">Issue Date</label>
+            <input type="date" id="invIssueDate" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+          </div>
+          <div>
+            <label for="invDueDate" class="block text-xs font-semibold text-slate-400 mb-1">Due Date</label>
+            <input type="date" id="invDueDate" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex space-x-3 pt-4">
+        <button onclick="closeInvoiceModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 py-2.5 rounded-lg text-sm font-semibold transition">
+          Cancel
+        </button>
+        <button onclick="submitGenerateInvoice()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-slate-50 py-2.5 rounded-lg text-sm font-semibold transition">
+          🖨️ Prepare Print Out
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RENAME INVOICE MODAL (NO-PRINT) -->
+  <div id="renameModal" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <h3 class="text-md font-bold text-slate-100">Rename Invoice Client Name</h3>
+      <input type="hidden" id="renameInvoiceId">
+      <div>
+        <label for="renameClientName" class="block text-xs font-semibold text-slate-400 mb-1">Client Business/Contact Name</label>
+        <input type="text" id="renameClientName" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-100 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+      </div>
+      <div class="flex space-x-3 pt-2">
+        <button onclick="closeRenameModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 py-2.5 rounded-lg text-sm font-semibold transition">
+          Cancel
+        </button>
+        <button onclick="submitRenameInvoice()" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-slate-50 py-2.5 rounded-lg text-sm font-semibold transition">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINT LAYOUT PREVIEW (PRINT-ONLY & INVOICE PRINTER VIEW) -->
+  <div id="printableInvoiceContainer" class="hidden absolute top-0 left-0 w-full min-h-screen bg-white text-slate-900 p-8 sm:p-12 z-50">
+    <div class="max-w-4xl mx-auto bg-white" style="font-family: sans-serif;">
+      
+      <!-- PRINT ACTION BAR (HIDDEN IN PRINT OUT) -->
+      <div class="no-print mb-8 p-4 bg-slate-100 rounded-xl flex items-center justify-between border border-slate-200">
+        <div class="flex items-center space-x-2 text-slate-800 text-sm font-semibold">
+          <span>📄 Printable Preview — Styled for Professional Printing</span>
+        </div>
+        <div class="flex space-x-3">
+          <button onclick="closePrintView()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 py-1.5 px-4 rounded-lg text-xs font-bold transition">
+            Close Preview
+          </button>
+          <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-500 text-white py-1.5 px-4 rounded-lg text-xs font-bold transition">
+            🖨️ Open Print/PDF Dialog
+          </button>
+        </div>
+      </div>
+
+      <!-- INVOICE HEADER -->
+      <div style="border-bottom: 3px solid #1a365d; padding-bottom: 24px; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="vertical-align: top;">
+              <div style="font-size: 26px; font-weight: 800; color: #1a365d; text-transform: uppercase; letter-spacing: 0.5px;">Working Genius Consulting</div>
+              <div style="font-size: 11px; font-weight: 600; color: #4a5568; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">Individual & Workshop Solutions</div>
+            </td>
+            <td style="vertical-align: top; text-align: right;">
+              <div style="font-size: 28px; font-weight: 800; color: #2d3748; text-transform: uppercase;">Invoice</div>
+              <div style="font-size: 11px; color: #718096; margin-top: 4px; font-family: monospace;">No: <span id="pInvNo" style="font-weight: bold; color: #1a365d;">-</span></div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- SENDER & BILL TO INFORMATION -->
+      <div style="margin-bottom: 32px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="width: 50%; vertical-align: top; padding-right: 16px;">
+              <div style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #718096; letter-spacing: 1px; margin-bottom: 6px;">Prepared & Issued By:</div>
+              <div id="pSenderName" style="font-size: 14px; font-weight: bold; color: #2d3748;">Working Genius Consulting</div>
+              <div id="pSenderAddress" style="font-size: 12px; color: #4a5568; line-height: 1.5; margin-top: 4px; white-space: pre-wrap;">2650 Mary Ave. Sanger, CA 93657</div>
+              <div style="font-size: 11px; color: #4a5568; margin-top: 4px;">
+                <span id="pSenderEmail">jeff@jeffjonesconsulting.com</span> &bull; <span id="pSenderPhone">559-978-7598</span>
+              </div>
+            </td>
+            <td style="width: 50%; vertical-align: top; padding-left: 16px; border-left: 1px solid #e2e8f0;">
+              <div style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #718096; letter-spacing: 1px; margin-bottom: 6px;">Billed To (Client):</div>
+              <div id="pClientName" style="font-size: 14px; font-weight: bold; color: #1a365d;">-</div>
+              <div id="pClientEmail" style="font-size: 12px; color: #4a5568; margin-top: 4px;">-</div>
+              
+              <table style="width: 100%; margin-top: 12px; font-size: 11px; color: #4a5568;">
+                <tr>
+                  <td style="font-weight: bold; padding-bottom: 3px; width: 40%;">Issue Date:</td>
+                  <td id="pIssueDate" style="padding-bottom: 3px;">-</td>
+                </tr>
+                <tr>
+                  <td style="font-weight: bold; padding-bottom: 3px;">Due Date:</td>
+                  <td id="pDueDate" style="padding-bottom: 3px;">-</td>
+                </tr>
+                <tr>
+                  <td style="font-weight: bold;">Terms:</td>
+                  <td id="pTerms">-</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- INVOICE LINE ITEMS TABLE -->
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 32px; font-size: 12px;">
+        <thead>
+          <tr style="background-color: #1a365d; color: white;">
+            <th style="padding: 10px; text-align: left; font-weight: bold; border: 1px solid #1a365d;">Service Details & Description</th>
+            <th style="padding: 10px; text-align: center; font-weight: bold; width: 12%; border: 1px solid #1a365d;">Qty</th>
+            <th style="padding: 10px; text-align: right; font-weight: bold; width: 18%; border: 1px solid #1a365d;">Unit Rate</th>
+            <th style="padding: 10px; text-align: right; font-weight: bold; width: 20%; border: 1px solid #1a365d;">Amount</th>
+          </tr>
+        </thead>
+        <tbody id="pTableBody">
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+
+      <!-- INVOICE TOTALS SUMMARY -->
+      <div style="margin-left: auto; width: 50%; margin-bottom: 40px; font-size: 12px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 6px 0; color: #4a5568;">Subtotal Amount:</td>
+            <td id="pSubtotal" style="padding: 6px 0; text-align: right; font-weight: bold; color: #2d3748;">$0.00</td>
+          </tr>
+          <tr id="pDiscountRow" style="display: none;">
+            <td style="padding: 6px 0; color: #e53e3e;">Promotional Discounts:</td>
+            <td id="pDiscount" style="padding: 6px 0; text-align: right; font-weight: bold; color: #e53e3e;">-$0.00</td>
+          </tr>
+          <tr style="border-top: 2px solid #1a365d; font-size: 14px; font-weight: bold;">
+            <td style="padding: 10px 0; color: #1a365d; text-transform: uppercase;">Grand Total Due:</td>
+            <td id="pGrandTotal" style="padding: 10px 0; text-align: right; color: #1a365d; font-size: 16px;">$0.00</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- INVOICE FOOTER SIGNATURE -->
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 24px; text-align: center; color: #718096; font-size: 11px; line-height: 1.6; margin-top: 50px;">
+        <div>Thank you for partnering with me on your Working Genius journey. I value our collaboration.</div>
+        <div style="margin-top: 4px;">Please reach out to Jeffrey Jones directly at <a href="mailto:jeff@jeffjonesconsulting.com" style="color: #1a365d; text-decoration: none; font-weight: bold;">jeff@jeffjonesconsulting.com</a> for any additional support.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER (NO-PRINT) -->
+  <footer class="no-print border-t border-slate-800 bg-slate-950 py-6 mt-12 text-center text-xs text-slate-500 font-mono">
+    &copy; 2026 Working Genius Consulting Portal. All Rights Reserved. Styled strictly to Match Android Client configurations.
+  </footer>
+
+  <script>
+    // Global Constants
+    const SYNC_BUCKET = "kvdb_wg_genius_v1";
+    const KEY_SCENARIOS = "saved_scenarios";
+    
+    // Core App State (replicates Android local preferences & state)
+    let state = {
+      syncCode: "jeff-sync",
+      autoSyncEnabled: false,
+      lastSyncTime: "Never",
+      senderName: "Working Genius Consulting",
+      senderEmail: "jeff@jeffjonesconsulting.com",
+      senderPhone: "559-978-7598",
+      senderAddress: "2650 Mary Ave. Sanger, CA 93657",
+      rateFpHourly: 300,
+      rateFpPrep: 100,
+      rateFpAdmin: 25,
+      rateNpHourly: 100,
+      rateNpPrep: 50,
+      rateNpAdmin: 20,
+      rateIndivFlat: 100,
+      savedScenarios: [],
+      savedInvoices: []
+    };
+
+    // Tab state
+    let activeTab = 'scenarios';
+
+    // On Load
+    window.onload = function() {
+      loadStateFromLocalStorage();
+      initializeInputFields();
+      recalculateFees();
+      renderScenarios();
+      renderInvoices();
+
+      // Check if auto-pull is enabled
+      if (state.autoSyncEnabled && state.syncCode.trim()) {
+        triggerPull();
+      }
+    };
+
+    function loadStateFromLocalStorage() {
+      const cached = localStorage.getItem("wg_genius_companion_state");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          state = { ...state, ...parsed };
+        } catch (e) {
+          console.error("Error reading local cache", e);
+        }
+      }
+    }
+
+    function saveLocalState() {
+      // Capture Profile fields
+      state.senderName = document.getElementById("senderName").value || "Working Genius Consulting";
+      state.senderEmail = document.getElementById("senderEmail").value || "jeff@jeffjonesconsulting.com";
+      state.senderPhone = document.getElementById("senderPhone").value || "559-978-7598";
+      state.senderAddress = document.getElementById("senderAddress").value || "2650 Mary Ave. Sanger, CA 93657";
+      state.syncCode = document.getElementById("syncCode").value.trim() || "jeff-sync";
+
+      localStorage.setItem("wg_genius_companion_state", JSON.stringify(state));
+    }
+
+    function initializeInputFields() {
+      document.getElementById("syncCode").value = state.syncCode;
+      document.getElementById("autoSync").checked = state.autoSyncEnabled;
+      document.getElementById("lastSyncTime").innerText = state.lastSyncTime;
+
+      document.getElementById("senderName").value = state.senderName;
+      document.getElementById("senderEmail").value = state.senderEmail;
+      document.getElementById("senderPhone").value = state.senderPhone;
+      document.getElementById("senderAddress").value = state.senderAddress;
+
+      document.getElementById("rateFpHourly").value = state.rateFpHourly;
+      document.getElementById("rateFpPrep").value = state.rateFpPrep;
+      document.getElementById("rateFpAdmin").value = state.rateFpAdmin;
+      document.getElementById("rateNpHourly").value = state.rateNpHourly;
+      document.getElementById("rateNpPrep").value = state.rateNpPrep;
+      document.getElementById("rateNpAdmin").value = state.rateNpAdmin;
+      document.getElementById("rateIndivFlat").value = state.rateIndivFlat;
+    }
+
+    function updateParticipantsVal() {
+      const val = document.getElementById("participants").value;
+      document.getElementById("participantsVal").innerText = val;
+      recalculateAndSave();
+    }
+
+    function onOrgTypeChanged() {
+      const orgType = document.querySelector('input[name="orgType"]:checked').value;
+      const partContainer = document.getElementById("participantsContainer");
+      const hrsContainer = document.getElementById("hoursContainer");
+      const prepDiscContainer = document.getElementById("prepDiscountContainer");
+      const assessDiscContainer = document.getElementById("assessmentDiscountContainer");
+      const outputTypeTag = document.getElementById("outputTypeTag");
+
+      if (orgType === "individual_debrief") {
+        partContainer.classList.add("opacity-30", "pointer-events-none");
+        hrsContainer.classList.add("opacity-30", "pointer-events-none");
+        prepDiscContainer.classList.add("opacity-30", "pointer-events-none");
+        assessDiscContainer.classList.add("opacity-30", "pointer-events-none");
+        outputTypeTag.innerText = "Individual Debrief";
+      } else {
+        partContainer.classList.remove("opacity-30", "pointer-events-none");
+        hrsContainer.classList.remove("opacity-30", "pointer-events-none");
+        prepDiscContainer.classList.remove("opacity-30", "pointer-events-none");
+        assessDiscContainer.classList.remove("opacity-30", "pointer-events-none");
+        outputTypeTag.innerText = orgType === "for_profit" ? "Corporate Workshop" : "Non-Profit Workshop";
+      }
+
+      recalculateAndSave();
+    }
+
+    // Core Fee Calculator Engine
+    function recalculateFees() {
+      const orgType = document.querySelector('input[name="orgType"]:checked').value;
+      const participants = parseInt(document.getElementById("participants").value, 10);
+      const hours = parseInt(document.querySelector('input[name="hours"]:checked').value, 10);
+
+      const consultingDiscount = parseInt(document.getElementById("consultingDiscount").value, 10) || 0;
+      const prepDiscount = parseInt(document.getElementById("prepDiscount").value, 10) || 0;
+      const assessmentDiscount = parseInt(document.getElementById("assessmentDiscount").value, 10) || 0;
+
+      // Extract current customized rates
+      const rateFpHourly = parseInt(document.getElementById("rateFpHourly").value, 10) || 300;
+      const rateFpPrep = parseInt(document.getElementById("rateFpPrep").value, 10) || 100;
+      const rateFpAdmin = parseInt(document.getElementById("rateFpAdmin").value, 10) || 25;
+      const rateNpHourly = parseInt(document.getElementById("rateNpHourly").value, 10) || 100;
+      const rateNpPrep = parseInt(document.getElementById("rateNpPrep").value, 10) || 50;
+      const rateNpAdmin = parseInt(document.getElementById("rateNpAdmin").value, 10) || 20;
+      const rateIndivFlat = parseInt(document.getElementById("rateIndivFlat").value, 10) || 100;
+
+      // Capture states inside our global state
+      state.rateFpHourly = rateFpHourly;
+      state.rateFpPrep = rateFpPrep;
+      state.rateFpAdmin = rateFpAdmin;
+      state.rateNpHourly = rateNpHourly;
+      state.rateNpPrep = rateNpPrep;
+      state.rateNpAdmin = rateNpAdmin;
+      state.rateIndivFlat = rateIndivFlat;
+
+      const isForProfit = orgType === "for_profit";
+      const isNonProfit = orgType === "non_profit";
+      const isIndiv = orgType === "individual_debrief";
+
+      // Hourly base consulting fee calculation
+      const baseHourlyRate = isForProfit ? rateFpHourly : (isNonProfit ? rateNpHourly : 0);
+      const calculatedConsultingFee = baseHourlyRate * hours;
+      const baseConsultingFee = isIndiv ? 
+        Math.max(0, rateIndivFlat - consultingDiscount) : 
+        Math.max(0, calculatedConsultingFee - consultingDiscount);
+
+      // Prep fee calculation (Prep rate applied for every 12 attendees ceiling factor)
+      const prepFeeFactor = isForProfit ? rateFpPrep : (isNonProfit ? rateNpPrep : 0);
+      const calculatedPrepFee = isIndiv ? 0 : Math.ceil(participants / 12) * prepFeeFactor;
+      const basePrepFee = Math.max(0, calculatedPrepFee - prepDiscount);
+
+      // Administration fee ($25 or $20 assessment per person)
+      const adminRate = isForProfit ? rateFpAdmin : (isNonProfit ? rateNpAdmin : 0);
+      const calculatedAssessmentFee = isIndiv ? 0 : participants * adminRate;
+      const administrativeFeeTotal = Math.max(0, calculatedAssessmentFee - assessmentDiscount);
+
+      // Total output
+      const grandTotal = isIndiv ? baseConsultingFee : (baseConsultingFee + basePrepFee + administrativeFeeTotal);
+
+      // Render out values on dashboard
+      document.getElementById("feeConsulting").innerText = `$${baseConsultingFee.toFixed(2)}`;
+      
+      const feePrepRow = document.getElementById("feePrepRow");
+      const feeAdminRow = document.getElementById("feeAdminRow");
+
+      if (isIndiv) {
+        feePrepRow.classList.add("hidden");
+        feeAdminRow.classList.add("hidden");
+      } else {
+        feePrepRow.classList.remove("hidden");
+        feeAdminRow.classList.remove("hidden");
+        document.getElementById("feePrep").innerText = `$${basePrepFee.toFixed(2)}`;
+        document.getElementById("feeAdmin").innerText = `$${administrativeFeeTotal.toFixed(2)}`;
+      }
+
+      document.getElementById("grandTotalVal").innerText = `$${grandTotal.toFixed(2)}`;
+
+      return {
+        baseConsultingFee,
+        basePrepFee,
+        administrativeFeeTotal,
+        grandTotal,
+        calculatedConsultingFee,
+        calculatedPrepFee,
+        calculatedAssessmentFee,
+        consultingDiscount,
+        prepDiscount,
+        assessmentDiscount,
+        orgType,
+        participants: isIndiv ? 1 : participants,
+        hours: isIndiv ? 1 : hours
+      };
+    }
+
+    function recalculateAndSave() {
+      recalculateFees();
+      saveLocalState();
+    }
+
+    function toggleAutoSync() {
+      state.autoSyncEnabled = document.getElementById("autoSync").checked;
+      saveLocalState();
+    }
+
+    async function generateRandomCode() {
+      setSyncBadge("Generating...", "amber");
+      try {
+        const payload = {
+          saved_scenarios: "",
+          saved_invoices: "",
+          sender_name: state.senderName,
+          sender_email: state.senderEmail,
+          sender_phone: state.senderPhone,
+          sender_address: state.senderAddress,
+          rate_fp_hourly: state.rateFpHourly,
+          rate_np_hourly: state.rateNpHourly,
+          rate_fp_prep: state.rateFpPrep,
+          rate_np_prep: state.rateNpPrep,
+          rate_fp_admin: state.rateFpAdmin,
+          rate_np_admin: state.rateNpAdmin,
+          rate_indiv_flat: state.rateIndivFlat
+        };
+
+        const response = await fetch(`https://extendsclass.com/api/json-storage/bin`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          const resData = await response.json();
+          if (resData.id) {
+            state.syncCode = resData.id.toUpperCase();
+            document.getElementById("syncCode").value = state.syncCode;
+            recalculateAndSave();
+            setSyncBadge("Ready", "emerald");
+            showToast(`Generated new Sync Code: ${state.syncCode}`);
+          }
+        } else {
+          throw new Error();
+        }
+      } catch (e) {
+        // Fallback to local generation if offline
+        const localCode = Math.random().toString(36).substring(2, 9).toUpperCase();
+        state.syncCode = localCode;
+        document.getElementById("syncCode").value = localCode;
+        recalculateAndSave();
+        setSyncBadge("Ready", "emerald");
+        showToast("Offline: Generated temporary sync code");
+      }
+    }
+
+    // CLOUD SYNCHRONIZATION PUSH & PULL ENGINE
+    async function triggerPush() {
+      let cleanCode = state.syncCode.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const isExistingBin = /^[a-z0-9]{7,12}$/.test(cleanCode);
+
+      setSyncBadge("Syncing...", "amber");
+      
+      try {
+        const payload = {
+          saved_scenarios: state.savedScenarios.map(s => `${s.id}:::${s.name}:::${s.orgType}:::${s.participants}:::${s.hours}:::${s.consultingDiscount}:::${s.prepDiscount}:::${s.assessmentDiscount}:::${s.grandTotal}`).join(";;;"),
+          saved_invoices: state.savedInvoices.map(inv => `${inv.id}:::${inv.invoiceNo}:::${inv.clientName}:::${inv.clientEmail}:::${inv.issueDate}:::${inv.dueDate}:::${inv.terms}:::${inv.orgType}:::${inv.participants}:::${inv.hours}:::${inv.consultingDiscount}:::${inv.prepDiscount}:::${inv.assessmentDiscount}:::${inv.total}:::${inv.timestamp}`).join(";;;"),
+          sender_name: state.senderName,
+          sender_email: state.senderEmail,
+          sender_phone: state.senderPhone,
+          sender_address: state.senderAddress,
+          rate_fp_hourly: state.rateFpHourly,
+          rate_np_hourly: state.rateNpHourly,
+          rate_fp_prep: state.rateFpPrep,
+          rate_np_prep: state.rateNpPrep,
+          rate_fp_admin: state.rateFpAdmin,
+          rate_np_admin: state.rateNpAdmin,
+          rate_indiv_flat: state.rateIndivFlat
+        };
+
+        let response;
+        if (isExistingBin) {
+          response = await fetch(`https://extendsclass.com/api/json-storage/bin/${cleanCode}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          response = await fetch(`https://extendsclass.com/api/json-storage/bin`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+        }
+
+        if (response.ok) {
+          const resData = await response.json();
+          if (!isExistingBin && resData.id) {
+            cleanCode = resData.id;
+            state.syncCode = cleanCode.toUpperCase();
+            document.getElementById("syncCode").value = state.syncCode;
+          }
+
+          const now = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit' }) + ", " + new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+          state.lastSyncTime = now;
+          document.getElementById("lastSyncTime").innerText = now;
+          saveLocalState();
+          
+          setSyncBadge("Synced", "emerald");
+          showToast(`☁️ Cloud backup uploaded successfully! Code: ${state.syncCode}`);
+        } else {
+          throw new Error("HTTP " + response.status);
+        }
+      } catch (e) {
+        console.error(e);
+        setSyncBadge("Ready", "emerald");
+        alert("❌ Cloud push failed. Please verify your connection.");
+      }
+    }
+
+    async function triggerPull() {
+      const cleanCode = state.syncCode.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!cleanCode || cleanCode.length < 5) {
+        alert("Please enter a valid 7-character Sync Room Code first.");
+        setSyncBadge("Ready", "emerald");
+        return;
+      }
+
+      setSyncBadge("Syncing...", "amber");
+
+      try {
+        const response = await fetch(`https://extendsclass.com/api/json-storage/bin/${cleanCode}`);
+        if (!response.ok) {
+          if (response.status === 404) {
+            alert("No cloud data found under this sync code yet. Try pushing your local configurations first!");
+            setSyncBadge("Ready", "emerald");
+            return;
+          }
+          throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+        
+        // Parse scenarios
+        if (data.saved_scenarios) {
+          state.savedScenarios = data.saved_scenarios.split(";;;").map(line => {
+            const parts = line.split(":::");
+            if (parts.length >= 9) {
+              return {
+                id: parts[0],
+                name: parts[1],
+                orgType: parts[2],
+                participants: parseInt(parts[3], 10),
+                hours: parseInt(parts[4], 10),
+                consultingDiscount: parseInt(parts[5], 10),
+                prepDiscount: parseInt(parts[6], 10),
+                assessmentDiscount: parseInt(parts[7], 10),
+                grandTotal: parseInt(parts[8], 10)
+              };
+            }
+            return null;
+          }).filter(Boolean);
+        }
+
+        // Parse invoices
+        if (data.saved_invoices) {
+          state.savedInvoices = data.saved_invoices.split(";;;").map(line => {
+            const parts = line.split(":::");
+            if (parts.length >= 15) {
+              return {
+                id: parts[0],
+                invoiceNo: parts[1],
+                clientName: parts[2],
+                clientEmail: parts[3],
+                issueDate: parts[4],
+                dueDate: parts[5],
+                terms: parts[6],
+                orgType: parts[7],
+                participants: parseInt(parts[8], 10),
+                hours: parseInt(parts[9], 10),
+                consultingDiscount: parseInt(parts[10], 10),
+                prepDiscount: parseInt(parts[11], 10),
+                assessmentDiscount: parseInt(parts[12], 10),
+                total: parseInt(parts[13], 10),
+                timestamp: parseInt(parts[14], 10)
+              };
+            }
+            return null;
+          }).filter(Boolean);
+        }
+
+        // Parse custom billing parameters
+        if (data.sender_name) state.senderName = data.sender_name;
+        if (data.sender_email) state.senderEmail = data.sender_email;
+        if (data.sender_phone) state.senderPhone = data.sender_phone;
+        if (data.sender_address) state.senderAddress = data.sender_address;
+
+        if (data.rate_fp_hourly) state.rateFpHourly = parseInt(data.rate_fp_hourly, 10);
+        if (data.rate_np_hourly) state.rateNonProfitHourly = parseInt(data.rate_np_hourly, 10);
+        if (data.rate_fp_prep) state.rateFpPrep = parseInt(data.rate_fp_prep, 10);
+        if (data.rate_np_prep) state.rateNpPrep = parseInt(data.rate_np_prep, 10);
+        if (data.rate_fp_admin) state.rateFpAdmin = parseInt(data.rate_fp_admin, 10);
+        if (data.rate_np_admin) state.rateNpAdmin = parseInt(data.rate_np_admin, 10);
+        if (data.rate_indiv_flat) state.rateIndivFlat = parseInt(data.rate_indiv_flat, 10);
+
+        const now = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit' }) + ", " + new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+        state.lastSyncTime = now;
+        document.getElementById("lastSyncTime").innerText = now;
+
+        initializeInputFields();
+        recalculateFees();
+        renderScenarios();
+        renderInvoices();
+        saveLocalState();
+
+        setSyncBadge("Synced", "emerald");
+        showToast("🔄 Synced and loaded cloud data successfully!");
+
+      } catch (e) {
+        console.error(e);
+        setSyncBadge("Ready", "emerald");
+        alert("❌ Pull sync failed. Could not pull from cloud bucket.");
+      }
+    }
+
+    function setSyncBadge(text, color) {
+      const badge = document.getElementById("syncStatusBadge");
+      if (color === "amber") {
+        badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20";
+        badge.innerHTML = `<span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-amber-400 animate-spin"></span> ${text}`;
+      } else if (color === "emerald") {
+        badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+        badge.innerHTML = `<span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-400"></span> ${text}`;
+      }
+    }
+
+    // LIST VIEW RENDERING
+    function renderScenarios() {
+      const container = document.getElementById("scenariosList");
+      const emptyMsg = document.getElementById("noScenariosMsg");
+      container.innerHTML = "";
+
+      if (state.savedScenarios.length === 0) {
+        emptyMsg.classList.remove("hidden");
+        return;
+      }
+      emptyMsg.classList.add("hidden");
+
+      state.savedScenarios.forEach(sc => {
+        const div = document.createElement("div");
+        div.className = "bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition";
+        
+        let typeText = "Corporate Workshop";
+        let typeColor = "text-indigo-400";
+        if (sc.orgType === "non_profit") { typeText = "Non-Profit Workshop"; typeColor = "text-emerald-400"; }
+        if (sc.orgType === "individual_debrief") { typeText = "Individual Debrief"; typeColor = "text-pink-400"; }
+
+        div.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start">
+              <h4 class="font-bold text-slate-100 text-sm truncate max-w-[200px]">${sc.name}</h4>
+              <span class="text-[10px] font-mono font-bold ${typeColor} uppercase bg-slate-950 px-2 py-0.5 rounded">${typeText}</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-2">
+              ${sc.orgType === "individual_debrief" ? "Individual debrief session" : `${sc.participants} attendees &bull; ${sc.hours} hours duration`}
+            </p>
+            <div class="text-indigo-400 font-mono font-bold text-sm mt-3">$${sc.grandTotal}.00</div>
+          </div>
+          <div class="flex space-x-2 mt-4 pt-3 border-t border-slate-800">
+            <button onclick="loadScenarioIntoCalc('${sc.id}')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 rounded text-xs font-semibold transition">
+              Load Into Calc
+            </button>
+            <button onclick="deleteScenario('${sc.id}')" class="bg-red-950/20 hover:bg-red-950/50 text-red-400 p-1.5 rounded text-xs transition border border-red-900/30">
+              🗑️
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderInvoices() {
+      const container = document.getElementById("invoicesList");
+      const emptyMsg = document.getElementById("noInvoicesMsg");
+      container.innerHTML = "";
+
+      if (state.savedInvoices.length === 0) {
+        emptyMsg.classList.remove("hidden");
+        return;
+      }
+      emptyMsg.classList.add("hidden");
+
+      state.savedInvoices.forEach(inv => {
+        const div = document.createElement("div");
+        div.className = "bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition";
+        
+        const issueDateFormatted = inv.issueDate ? new Date(inv.issueDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : "-";
+
+        div.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start">
+              <h4 class="font-bold text-slate-100 text-sm truncate max-w-[180px]">${inv.clientName}</h4>
+              <span class="text-[10px] font-mono font-bold text-slate-400 uppercase bg-slate-950 px-1.5 py-0.5 rounded">${inv.invoiceNo}</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-2">Issued: ${issueDateFormatted} &bull; ${inv.terms}</p>
+            <div class="text-emerald-400 font-mono font-bold text-sm mt-3">$${inv.total}.00</div>
+          </div>
+          <div class="flex space-x-2 mt-4 pt-3 border-t border-slate-800">
+            <button onclick="printSavedInvoice('${inv.id}')" class="flex-1 bg-indigo-950/40 hover:bg-indigo-950/80 border border-indigo-900/50 text-indigo-300 py-1.5 rounded text-xs font-semibold transition flex items-center justify-center space-x-1">
+              <span>🖨️</span> <span>Print / View</span>
+            </button>
+            <button onclick="openRenameModal('${inv.id}', '${inv.clientName}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-1.5 rounded text-xs transition">
+              ✏️
+            </button>
+            <button onclick="deleteInvoice('${inv.id}')" class="bg-red-950/20 hover:bg-red-950/50 text-red-400 p-1.5 rounded text-xs transition border border-red-900/30">
+              🗑️
+            </button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function switchHistoryTab(tab) {
+      activeTab = tab;
+      const tScen = document.getElementById("tabScenarios");
+      const tInvs = document.getElementById("tabInvoices");
+      const btnScen = document.getElementById("tabScenariosBtn");
+      const btnInvs = document.getElementById("tabInvoicesBtn");
+
+      if (tab === 'scenarios') {
+        tScen.classList.remove("hidden");
+        tInvs.classList.add("hidden");
+        btnScen.className = "text-sm font-bold pb-3 px-4 border-b-2 border-indigo-500 text-indigo-400 transition";
+        btnInvs.className = "text-sm font-semibold pb-3 px-4 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
+      } else {
+        tScen.classList.add("hidden");
+        tInvs.classList.remove("hidden");
+        btnScen.className = "text-sm font-semibold pb-3 px-4 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
+        btnInvs.className = "text-sm font-bold pb-3 px-4 border-b-2 border-indigo-500 text-indigo-400 transition";
+      }
+    }
+
+    // LIST CRUD OPERATORS
+    function promptSaveScenario() {
+      const calculation = recalculateFees();
+      const defaultName = `Scenario #${state.savedScenarios.length + 1}`;
+      const name = prompt("Enter a memorable name/client for this estimate scenario:", defaultName);
+      if (name === null) return; // cancelled
+
+      const cleanName = name.trim() || defaultName;
+
+      const newScenario = {
+        id: Math.random().toString(36).substring(2, 11),
+        name: cleanName,
+        orgType: calculation.orgType,
+        participants: calculation.participants,
+        hours: calculation.hours,
+        consultingDiscount: calculation.consultingDiscount,
+        prepDiscount: calculation.prepDiscount,
+        assessmentDiscount: calculation.assessmentDiscount,
+        grandTotal: calculation.grandTotal
+      };
+
+      state.savedScenarios.push(newScenario);
+      saveLocalState();
+      renderScenarios();
+      showToast(`Scenario "${cleanName}" saved!`);
+
+      if (state.autoSyncEnabled) {
+        triggerPush();
+      }
+    }
+
+    function loadScenarioIntoCalc(id) {
+      const sc = state.savedScenarios.find(item => item.id === id);
+      if (!sc) return;
+
+      // Select orgType radio
+      const radios = document.getElementsByName("orgType");
+      for (let r of radios) {
+        if (r.value === sc.orgType) r.checked = true;
+      }
+
+      // Slider
+      document.getElementById("participants").value = sc.participants;
+      document.getElementById("participantsVal").innerText = sc.participants;
+
+      // Hours duration
+      const hrRadios = document.getElementsByName("hours");
+      for (let hr of hrRadios) {
+        if (parseInt(hr.value, 10) === sc.hours) hr.checked = true;
+      }
+
+      // Discounts
+      document.getElementById("consultingDiscount").value = sc.consultingDiscount || "";
+      document.getElementById("prepDiscount").value = sc.prepDiscount || "";
+      document.getElementById("assessmentDiscount").value = sc.assessmentDiscount || "";
+
+      onOrgTypeChanged();
+      showToast(`Scenario "${sc.name}" loaded into workspace.`);
+    }
+
+    function deleteScenario(id) {
+      if (confirm("Are you sure you want to remove this estimate scenario?")) {
+        state.savedScenarios = state.savedScenarios.filter(s => s.id !== id);
+        saveLocalState();
+        renderScenarios();
+        showToast("Scenario deleted.");
+
+        if (state.autoSyncEnabled) {
+          triggerPush();
+        }
+      }
+    }
+
+    function deleteInvoice(id) {
+      if (confirm("Are you sure you want to permanently delete this invoice from history?")) {
+        state.savedInvoices = state.savedInvoices.filter(i => i.id !== id);
+        saveLocalState();
+        renderInvoices();
+        showToast("Invoice removed.");
+
+        if (state.autoSyncEnabled) {
+          triggerPush();
+        }
+      }
+    }
+
+    function openRenameModal(id, currentName) {
+      document.getElementById("renameInvoiceId").value = id;
+      document.getElementById("renameClientName").value = currentName;
+      document.getElementById("renameModal").classList.remove("hidden");
+    }
+
+    function closeRenameModal() {
+      document.getElementById("renameModal").classList.add("hidden");
+    }
+
+    function submitRenameInvoice() {
+      const id = document.getElementById("renameInvoiceId").value;
+      const newName = document.getElementById("renameClientName").value.trim();
+      
+      if (!newName) {
+        alert("Client name cannot be empty.");
+        return;
+      }
+
+      const inv = state.savedInvoices.find(item => item.id === id);
+      if (inv) {
+        inv.clientName = newName;
+        saveLocalState();
+        renderInvoices();
+        closeRenameModal();
+        showToast("Invoice updated successfully.");
+
+        if (state.autoSyncEnabled) {
+          triggerPush();
+        }
+      }
+    }
+
+    // INVOICE POPUP CREATION
+    function openInvoiceModal() {
+      const randomId = "WGC-" + Math.floor(1000 + Math.random() * 9000);
+      document.getElementById("invNo").value = randomId;
+      document.getElementById("invClientName").value = "";
+      document.getElementById("invClientEmail").value = "";
+      
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById("invIssueDate").value = today;
+      
+      // Due Date Net 30 default
+      const future = new Date();
+      future.setDate(future.getDate() + 30);
+      document.getElementById("invDueDate").value = future.toISOString().split('T')[0];
+
+      document.getElementById("invoiceModal").classList.remove("hidden");
+    }
+
+    function closeInvoiceModal() {
+      document.getElementById("invoiceModal").classList.add("hidden");
+    }
+
+    function submitGenerateInvoice() {
+      const clientName = document.getElementById("invClientName").value.trim();
+      const clientEmail = document.getElementById("invClientEmail").value.trim();
+      const invoiceNo = document.getElementById("invNo").value.trim() || ("WGC-" + Math.floor(1000 + Math.random() * 9000));
+      const terms = document.getElementById("invTerms").value;
+      const issueDate = document.getElementById("invIssueDate").value;
+      const dueDate = document.getElementById("invDueDate").value;
+
+      if (!clientName) {
+        alert("Please provide a Client Name.");
+        return;
+      }
+
+      const calc = recalculateFees();
+
+      const newInvoice = {
+        id: Math.random().toString(36).substring(2, 11),
+        invoiceNo,
+        clientName,
+        clientEmail,
+        issueDate,
+        dueDate,
+        terms,
+        orgType: calc.orgType,
+        participants: calc.participants,
+        hours: calc.hours,
+        consultingDiscount: calc.consultingDiscount,
+        prepDiscount: calc.prepDiscount,
+        assessmentDiscount: calc.assessmentDiscount,
+        total: calc.grandTotal,
+        timestamp: Date.now()
+      };
+
+      state.savedInvoices.unshift(newInvoice);
+      saveLocalState();
+      renderInvoices();
+      closeInvoiceModal();
+
+      if (state.autoSyncEnabled) {
+        triggerPush();
+      }
+
+      // Open print preview instantly
+      prepareAndOpenPrintLayout(newInvoice, calc);
+    }
+
+    // PRINT PREVIEW OVERLAY ENGINE
+    function prepareAndOpenPrintLayout(inv, calc) {
+      document.getElementById("pInvNo").innerText = inv.invoiceNo;
+      document.getElementById("pSenderName").innerText = state.senderName;
+      document.getElementById("pSenderAddress").innerText = state.senderAddress;
+      document.getElementById("pSenderEmail").innerText = state.senderEmail;
+      document.getElementById("pSenderPhone").innerText = state.senderPhone;
+
+      document.getElementById("pClientName").innerText = inv.clientName;
+      document.getElementById("pClientEmail").innerText = inv.clientEmail ? inv.clientEmail : "No email reference supplied";
+      
+      const issueFmt = inv.issueDate ? new Date(inv.issueDate).toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' }) : "-";
+      const dueFmt = inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' }) : "-";
+
+      document.getElementById("pIssueDate").innerText = issueFmt;
+      document.getElementById("pDueDate").innerText = dueFmt;
+      document.getElementById("pTerms").innerText = inv.terms;
+
+      // Table Line Items Building
+      const tbody = document.getElementById("pTableBody");
+      tbody.innerHTML = "";
+
+      let items = [];
+      const isIndiv = inv.orgType === "individual_debrief";
+
+      if (isIndiv) {
+        const rateFlat = parseInt(document.getElementById("rateIndivFlat").value, 10) || 100;
+        items.push({
+          desc: "Working Genius Individual Assessment & Personal Debrief Consultation package including customized review and personal profile.",
+          qty: 1,
+          rate: rateFlat,
+          amount: rateFlat
+        });
+        if (inv.consultingDiscount > 0) {
+          items.push({
+            desc: "Promotional Consultation Package Discount Applied",
+            qty: 1,
+            rate: -inv.consultingDiscount,
+            amount: -inv.consultingDiscount,
+            isPromo: true
+          });
+        }
+      } else {
+        // Corporate or Non-profit workshop
+        const hourlyRate = inv.orgType === "for_profit" ? state.rateFpHourly : state.rateNpHourly;
+        const consultBase = hourlyRate * inv.hours;
+        items.push({
+          desc: `Working Genius Facilitation & Consulting Service Session (${inv.hours} Hours duration customized workshop).`,
+          qty: 1,
+          rate: consultBase,
+          amount: consultBase
+        });
+
+        if (inv.consultingDiscount > 0) {
+          items.push({
+            desc: "Promotional Workshop Facilitation Discount Applied",
+            qty: 1,
+            rate: -inv.consultingDiscount,
+            amount: -inv.consultingDiscount,
+            isPromo: true
+          });
+        }
+
+        const prepRate = inv.orgType === "for_profit" ? state.rateFpPrep : state.rateNpPrep;
+        const prepBase = Math.ceil(inv.participants / 12) * prepRate;
+        items.push({
+          desc: `Comprehensive Materials Preparation and customized booklet planning (for ${inv.participants} registered participants).`,
+          qty: 1,
+          rate: prepBase,
+          amount: prepBase
+        });
+
+        if (inv.prepDiscount > 0) {
+          items.push({
+            desc: "Promotional Materials Preparation Fee Discount Applied",
+            qty: 1,
+            rate: -inv.prepDiscount,
+            amount: -inv.prepDiscount,
+            isPromo: true
+          });
+        }
+
+        const adminRate = inv.orgType === "for_profit" ? state.rateFpAdmin : state.rateNpAdmin;
+        const adminBase = inv.participants * adminRate;
+        items.push({
+          desc: `Attendee Personal Assessment & Report access validation licensing fee (billed for ${inv.participants} attendees).`,
+          qty: inv.participants,
+          rate: adminRate,
+          amount: adminBase
+        });
+
+        if (inv.assessmentDiscount > 0) {
+          items.push({
+            desc: "Promotional Assessment Access Fee Discount Applied",
+            qty: 1,
+            rate: -inv.assessmentDiscount,
+            amount: -inv.assessmentDiscount,
+            isPromo: true
+          });
+        }
+      }
+
+      let subtotal = 0;
+      let discounts = 0;
+
+      items.forEach(item => {
+        if (item.rate < 0) {
+          discounts += Math.abs(item.amount);
+        } else {
+          subtotal += item.amount;
+        }
+
+        const tr = document.createElement("tr");
+        if (item.isPromo) {
+          tr.style.color = "#e53e3e";
+          tr.style.fontStyle = "italic";
+        }
+        tr.innerHTML = `
+          <td style="padding: 10px; border: 1px solid #e2e8f0; max-width: 400px;">${item.desc}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: center;">${item.qty}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: right;">${item.rate < 0 ? "-" : ""}$${Math.abs(item.rate).toFixed(2)}</td>
+          <td style="padding: 10px; border: 1px solid #e2e8f0; text-align: right; font-weight: 500;">${item.amount < 0 ? "-" : ""}$${Math.abs(item.amount).toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById("pSubtotal").innerText = `$${subtotal.toFixed(2)}`;
+      const pDiscRow = document.getElementById("pDiscountRow");
+      if (discounts > 0) {
+        pDiscRow.style.display = "table-row";
+        document.getElementById("pDiscount").innerText = `-$${discounts.toFixed(2)}`;
+      } else {
+        pDiscRow.style.display = "none";
+      }
+
+      document.getElementById("pGrandTotal").innerText = `$${inv.total.toFixed(2)}`;
+
+      // Swap view containers
+      document.body.classList.add("bg-white");
+      document.body.classList.remove("bg-slate-900");
+      document.getElementById("printableInvoiceContainer").classList.remove("hidden");
+    }
+
+    function printSavedInvoice(id) {
+      const inv = state.savedInvoices.find(item => item.id === id);
+      if (!inv) return;
+
+      // Reconstruct temporary calculations matching the stored invoice properties
+      const isIndiv = inv.orgType === "individual_debrief";
+      const isForProfit = inv.orgType === "for_profit";
+      const isNonProfit = inv.orgType === "non_profit";
+
+      const hourlyRate = isForProfit ? state.rateFpHourly : state.rateNpHourly;
+      const consultBase = isIndiv ? state.rateIndivFlat : (hourlyRate * inv.hours);
+
+      const prepRate = isForProfit ? state.rateFpPrep : state.rateNpPrep;
+      const prepBase = isIndiv ? 0 : Math.ceil(inv.participants / 12) * prepRate;
+
+      const adminRate = isForProfit ? state.rateFpAdmin : state.rateNpAdmin;
+      const adminBase = isIndiv ? 0 : inv.participants * adminRate;
+
+      const tempCalc = {
+        orgType: inv.orgType,
+        participants: inv.participants,
+        hours: inv.hours,
+        consultingDiscount: inv.consultingDiscount,
+        prepDiscount: inv.prepDiscount,
+        assessmentDiscount: inv.assessmentDiscount,
+        grandTotal: inv.total,
+        calculatedConsultingFee: consultBase,
+        calculatedPrepFee: prepBase,
+        calculatedAssessmentFee: adminBase
+      };
+
+      prepareAndOpenPrintLayout(inv, tempCalc);
+    }
+
+    function closePrintView() {
+      document.body.classList.remove("bg-white");
+      document.body.classList.add("bg-slate-900");
+      document.getElementById("printableInvoiceContainer").classList.add("hidden");
+    }
+
+    function showToast(msg) {
+      const div = document.createElement("div");
+      div.className = "no-print fixed bottom-5 right-5 bg-indigo-600 text-white py-3 px-5 rounded-xl shadow-2xl font-bold text-xs tracking-wider uppercase transition z-50 transform translate-y-10 opacity-0";
+      div.innerText = msg;
+      document.body.appendChild(div);
+      
+      // Animate in
+      setTimeout(() => {
+        div.classList.remove("translate-y-10", "opacity-0");
+      }, 50);
+
+      // Dismiss after 3s
+      setTimeout(() => {
+        div.classList.add("translate-y-10", "opacity-0");
+        setTimeout(() => div.remove(), 400);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
