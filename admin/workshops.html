@@ -146,9 +146,21 @@
     const WORKSHOPS_KEY = "jjc_workshops";
     let workshops = [];
 
-    function loadWorkshops() {
-      workshops = JSON.parse(localStorage.getItem(WORKSHOPS_KEY) || "[]");
+  try {
+    workshops = await Database.getWorkshops();
+
+    if (!Array.isArray(workshops)) {
+      workshops = [];
     }
+
+    localStorage.setItem(WORKSHOPS_KEY, JSON.stringify(workshops));
+
+  } catch (err) {
+    console.warn("Unable to load workshops from Google Sheets.", err);
+
+    workshops = JSON.parse(localStorage.getItem(WORKSHOPS_KEY) || "[]");
+  }
+}
 
     function persistWorkshops() {
       localStorage.setItem(WORKSHOPS_KEY, JSON.stringify(workshops));
@@ -274,12 +286,12 @@
       setTimeout(() => t.remove(), 2600);
     }
 
-    window.addEventListener("load", () => {
-      JJC_applyBranding("admin");
-      loadWorkshops();
-      resetForm();
-      renderWorkshops();
-    });
+window.addEventListener("load", async () => {
+  JJC_applyBranding("admin");
+  await loadWorkshops();
+  resetForm();
+  renderWorkshops();
+});
   </script>
 </body>
 </html>
