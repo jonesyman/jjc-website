@@ -5,366 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Jeff Jones Consulting</title>
   <meta name="description" content="Jeff Jones Consulting helps teams use the Working Genius model to improve clarity, trust, and teamwork." />
-  <style>
-    :root {
-      --brand: #263860;
-      --brand-2: #344b7d;
-      --ink: #f8fafc;
-      --muted: #94a3b8;
-      --muted-2: #64748b;
-      --line: #243247;
-      --panel: #0f172a;
-      --panel-2: #111c31;
-      --bg: #070b13;
-      --white: #ffffff;
-      --radius: 22px;
-    }
 
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at top right, rgba(38,56,96,.42), transparent 34%),
-        radial-gradient(circle at bottom left, rgba(38,56,96,.20), transparent 30%),
-        var(--bg);
-      line-height: 1.6;
-    }
+  <link rel="icon" href="assets/images/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="assets/images/apple-touch-icon.png">
+  <link rel="manifest" href="assets/images/site.webmanifest">
 
-    a { color: inherit; }
-    .container {
-      max-width: 1120px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: rgba(7,11,19,.92);
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(10px);
-    }
-
-    .nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 0;
-      gap: 20px;
-    }
-
-    .logo {
-      text-decoration: none;
-      font-weight: 900;
-      color: var(--ink);
-      line-height: 1.1;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-mark {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--brand), #101827);
-      display: grid;
-      place-items: center;
-      color: white;
-      border: 1px solid rgba(255,255,255,.12);
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
-    }
-
-    .logo span {
-      display: block;
-      font-size: 11px;
-      letter-spacing: 2px;
-      color: var(--muted);
-      text-transform: uppercase;
-      margin-top: 3px;
-    }
-    .site-logo {
-  width: 46px;
-  height: 46px;
-  object-fit: contain;
-  border-radius: 0;
-}
-
-    nav ul {
-      list-style: none;
-      display: flex;
-      gap: 8px;
-      padding: 0;
-      margin: 0;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    nav a {
-      display: inline-block;
-      padding: 9px 13px;
-      text-decoration: none;
-      border-radius: 999px;
-      color: #cbd5e1;
-      font-weight: 800;
-      font-size: 14px;
-    }
-
-    nav a:hover { background: rgba(38,56,96,.45); color: white; }
-
-    .hero {
-      padding: 82px 0 70px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.16fr .84fr;
-      gap: 38px;
-      align-items: center;
-    }
-
-    .eyebrow {
-      display: inline-block;
-      background: rgba(38,56,96,.48);
-      border: 1px solid rgba(148,163,184,.16);
-      color: #dbeafe;
-      padding: 8px 13px;
-      border-radius: 999px;
-      font-weight: 900;
-      font-size: 13px;
-      letter-spacing: .08em;
-      margin-bottom: 18px;
-    }
-
-    h1 {
-      font-size: clamp(40px, 6vw, 64px);
-      line-height: 1.02;
-      letter-spacing: -2px;
-      margin: 0;
-    }
-
-    h2 {
-      font-size: clamp(30px, 4vw, 44px);
-      line-height: 1.1;
-      letter-spacing: -1px;
-      margin: 0 0 18px;
-    }
-
-    h3 { margin: 0 0 10px; font-size: 23px; }
-    p { margin: 0 0 16px; }
-    .lead { font-size: 20px; color: #cbd5e1; margin-top: 22px; }
-
-    .buttons { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
-
-    .button {
-      display: inline-block;
-      text-decoration: none;
-      padding: 13px 19px;
-      border-radius: 999px;
-      font-weight: 900;
-      border: 1px solid rgba(255,255,255,.16);
-    }
-
-    .button.primary { background: var(--brand); color: #fff; }
-    .button.primary:hover { background: var(--brand-2); }
-    .button.secondary { background: transparent; color: #dbeafe; border-color: rgba(148,163,184,.35); }
-    .button.secondary:hover { background: rgba(38,56,96,.35); }
-
-    .card {
-      background: linear-gradient(180deg, rgba(17,28,49,.96), rgba(15,23,42,.96));
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 28px;
-      box-shadow: 0 18px 55px rgba(0,0,0,.23);
-    }
-
-    .soft-card {
-      background: rgba(15,23,42,.75);
-      border: 1px solid rgba(148,163,184,.13);
-      border-radius: var(--radius);
-      padding: 28px;
-    }
-
-    .section { padding: 72px 0; }
-    .section.alt {
-      background: rgba(15,23,42,.55);
-      border-top: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-    }
-
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-
-    .muted { color: var(--muted); }
-
-    .checklist { padding: 0; margin: 20px 0 0; list-style: none; }
-    .checklist li { margin: 12px 0; padding-left: 28px; position: relative; }
-    .checklist li:before { content: "✓"; position: absolute; left: 0; font-weight: 900; color: #b9c8ef; }
-
-    .genius-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-      margin-top: 26px;
-    }
-
-    .mini-bar { width: 56px; height: 7px; background: #b9c8ef; border-radius: 999px; margin-bottom: 15px; }
-
-    .rates-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-top: 30px;
-    }
-
-    .rate-card {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .rate-card:before {
-      content: "";
-      position: absolute;
-      inset: 0 0 auto 0;
-      height: 5px;
-      background: var(--brand-2);
-    }
-
-    .price {
-      font-size: 34px;
-      line-height: 1;
-      font-weight: 900;
-      margin: 16px 0 8px;
-      color: #dbeafe;
-    }
-
-    .price small {
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 800;
-    }
-
-    .fee-list {
-      margin: 18px 0 0;
-      padding: 0;
-      list-style: none;
-      color: #cbd5e1;
-      font-size: 14px;
-    }
-
-    .fee-list li {
-      display: flex;
-      justify-content: space-between;
-      gap: 18px;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(148,163,184,.12);
-    }
-
-    .fee-list li:last-child { border-bottom: 0; }
-
-    .calculator {
-      display: grid;
-      grid-template-columns: .9fr 1.1fr;
-      gap: 28px;
-      align-items: start;
-    }
-
-    label { display: block; font-weight: 900; font-size: 14px; color: #cbd5e1; margin-bottom: 6px; }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 13px 14px;
-      border: 1px solid #2b3b55;
-      border-radius: 14px;
-      font: inherit;
-      background: #0a1221;
-      color: var(--ink);
-    }
-
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #7890c7;
-      box-shadow: 0 0 0 3px rgba(38,56,96,.35);
-    }
-
-    .field { margin-bottom: 16px; }
-
-    .estimate {
-      background: var(--brand);
-      color: #fff;
-      border-radius: var(--radius);
-      padding: 22px;
-      margin-top: 18px;
-      border: 1px solid rgba(255,255,255,.12);
-    }
-
-    .estimate-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 7px 0;
-      color: #e2e8f0;
-    }
-
-    .estimate-total {
-      margin-top: 14px;
-      padding-top: 14px;
-      border-top: 1px solid rgba(255,255,255,.25);
-      display: flex;
-      justify-content: space-between;
-      align-items: end;
-      font-weight: 900;
-      font-size: 22px;
-    }
-
-    .estimate-total span:last-child { font-size: 34px; }
-
-    .form-note { font-size: 13px; color: var(--muted); margin-top: 12px; }
-
-    footer {
-      border-top: 1px solid var(--line);
-      background: rgba(7,11,19,.92);
-      padding: 28px 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .footer-grid {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    @media (max-width: 900px) {
-      .hero-grid, .grid-3, .grid-2, .genius-grid, .calculator, .rates-grid { grid-template-columns: 1fr; }
-      .nav { align-items: flex-start; flex-direction: column; }
-      nav ul { justify-content: flex-start; }
-      .hero { padding: 56px 0; }
-      .section { padding: 54px 0; }
-    }
-  </style>
+  <link rel="stylesheet" href="assets/css/site.css">
 </head>
 
 <body>
   <header>
     <div class="container nav">
       <a href="#home" class="logo">
-        <img src="JJC_Logo.png" alt="Jeff Jones Consulting logo" class="site-logo">
-        <span style="font-size:16px; letter-spacing:0; color:white; text-transform:none;">Jeff Jones Consulting<br><span>Working Genius Facilitation</span></span>
+        <img data-brand-logo class="site-logo" src="assets/images/JJC_Logo.png" alt="Jeff Jones Consulting logo">
+        <span style="font-size:16px; letter-spacing:0; color:white; text-transform:none;"><span data-brand-company>Jeff Jones Consulting</span><br><span class="logo-sub" data-brand-tagline>Working Genius Facilitation</span></span>
       </a>
       <nav aria-label="Main navigation">
         <ul>
@@ -385,7 +41,7 @@
           <h1>Practical consulting for teams that want to work better together.</h1>
           <p class="lead">Jeff Jones Consulting helps leaders and teams use the Working Genius model to understand strengths, reduce friction, and create healthier ways of getting work done.</p>
           <div class="buttons">
-            <a class="button primary" href="#contact">Start a Conversation</a>
+            <a class="button" href="#contact">Start a Conversation</a>
             <a class="button secondary" href="#services">View Services</a>
           </div>
         </div>
@@ -403,18 +59,9 @@
 
     <section class="section">
       <div class="container grid-3">
-        <div class="card">
-          <h3>Working Genius Facilitation</h3>
-          <p class="muted">Guided sessions that help teams understand their gifts, frustrations, and gaps.</p>
-        </div>
-        <div class="card">
-          <h3>Team Workshops</h3>
-          <p class="muted">Practical workshops for leaders, departments, nonprofits, churches, and small organizations.</p>
-        </div>
-        <div class="card">
-          <h3>Clear Pricing</h3>
-          <p class="muted">Published planning rates with final scope confirmed through a short conversation.</p>
-        </div>
+        <div class="card"><h3>Working Genius Facilitation</h3><p class="muted">Guided sessions that help teams understand their gifts, frustrations, and gaps.</p></div>
+        <div class="card"><h3>Team Workshops</h3><p class="muted">Practical workshops for leaders, departments, nonprofits, churches, and small organizations.</p></div>
+        <div class="card"><h3>Clear Pricing</h3><p class="muted">Published planning rates with final scope confirmed through a short conversation.</p></div>
       </div>
     </section>
 
@@ -422,22 +69,7 @@
       <div class="container">
         <p class="eyebrow">About the consultant</p>
         <h2>A practical facilitator for real teams doing real work.</h2>
-        <p class="lead">Jeff Jones brings a grounded, people-focused approach to helping teams understand how they work, where they get stuck, and what they can do differently. His style is direct, approachable, and designed for leaders who want more than a feel-good workshop.</p>
-        <div class="grid-2" style="margin-top:28px;">
-          <div class="card">
-            <h3>What Jeff emphasizes</h3>
-            <ul class="checklist">
-              <li>Clarity before complexity</li>
-              <li>Honest conversations without unnecessary harshness</li>
-              <li>Better use of people’s natural strengths</li>
-              <li>Practical next steps teams can sustain</li>
-            </ul>
-          </div>
-          <div class="card">
-            <h3>Good fit for</h3>
-            <p class="muted">Leadership teams, nonprofit teams, church staffs, small businesses, university departments, and project groups that need better teamwork, clearer roles, and healthier communication around work.</p>
-          </div>
-        </div>
+        <p class="lead">Jeff Jones brings a grounded, people-focused approach to helping teams understand how they work, where they get stuck, and what they can do differently.</p>
       </div>
     </section>
 
@@ -445,7 +77,7 @@
       <div class="container">
         <p class="eyebrow">The Working Genius model</p>
         <h2>A simple way to understand why work energizes or drains people.</h2>
-        <p class="lead">The Working Genius model helps teams identify which parts of work bring energy and which parts create frustration. It is especially useful because it focuses on actual work, not abstract personality traits.</p>
+        <p class="lead">The Working Genius model helps teams identify which parts of work bring energy and which parts create frustration.</p>
         <div class="genius-grid">
           <div class="card"><div class="mini-bar"></div><h3>Wonder</h3><p class="muted">Asks big-picture questions and sees potential.</p></div>
           <div class="card"><div class="mini-bar"></div><h3>Invention</h3><p class="muted">Creates original ideas and possible solutions.</p></div>
@@ -461,35 +93,30 @@
       <div class="container">
         <p class="eyebrow">Services & pricing</p>
         <h2>Flexible workshops with clear planning rates.</h2>
-        <p class="lead">These are planning rates based on current Jeff Jones Consulting defaults. Final pricing may vary based on travel, customization, scheduling needs, and agreed scope.</p>
+        <p class="lead">Rates are loaded from the Jeff Jones Consulting Google Sheet, so the public site stays aligned with the admin console.</p>
 
         <div class="rates-grid">
           <div class="card rate-card">
             <h3>Corporate / For-Profit</h3>
-            <div class="price">$300 <small>/ hour</small></div>
-            <p class="muted">For businesses and for-profit organizations.</p>
+            <div class="price"><span data-rate="CorporateHourly">$300</span> <small>/ hour</small></div>
             <ul class="fee-list">
-              <li><span>Prep fee</span><strong>$100 / 12 participants</strong></li>
-              <li><span>Assessment/admin fee</span><strong>$25 / person</strong></li>
+              <li><span>Prep fee</span><strong data-rate="CorporatePrep">$100 / 12 participants</strong></li>
+              <li><span>Assessment/admin fee</span><strong data-rate="CorporateAssessment">$25 / person</strong></li>
               <li><span>Typical duration</span><strong>2–4 hours</strong></li>
             </ul>
           </div>
-
           <div class="card rate-card">
             <h3>Nonprofit / Government</h3>
-            <div class="price">$100 <small>/ hour</small></div>
-            <p class="muted">For nonprofits, churches, schools, and public-sector teams.</p>
+            <div class="price"><span data-rate="NonprofitHourly">$100</span> <small>/ hour</small></div>
             <ul class="fee-list">
-              <li><span>Prep fee</span><strong>$50 / 12 participants</strong></li>
-              <li><span>Assessment/admin fee</span><strong>$20 / person</strong></li>
+              <li><span>Prep fee</span><strong data-rate="NonprofitPrep">$50 / 12 participants</strong></li>
+              <li><span>Assessment/admin fee</span><strong data-rate="NonprofitAssessment">$20 / person</strong></li>
               <li><span>Typical duration</span><strong>2–4 hours</strong></li>
             </ul>
           </div>
-
           <div class="card rate-card">
             <h3>Individual Debrief</h3>
-            <div class="price">$100 <small>flat fee</small></div>
-            <p class="muted">For a one-on-one Working Genius debrief or review session.</p>
+            <div class="price"><span data-rate="IndividualDebrief">$100</span> <small>flat fee</small></div>
             <ul class="fee-list">
               <li><span>Format</span><strong>Individual</strong></li>
               <li><span>Assessment/admin</span><strong>Included as scoped</strong></li>
@@ -502,10 +129,8 @@
           <div class="calculator">
             <div>
               <h3>Planning estimate calculator</h3>
-              <p class="muted">Use this to estimate workshop costs. Rates are fixed on this public page and match the current admin defaults.</p>
-              <p class="muted">Discounts, overrides, and formal invoices are handled privately after a conversation.</p>
+              <p class="muted">Use this to estimate workshop costs. Rates are fixed on this public page.</p>
             </div>
-
             <div>
               <div class="field">
                 <label for="orgType">Organization type</label>
@@ -515,21 +140,8 @@
                   <option value="individual_debrief">Individual Debrief</option>
                 </select>
               </div>
-
-              <div class="field" id="participantsField">
-                <label for="participants">Participants</label>
-                <input type="number" id="participants" min="1" value="12" />
-              </div>
-
-              <div class="field" id="hoursField">
-                <label for="hours">Workshop hours</label>
-                <select id="hours">
-                  <option value="2">2 hours</option>
-                  <option value="3" selected>3 hours</option>
-                  <option value="4">4 hours</option>
-                </select>
-              </div>
-
+              <div class="field" id="participantsField"><label for="participants">Participants</label><input type="number" id="participants" min="1" value="12"></div>
+              <div class="field" id="hoursField"><label for="hours">Workshop hours</label><select id="hours"><option value="2">2 hours</option><option value="3" selected>3 hours</option><option value="4">4 hours</option></select></div>
               <div class="estimate">
                 <div class="estimate-row"><span>Consulting / facilitation</span><span id="consultingCost">$900.00</span></div>
                 <div class="estimate-row" id="prepRow"><span>Preparation fee</span><span id="prepCost">$100.00</span></div>
@@ -539,7 +151,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </section>
 
@@ -548,30 +159,20 @@
         <div>
           <p class="eyebrow">Contact</p>
           <h2>Start with a simple conversation.</h2>
-          <p class="lead">Share a little about your team, organization, or event. Jeff can help determine whether a Working Genius session or team workshop is the right fit.</p>
-          <p><strong>Email:</strong> <a href="mailto:jeff@jeffjonesconsulting.com">jeff@jeffjonesconsulting.com</a></p>
-          <p><strong>Phone:</strong> <a href="tel:15599787598">(559) 978-7598</a></p>
+          <p class="lead">Share a little about your team, organization, or event.</p>
+          <p><strong>Email:</strong> <a data-brand-email href="mailto:jeff@jeffjonesconsulting.com">jeff@jeffjonesconsulting.com</a></p>
+          <p><strong>Phone:</strong> <a data-brand-phone href="tel:15599787598">(559) 978-7598</a></p>
         </div>
         <div class="card">
           <form action="https://formspree.io/f/xzdwbebl" method="POST">
             <input type="hidden" name="_subject" value="New JJC Website Inquiry">
             <div class="grid-2">
-              <div class="field"><label for="name">Name</label><input id="name" name="name" required /></div>
-              <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" required /></div>
+              <div class="field"><label for="name">Name</label><input id="name" name="name" required></div>
+              <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" required></div>
             </div>
-            <div class="field"><label for="organization">Organization</label><input id="organization" name="organization" /></div>
-            <div class="field">
-              <label for="interest">What are you interested in?</label>
-              <select id="interest" name="interest">
-                <option>Working Genius team workshop</option>
-                <option>Leadership team facilitation</option>
-                <option>Nonprofit or church team session</option>
-                <option>Individual debrief</option>
-                <option>Not sure yet</option>
-              </select>
-            </div>
+            <div class="field"><label for="organization">Organization</label><input id="organization" name="organization"></div>
             <div class="field"><label for="message">Message</label><textarea id="message" name="message" rows="5" required></textarea></div>
-            <button class="button primary" type="submit">Send Message</button>
+            <button class="button" type="submit">Send Message</button>
           </form>
         </div>
       </div>
@@ -580,77 +181,57 @@
 
   <footer>
     <div class="container footer-grid">
-      <div><strong>Jeff Jones Consulting</strong><br />Helping teams work with more clarity, trust, and momentum.</div>
-      <div><a href="mailto:jeff@jeffjonesconsulting.com">jeff@jeffjonesconsulting.com</a><br /><a href="tel:15599787598">(559) 978-7598</a></div>
+      <div><strong data-brand-company>Jeff Jones Consulting</strong><br>Helping teams work with more clarity, trust, and momentum.</div>
+      <div><a data-brand-email href="mailto:jeff@jeffjonesconsulting.com">jeff@jeffjonesconsulting.com</a><br><a data-brand-phone href="tel:15599787598">(559) 978-7598</a></div>
     </div>
   </footer>
 
+  <script src="assets/js/branding.js"></script>
+  <script src="assets/js/googleSheets.js"></script>
+  <script src="assets/js/rates.js"></script>
   <script>
-    // Public pricing values. If rates change, update this one object.
-    const JJC_RATES = {
-      forProfitHourly: 300,
-      forProfitPrepPerTwelve: 100,
-      forProfitAssessmentPerPerson: 25,
-      nonprofitHourly: 100,
-      nonprofitPrepPerTwelve: 50,
-      nonprofitAssessmentPerPerson: 20,
-      individualDebriefFlat: 100
-    };
-
-    function money(value) {
-      return "$" + Number(value || 0).toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
+    function updateVisibleRates() {
+      const r = window.JJC_RATES;
+      document.querySelector('[data-rate="CorporateHourly"]').textContent = JJC_wholeMoney(r.CorporateHourly);
+      document.querySelector('[data-rate="CorporatePrep"]').textContent = JJC_wholeMoney(r.CorporatePrep) + " / 12 participants";
+      document.querySelector('[data-rate="CorporateAssessment"]').textContent = JJC_wholeMoney(r.CorporateAssessment) + " / person";
+      document.querySelector('[data-rate="NonprofitHourly"]').textContent = JJC_wholeMoney(r.NonprofitHourly);
+      document.querySelector('[data-rate="NonprofitPrep"]').textContent = JJC_wholeMoney(r.NonprofitPrep) + " / 12 participants";
+      document.querySelector('[data-rate="NonprofitAssessment"]').textContent = JJC_wholeMoney(r.NonprofitAssessment) + " / person";
+      document.querySelector('[data-rate="IndividualDebrief"]').textContent = JJC_wholeMoney(r.IndividualDebrief);
     }
 
     function updatePublicEstimate() {
       const orgType = document.getElementById("orgType").value;
-      const participantsField = document.getElementById("participantsField");
-      const hoursField = document.getElementById("hoursField");
-      const prepRow = document.getElementById("prepRow");
-      const assessmentRow = document.getElementById("assessmentRow");
-
       const isIndividual = orgType === "individual_debrief";
+      document.getElementById("participantsField").style.display = isIndividual ? "none" : "block";
+      document.getElementById("hoursField").style.display = isIndividual ? "none" : "block";
+      document.getElementById("prepRow").style.display = isIndividual ? "none" : "flex";
+      document.getElementById("assessmentRow").style.display = isIndividual ? "none" : "flex";
 
-      participantsField.style.display = isIndividual ? "none" : "block";
-      hoursField.style.display = isIndividual ? "none" : "block";
-      prepRow.style.display = isIndividual ? "none" : "flex";
-      assessmentRow.style.display = isIndividual ? "none" : "flex";
+      const c = Rates.calculate({
+        orgType,
+        participants: document.getElementById("participants").value,
+        hours: document.getElementById("hours").value
+      });
 
-      let consulting = 0;
-      let prep = 0;
-      let assessment = 0;
-
-      if (isIndividual) {
-        consulting = JJC_RATES.individualDebriefFlat;
-      } else {
-        const participants = Math.max(1, Number(document.getElementById("participants").value || 1));
-        const hours = Number(document.getElementById("hours").value || 3);
-
-        if (orgType === "for_profit") {
-          consulting = JJC_RATES.forProfitHourly * hours;
-          prep = Math.ceil(participants / 12) * JJC_RATES.forProfitPrepPerTwelve;
-          assessment = participants * JJC_RATES.forProfitAssessmentPerPerson;
-        } else {
-          consulting = JJC_RATES.nonprofitHourly * hours;
-          prep = Math.ceil(participants / 12) * JJC_RATES.nonprofitPrepPerTwelve;
-          assessment = participants * JJC_RATES.nonprofitAssessmentPerPerson;
-        }
-      }
-
-      document.getElementById("consultingCost").textContent = money(consulting);
-      document.getElementById("prepCost").textContent = money(prep);
-      document.getElementById("assessmentCost").textContent = money(assessment);
-      document.getElementById("totalCost").textContent = money(consulting + prep + assessment);
+      document.getElementById("consultingCost").textContent = JJC_money(c.consultingNet);
+      document.getElementById("prepCost").textContent = JJC_money(c.prepNet);
+      document.getElementById("assessmentCost").textContent = JJC_money(c.assessmentNet);
+      document.getElementById("totalCost").textContent = JJC_money(c.total);
     }
 
-    ["orgType", "participants", "hours"].forEach(function(id) {
+    ["orgType", "participants", "hours"].forEach(id => {
       document.getElementById(id).addEventListener("input", updatePublicEstimate);
       document.getElementById(id).addEventListener("change", updatePublicEstimate);
     });
 
-    updatePublicEstimate();
+    window.addEventListener("load", async () => {
+      JJC_applyBranding("public");
+      await Rates.load();
+      updateVisibleRates();
+      updatePublicEstimate();
+    });
   </script>
 </body>
 </html>
