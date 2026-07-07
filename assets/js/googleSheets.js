@@ -1,99 +1,41 @@
 // assets/js/googleSheets.js
-// =====================================================
+// ======================================================
 // Jeff Jones Consulting
-// Google Sheets Data Access Layer
-// =====================================================
+// Google Sheets Database Layer
+// ======================================================
 
 window.Database = {
 
+    // Replace this only if your Apps Script URL changes
     apiUrl: "https://script.google.com/macros/s/AKfycbzf8ywN8yb8y6CIdo3xngoHkhHNiW0ZMQO2nKtfqh4OTSW5Ciet1Eczi24YmHP6Kf3b/exec",
 
-    //--------------------------------------------------
+    //----------------------------------------------------
     // Generic GET
-    //--------------------------------------------------
+    //----------------------------------------------------
 
-async get(action) {
-    const url = `${this.apiUrl}?action=${action}&_=${Date.now()}`;
+    async get(action) {
 
-    const response = await fetch(url, {
-        method: "GET",
-        cache: "no-store"
-    });
+        const url = `${this.apiUrl}?action=${action}&_=${Date.now()}`;
 
-    if (!response.ok) {
-        throw new Error(`Unable to load ${action}. Status: ${response.status}`);
-    }
+        const response = await fetch(url, {
+            method: "GET",
+            cache: "no-store"
+        });
 
-    const data = await response.json();
+        if (!response.ok) {
+            throw new Error(`Unable to load ${action}. Status: ${response.status}`);
+        }
 
-    console.log(`Loaded ${action} from Google Sheets:`, data);
+        const data = await response.json();
 
-    return data;
-},
+        console.log(`Loaded ${action}:`, data);
 
-    //--------------------------------------------------
-    // Rates
-    //--------------------------------------------------
-
-    async getRates() {
-        return this.get("rates");
+        return data;
     },
 
-    //--------------------------------------------------
-    // Clients
-    //--------------------------------------------------
-
-    async getClients() {
-        return this.get("clients");
-    },
-
-    //--------------------------------------------------
-    // Workshops
-    //--------------------------------------------------
-
-    async getWorkshops() {
-        return this.get("workshops");
-    },
-
-    //--------------------------------------------------
-    // Estimates
-    //--------------------------------------------------
-
-    async getEstimates() {
-        return this.get("estimates");
-    },
-
-    //--------------------------------------------------
-    // Invoices
-    //--------------------------------------------------
-
-    async getInvoices() {
-        return this.get("invoices");
-    },
-
-    //--------------------------------------------------
-    // Saves
-    //--------------------------------------------------
-
-    saveClient(data) {
-        return this.post("saveClient", data);
-    },
-
-    saveWorkshop(data) {
-        return this.post("saveWorkshop", data);
-    },
-
-    saveEstimate(data) {
-        return this.post("saveEstimate", data);
-    },
-
-    saveInvoice(data) {
-        return this.post("saveInvoice", data);
-    },
-
-    //--------------------------------------------------
+    //----------------------------------------------------
     // Generic POST
-    //--------------------------------------------------
+    //----------------------------------------------------
 
     post(action, data) {
 
@@ -114,6 +56,62 @@ async get(action) {
 
         });
 
+    },
+
+    //----------------------------------------------------
+    // Rates
+    //----------------------------------------------------
+
+    async getRates() {
+        return this.get("rates");
+    },
+
+    //----------------------------------------------------
+    // Clients
+    //----------------------------------------------------
+
+    async getClients() {
+        return this.get("clients");
+    },
+
+    saveClient(data) {
+        return this.post("saveClient", data);
+    },
+
+    //----------------------------------------------------
+    // Workshops
+    //----------------------------------------------------
+
+    async getWorkshops() {
+        return this.get("workshops");
+    },
+
+    saveWorkshop(data) {
+        return this.post("saveWorkshop", data);
+    },
+
+    //----------------------------------------------------
+    // Estimates
+    //----------------------------------------------------
+
+    async getEstimates() {
+        return this.get("estimates");
+    },
+
+    saveEstimate(data) {
+        return this.post("saveEstimate", data);
+    },
+
+    //----------------------------------------------------
+    // Invoices
+    //----------------------------------------------------
+
+    async getInvoices() {
+        return this.get("invoices");
+    },
+
+    saveInvoice(data) {
+        return this.post("saveInvoice", data);
     }
 
 };
