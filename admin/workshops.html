@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JJC Admin | Workshops</title>
+
+  <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="../assets/images/apple-touch-icon.png">
+  <link rel="manifest" href="../assets/images/site.webmanifest">
+
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+
+<body>
+  <header class="no-print">
+    <div class="container topbar">
+      <div class="brand-block">
+        <img data-brand-logo class="site-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting logo">
+        <div>
+          <p class="brand-title">Workshops</p>
+          <p class="brand-subtitle">Jeff Jones Consulting Admin</p>
+        </div>
+      </div>
+      <div class="actions" style="margin:0;">
+        <a class="button secondary small-btn" href="/admin/">Dashboard</a>
+        <a class="button secondary small-btn" href="/admin/clients.html">Clients</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container no-print">
+    <section class="hero">
+      <div class="card">
+        <span class="eyebrow">Workshop Management</span>
+        <h1>Track upcoming and completed Working Genius engagements.</h1>
+        <p class="muted">Workshops are saved locally and sent to your Google Sheet. Use WorkshopIDs such as WRK-0001, WRK-0002, and so on.</p>
+      </div>
+    </section>
+
+    <section class="grid workspace" style="margin-bottom:22px;">
+      <div class="card">
+        <div class="section-title">
+          <h2>Add / Edit Workshop</h2>
+          <button class="button ghost small-btn" onclick="resetForm()">New Workshop</button>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="WorkshopID">Workshop ID</label>
+            <input id="WorkshopID" placeholder="WRK-0001">
+          </div>
+          <div class="field">
+            <label for="ClientID">Client ID</label>
+            <input id="ClientID" placeholder="CLI-0001">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="Organization">Organization</label>
+          <input id="Organization" placeholder="Organization name">
+        </div>
+
+        <div class="grid grid-3">
+          <div class="field">
+            <label for="WorkshopDate">Workshop Date</label>
+            <input id="WorkshopDate" type="date">
+          </div>
+          <div class="field">
+            <label for="Type">Type</label>
+            <select id="Type">
+              <option>Corporate</option>
+              <option>Nonprofit</option>
+              <option>Government</option>
+              <option>Church</option>
+              <option>Individual Debrief</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="Status">Status</label>
+            <select id="Status">
+              <option>Prospect</option>
+              <option>Estimated</option>
+              <option>Scheduled</option>
+              <option>Completed</option>
+              <option>Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-3">
+          <div class="field">
+            <label for="Participants">Participants</label>
+            <input id="Participants" type="number" min="0" value="12">
+          </div>
+          <div class="field">
+            <label for="Hours">Hours</label>
+            <input id="Hours" type="number" min="0" step=".5" value="3">
+          </div>
+          <div class="field">
+            <label for="EstimateID">Estimate ID</label>
+            <input id="EstimateID" placeholder="EST-0001">
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="InvoiceID">Invoice #</label>
+            <input id="InvoiceID" placeholder="INV-0001">
+          </div>
+          <div class="field">
+            <label for="Location">Location</label>
+            <input id="Location" placeholder="Location or virtual">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="Notes">Notes</label>
+          <textarea id="Notes" rows="5" placeholder="Agenda, facilitation notes, follow-up items, logistics"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="button" onclick="saveWorkshop()">Save Workshop</button>
+          <button class="button secondary" onclick="resetForm()">Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>Workshop List</h2>
+          <input id="search" placeholder="Search workshops..." style="max-width:260px;" oninput="renderWorkshops()">
+        </div>
+        <div id="workshopsList" class="list-grid"></div>
+        <p id="emptyMsg" class="muted small">No workshops yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="no-print">Jeff Jones Consulting Admin Console</footer>
+
+  <script src="../assets/js/branding.js"></script>
+  <script src="../assets/js/googleSheets.js"></script>
+  <script>
+    const WORKSHOPS_KEY = "jjc_workshops";
+    let workshops = [];
+
+    function loadWorkshops() {
+      workshops = JSON.parse(localStorage.getItem(WORKSHOPS_KEY) || "[]");
+    }
+
+    function persistWorkshops() {
+      localStorage.setItem(WORKSHOPS_KEY, JSON.stringify(workshops));
+    }
+
+    function nextWorkshopId() {
+      const max = workshops
+        .map(w => String(w.WorkshopID || "").match(/^WRK-(\d+)$/))
+        .filter(Boolean)
+        .map(m => Number(m[1]))
+        .reduce((a,b) => Math.max(a,b), 0);
+      return "WRK-" + String(max + 1).padStart(4, "0");
+    }
+
+    function resetForm() {
+      document.getElementById("WorkshopID").value = nextWorkshopId();
+      ["ClientID", "Organization", "EstimateID", "InvoiceID", "Location", "Notes"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("WorkshopDate").value = "";
+      document.getElementById("Type").value = "Corporate";
+      document.getElementById("Status").value = "Prospect";
+      document.getElementById("Participants").value = 12;
+      document.getElementById("Hours").value = 3;
+    }
+
+    function getFormData() {
+      return {
+        WorkshopID: document.getElementById("WorkshopID").value.trim(),
+        ClientID: document.getElementById("ClientID").value.trim(),
+        Organization: document.getElementById("Organization").value.trim(),
+        WorkshopDate: document.getElementById("WorkshopDate").value,
+        Type: document.getElementById("Type").value,
+        Status: document.getElementById("Status").value,
+        Participants: document.getElementById("Participants").value,
+        Hours: document.getElementById("Hours").value,
+        EstimateID: document.getElementById("EstimateID").value.trim(),
+        InvoiceID: document.getElementById("InvoiceID").value.trim(),
+        Location: document.getElementById("Location").value.trim(),
+        Notes: document.getElementById("Notes").value.trim()
+      };
+    }
+
+    function saveWorkshop() {
+      const data = getFormData();
+      if (!data.WorkshopID || !data.Organization) {
+        alert("WorkshopID and Organization are required.");
+        return;
+      }
+
+      const existingIndex = workshops.findIndex(w => w.WorkshopID === data.WorkshopID);
+      if (existingIndex >= 0) workshops[existingIndex] = data;
+      else workshops.unshift(data);
+
+      persistWorkshops();
+      sendWorkshopToSheet(data);
+      renderWorkshops();
+      resetForm();
+      toast("Workshop saved locally and sent to Google Sheets.");
+    }
+
+    function sendWorkshopToSheet(workshop) {
+      try {
+        fetch(Database.apiUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "saveWorkshop", data: workshop })
+        });
+      } catch (e) {
+        console.warn("Could not send workshop to sheet.", e);
+      }
+    }
+
+    function editWorkshop(id) {
+      const w = workshops.find(x => x.WorkshopID === id);
+      if (!w) return;
+      Object.keys(w).forEach(key => {
+        const el = document.getElementById(key);
+        if (el) el.value = w[key] || "";
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function deleteWorkshop(id) {
+      if (!confirm("Delete this local workshop record? This will not delete rows already sent to Google Sheets.")) return;
+      workshops = workshops.filter(w => w.WorkshopID !== id);
+      persistWorkshops();
+      renderWorkshops();
+      toast("Workshop deleted locally.");
+    }
+
+    function renderWorkshops() {
+      const q = document.getElementById("search").value.toLowerCase();
+      const wrap = document.getElementById("workshopsList");
+      const filtered = workshops.filter(w => Object.values(w).join(" ").toLowerCase().includes(q));
+      wrap.innerHTML = "";
+      document.getElementById("emptyMsg").classList.toggle("hidden", filtered.length > 0);
+
+      filtered.forEach(w => {
+        const div = document.createElement("div");
+        div.className = "record-card";
+        div.innerHTML = `
+          <div class="record-title">${escapeHtml(w.Organization)}</div>
+          <div class="tiny muted">${escapeHtml(w.WorkshopID)} • ${escapeHtml(w.WorkshopDate || "No date")} • ${escapeHtml(w.Status)}</div>
+          <div class="tiny muted">${escapeHtml(w.Type)} • ${escapeHtml(w.Participants)} participants • ${escapeHtml(w.Hours)} hours</div>
+          <div class="actions">
+            <button class="button secondary small-btn" onclick="editWorkshop('${escapeHtml(w.WorkshopID)}')">Edit</button>
+            <button class="button danger small-btn" onclick="deleteWorkshop('${escapeHtml(w.WorkshopID)}')">Delete</button>
+          </div>
+        `;
+        wrap.appendChild(div);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+    }
+
+    function toast(msg) {
+      const t = document.createElement("div");
+      t.className = "toast";
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2600);
+    }
+
+    window.addEventListener("load", () => {
+      JJC_applyBranding("admin");
+      loadWorkshops();
+      resetForm();
+      renderWorkshops();
+    });
+  </script>
+</body>
+</html>

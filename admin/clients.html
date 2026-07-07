@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JJC Admin | Clients</title>
+
+  <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="../assets/images/apple-touch-icon.png">
+  <link rel="manifest" href="../assets/images/site.webmanifest">
+
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+
+<body>
+  <header class="no-print">
+    <div class="container topbar">
+      <div class="brand-block">
+        <img data-brand-logo class="site-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting logo">
+        <div>
+          <p class="brand-title">Clients</p>
+          <p class="brand-subtitle">Jeff Jones Consulting Admin</p>
+        </div>
+      </div>
+      <div class="actions" style="margin:0;">
+        <a class="button secondary small-btn" href="/admin/">Dashboard</a>
+        <a class="button secondary small-btn" href="/admin/workshops.html">Workshops</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container no-print">
+    <section class="hero">
+      <div class="card">
+        <span class="eyebrow">Client Management</span>
+        <h1>Maintain organizations, contacts, and client notes.</h1>
+        <p class="muted">Clients are saved locally and sent to your Google Sheet. Use unique ClientIDs such as CLI-0001, CLI-0002, and so on.</p>
+      </div>
+    </section>
+
+    <section class="grid workspace" style="margin-bottom:22px;">
+      <div class="card">
+        <div class="section-title">
+          <h2>Add / Edit Client</h2>
+          <button class="button ghost small-btn" onclick="resetForm()">New Client</button>
+        </div>
+
+        <input type="hidden" id="editingId">
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="ClientID">Client ID</label>
+            <input id="ClientID" placeholder="CLI-0001">
+          </div>
+          <div class="field">
+            <label for="Organization">Organization</label>
+            <input id="Organization" placeholder="Organization name">
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="Contact">Contact</label>
+            <input id="Contact" placeholder="Primary contact">
+          </div>
+          <div class="field">
+            <label for="Email">Email</label>
+            <input id="Email" type="email" placeholder="contact@example.com">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="Phone">Phone</label>
+          <input id="Phone" placeholder="Phone number">
+        </div>
+
+        <div class="field">
+          <label for="Notes">Notes</label>
+          <textarea id="Notes" rows="5" placeholder="Relationship notes, preferences, context, follow-up items"></textarea>
+        </div>
+
+        <div class="actions">
+          <button class="button" onclick="saveClient()">Save Client</button>
+          <button class="button secondary" onclick="resetForm()">Clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h2>Client List</h2>
+          <input id="search" placeholder="Search clients..." style="max-width:260px;" oninput="renderClients()">
+        </div>
+        <div id="clientsList" class="list-grid"></div>
+        <p id="emptyMsg" class="muted small">No clients yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="no-print">Jeff Jones Consulting Admin Console</footer>
+
+  <script src="../assets/js/branding.js"></script>
+  <script src="../assets/js/googleSheets.js"></script>
+  <script>
+    const CLIENTS_KEY = "jjc_clients";
+    let clients = [];
+
+    function loadClients() {
+      clients = JSON.parse(localStorage.getItem(CLIENTS_KEY) || "[]");
+    }
+
+    function persistClients() {
+      localStorage.setItem(CLIENTS_KEY, JSON.stringify(clients));
+    }
+
+    function nextClientId() {
+      const max = clients
+        .map(c => String(c.ClientID || "").match(/^CLI-(\d+)$/))
+        .filter(Boolean)
+        .map(m => Number(m[1]))
+        .reduce((a,b) => Math.max(a,b), 0);
+      return "CLI-" + String(max + 1).padStart(4, "0");
+    }
+
+    function resetForm() {
+      document.getElementById("editingId").value = "";
+      document.getElementById("ClientID").value = nextClientId();
+      ["Organization", "Contact", "Email", "Phone", "Notes"].forEach(id => document.getElementById(id).value = "");
+    }
+
+    function getFormData() {
+      return {
+        ClientID: document.getElementById("ClientID").value.trim(),
+        Organization: document.getElementById("Organization").value.trim(),
+        Contact: document.getElementById("Contact").value.trim(),
+        Email: document.getElementById("Email").value.trim(),
+        Phone: document.getElementById("Phone").value.trim(),
+        Notes: document.getElementById("Notes").value.trim()
+      };
+    }
+
+    function saveClient() {
+      const data = getFormData();
+      if (!data.ClientID || !data.Organization) {
+        alert("ClientID and Organization are required.");
+        return;
+      }
+
+      const existingIndex = clients.findIndex(c => c.ClientID === data.ClientID);
+      if (existingIndex >= 0) clients[existingIndex] = data;
+      else clients.unshift(data);
+
+      persistClients();
+      sendClientToSheet(data);
+      renderClients();
+      resetForm();
+      toast("Client saved locally and sent to Google Sheets.");
+    }
+
+    function sendClientToSheet(client) {
+      try {
+        fetch(Database.apiUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "saveClient", data: client })
+        });
+      } catch (e) {
+        console.warn("Could not send client to sheet.", e);
+      }
+    }
+
+    function editClient(id) {
+      const c = clients.find(x => x.ClientID === id);
+      if (!c) return;
+      document.getElementById("editingId").value = id;
+      ["ClientID", "Organization", "Contact", "Email", "Phone", "Notes"].forEach(key => {
+        document.getElementById(key).value = c[key] || "";
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function deleteClient(id) {
+      if (!confirm("Delete this local client record? This will not delete rows already sent to Google Sheets.")) return;
+      clients = clients.filter(c => c.ClientID !== id);
+      persistClients();
+      renderClients();
+      toast("Client deleted locally.");
+    }
+
+    function renderClients() {
+      const q = document.getElementById("search").value.toLowerCase();
+      const wrap = document.getElementById("clientsList");
+      const filtered = clients.filter(c => Object.values(c).join(" ").toLowerCase().includes(q));
+      wrap.innerHTML = "";
+      document.getElementById("emptyMsg").classList.toggle("hidden", filtered.length > 0);
+
+      filtered.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "record-card";
+        div.innerHTML = `
+          <div class="record-title">${escapeHtml(c.Organization)}</div>
+          <div class="tiny muted">${escapeHtml(c.ClientID)} • ${escapeHtml(c.Contact || "No contact")}</div>
+          <div class="tiny muted">${escapeHtml(c.Email || "")}</div>
+          <div class="actions">
+            <button class="button secondary small-btn" onclick="editClient('${escapeHtml(c.ClientID)}')">Edit</button>
+            <button class="button danger small-btn" onclick="deleteClient('${escapeHtml(c.ClientID)}')">Delete</button>
+          </div>
+        `;
+        wrap.appendChild(div);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+    }
+
+    function toast(msg) {
+      const t = document.createElement("div");
+      t.className = "toast";
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2600);
+    }
+
+    window.addEventListener("load", () => {
+      JJC_applyBranding("admin");
+      loadClients();
+      resetForm();
+      renderClients();
+    });
+  </script>
+</body>
+</html>
