@@ -12,17 +12,24 @@ window.Database = {
     // Generic GET
     //--------------------------------------------------
 
-    async get(action) {
+async get(action) {
+    const url = `${this.apiUrl}?action=${action}&_=${Date.now()}`;
 
-        const response = await fetch(`${this.apiUrl}?action=${action}`);
+    const response = await fetch(url, {
+        method: "GET",
+        cache: "no-store"
+    });
 
-        if (!response.ok) {
-            throw new Error(`Unable to load ${action}.`);
-        }
+    if (!response.ok) {
+        throw new Error(`Unable to load ${action}. Status: ${response.status}`);
+    }
 
-        return await response.json();
+    const data = await response.json();
 
-    },
+    console.log(`Loaded ${action} from Google Sheets:`, data);
+
+    return data;
+},
 
     //--------------------------------------------------
     // Rates
