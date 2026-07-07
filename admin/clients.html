@@ -106,9 +106,22 @@
     const CLIENTS_KEY = "jjc_clients";
     let clients = [];
 
-    function loadClients() {
-      clients = JSON.parse(localStorage.getItem(CLIENTS_KEY) || "[]");
+async function loadClients() {
+  try {
+    clients = await Database.getClients();
+
+    if (!Array.isArray(clients)) {
+      clients = [];
     }
+
+    localStorage.setItem(CLIENTS_KEY, JSON.stringify(clients));
+
+  } catch (err) {
+    console.warn("Unable to load clients from Google Sheets.", err);
+
+    clients = JSON.parse(localStorage.getItem(CLIENTS_KEY) || "[]");
+  }
+}
 
     function persistClients() {
       localStorage.setItem(CLIENTS_KEY, JSON.stringify(clients));
@@ -224,12 +237,12 @@
       setTimeout(() => t.remove(), 2600);
     }
 
-    window.addEventListener("load", () => {
-      JJC_applyBranding("admin");
-      loadClients();
-      resetForm();
-      renderClients();
-    });
+window.addEventListener("load", async () => {
+  JJC_applyBranding("admin");
+  await loadClients();
+  resetForm();
+  renderClients();
+});
   </script>
 </body>
 </html>
