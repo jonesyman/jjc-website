@@ -1,587 +1,26 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>JJC Admin | Estimates & Invoices</title>
-  <meta name="description" content="Private Jeff Jones Consulting estimate and invoice console." />
-  <style>
-    :root {
-      --brand: #263860;
-      --brand-2: #344b7d;
-      --ink: #f8fafc;
-      --muted: #94a3b8;
-      --muted-2: #64748b;
-      --line: #243247;
-      --panel: #0f172a;
-      --panel-2: #111c31;
-      --panel-3: #17233a;
-      --bg: #070b13;
-      --white: #ffffff;
-      --good: #34d399;
-      --warn: #fbbf24;
-      --bad: #fb7185;
-      --radius: 22px;
-    }
 
-    * { box-sizing: border-box; }
+  <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" href="../assets/images/apple-touch-icon.png">
+  <link rel="manifest" href="../assets/images/site.webmanifest">
 
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background:
-        radial-gradient(circle at top right, rgba(38,56,96,.42), transparent 34%),
-        radial-gradient(circle at bottom left, rgba(38,56,96,.22), transparent 30%),
-        var(--bg);
-      color: var(--ink);
-      line-height: 1.55;
-      min-height: 100vh;
-    }
-
-    a { color: inherit; }
-    button, input, select, textarea { font: inherit; }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      background: rgba(7,11,19,.92);
-      border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(10px);
-    }
-
-    .topbar {
-      min-height: 72px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-    }
-
-    .brand-block {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-.logo-mark {
-    width: 52px;
-    height: 52px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-    .brand-title {
-      font-weight: 900;
-      letter-spacing: -.02em;
-      font-size: 18px;
-      margin: 0;
-    }
-
-    .brand-subtitle {
-      margin: 2px 0 0;
-      color: var(--muted);
-      font-size: 11px;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border: 1px solid rgba(52,211,153,.28);
-      color: var(--good);
-      background: rgba(52,211,153,.08);
-      border-radius: 999px;
-      padding: 7px 11px;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: var(--good);
-    }
-
-    .hero {
-      padding: 34px 0 24px;
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap: 22px;
-      align-items: stretch;
-    }
-
-    .eyebrow {
-      display: inline-block;
-      color: #cbd5e1;
-      background: rgba(38,56,96,.42);
-      border: 1px solid rgba(148,163,184,.16);
-      padding: 7px 11px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 900;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      margin-bottom: 14px;
-    }
-    
-
-    h1 {
-      font-size: clamp(32px, 5vw, 54px);
-      line-height: 1.04;
-      letter-spacing: -1.8px;
-      margin: 0;
-    }
-
-    h2 {
-      font-size: 20px;
-      letter-spacing: -.4px;
-      margin: 0;
-    }
-
-    h3 {
-      margin: 0 0 12px;
-      font-size: 15px;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      color: #cbd5e1;
-    }
-
-    p { margin: 0 0 12px; }
-    .muted { color: var(--muted); }
-    .small { font-size: 13px; }
-    .tiny { font-size: 12px; }
-
-    .card {
-      background: linear-gradient(180deg, rgba(17,28,49,.96), rgba(15,23,42,.96));
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 22px;
-      box-shadow: 0 18px 55px rgba(0,0,0,.22);
-    }
-
-    .card-soft {
-      background: rgba(15,23,42,.78);
-      border: 1px solid rgba(148,163,184,.13);
-      border-radius: 18px;
-      padding: 18px;
-    }
-
-    .section-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid var(--line);
-      margin-bottom: 18px;
-    }
-
-    .grid {
-      display: grid;
-      gap: 22px;
-    }
-
-    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .workspace { grid-template-columns: .92fr 1.08fr; }
-
-    label {
-      display: block;
-      margin-bottom: 7px;
-      color: #cbd5e1;
-      font-weight: 800;
-      font-size: 12px;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      color: var(--ink);
-      background: #0a1221;
-      border: 1px solid #2b3b55;
-      border-radius: 13px;
-      padding: 11px 12px;
-      outline: none;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: #7890c7;
-      box-shadow: 0 0 0 3px rgba(38,56,96,.35);
-    }
-
-    input[type="range"] {
-      accent-color: var(--brand-2);
-      padding: 0;
-    }
-
-    .field { margin-bottom: 15px; }
-
-    .button {
-      border: 1px solid rgba(255,255,255,.14);
-      border-radius: 999px;
-      padding: 12px 16px;
-      color: white;
-      background: var(--brand);
-      font-weight: 900;
-      cursor: pointer;
-      transition: .18s ease;
-      text-decoration: none;
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .button:hover { transform: translateY(-1px); background: var(--brand-2); }
-    .button.secondary { background: #111827; color: #cbd5e1; }
-    .button.ghost { background: transparent; color: #cbd5e1; }
-    .button.danger { background: rgba(251,113,133,.12); color: #fecdd3; border-color: rgba(251,113,133,.28); }
-    .button.small-btn { padding: 8px 11px; font-size: 12px; }
-
-    .radio-stack { display: grid; gap: 9px; }
-
-    .radio-card {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border: 1px solid #2b3b55;
-      background: #0a1221;
-      border-radius: 14px;
-      padding: 11px 12px;
-      cursor: pointer;
-      color: #dbe5f4;
-    }
-
-    .radio-card input { width: auto; }
-
-    .duration-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .duration-grid label {
-      border: 1px solid #2b3b55;
-      background: #0a1221;
-      border-radius: 13px;
-      padding: 11px 8px;
-      text-align: center;
-      cursor: pointer;
-      margin: 0;
-      color: #dbe5f4;
-    }
-
-    .duration-grid input { display: none; }
-    .duration-grid label:has(input:checked) {
-      border-color: #7890c7;
-      background: rgba(38,56,96,.42);
-      color: white;
-    }
-
-    .estimate-box {
-      border: 1px solid rgba(120,144,199,.22);
-      background: rgba(38,56,96,.18);
-      border-radius: 20px;
-      padding: 18px;
-    }
-
-    .estimate-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 18px;
-      padding: 8px 0;
-      color: #cbd5e1;
-      border-bottom: 1px solid rgba(148,163,184,.10);
-    }
-
-    .estimate-row:last-child { border-bottom: 0; }
-
-    .total-row {
-      margin-top: 10px;
-      padding-top: 16px;
-      border-top: 2px solid rgba(120,144,199,.30);
-      display: flex;
-      justify-content: space-between;
-      align-items: end;
-      gap: 18px;
-      font-weight: 900;
-      font-size: 17px;
-    }
-
-    .total-row span:last-child {
-      color: #b9c8ef;
-      font-size: 28px;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      border-bottom: 1px solid var(--line);
-      margin-bottom: 18px;
-    }
-
-    .tab {
-      background: transparent;
-      color: var(--muted);
-      border: none;
-      border-bottom: 3px solid transparent;
-      padding: 12px 13px;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .tab.active {
-      color: #c7d2fe;
-      border-bottom-color: #7890c7;
-    }
-
-    .list-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .record-card {
-      background: #0a1221;
-      border: 1px solid #2b3b55;
-      border-radius: 17px;
-      padding: 15px;
-    }
-
-    .record-title {
-      font-weight: 900;
-      margin-bottom: 4px;
-    }
-
-    .record-total {
-      color: #b9c8ef;
-      font-weight: 900;
-      margin-top: 10px;
-      font-size: 18px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 13px;
-      flex-wrap: wrap;
-    }
-
-    .hidden { display: none !important; }
-
-    .modal {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      background: rgba(2,6,23,.82);
-      backdrop-filter: blur(8px);
-      display: grid;
-      place-items: center;
-      padding: 20px;
-    }
-
-    .modal-panel {
-      width: min(560px, 100%);
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 22px;
-      box-shadow: 0 22px 80px rgba(0,0,0,.45);
-    }
-
-    .toast {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      z-index: 70;
-      background: var(--brand);
-      color: white;
-      border: 1px solid rgba(255,255,255,.16);
-      border-radius: 16px;
-      padding: 13px 15px;
-      font-weight: 900;
-      box-shadow: 0 18px 50px rgba(0,0,0,.35);
-    }
-
-    footer {
-      padding: 28px 0 38px;
-      color: var(--muted-2);
-      text-align: center;
-      font-size: 12px;
-    }
-
-    .print-view {
-      position: fixed;
-      inset: 0;
-      z-index: 60;
-      overflow: auto;
-      background: #e5e7eb;
-      color: #111827;
-      padding: 24px;
-    }
-
-    .print-toolbar {
-      max-width: 900px;
-      margin: 0 auto 16px;
-      background: white;
-      border-radius: 15px;
-      padding: 12px;
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.09);
-    }
-
-    .invoice-sheet {
-      max-width: 900px;
-      min-height: 1080px;
-      margin: 0 auto;
-      background: white;
-      padding: 54px;
-      box-shadow: 0 22px 70px rgba(0,0,0,.18);
-    }
-
-    .invoice-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 28px;
-      border-bottom: 3px solid var(--brand);
-      padding-bottom: 22px;
-      margin-bottom: 26px;
-    }
-
-    .invoice-logo {
-      width: 54px;
-      height: 54px;
-      border-radius: 17px;
-      background: var(--brand);
-      color: white;
-      display: grid;
-      place-items: center;
-      font-weight: 900;
-      font-size: 18px;
-      margin-bottom: 10px;
-    }
-    .invoice-logo-img {
-  width: 64px;
-  height: 64px;
-  object-fit: contain;
-  margin-bottom: 10px;
-}
-
-    .invoice-title {
-      font-size: 31px;
-      font-weight: 900;
-      color: var(--brand);
-      margin: 0;
-    }
-
-    .invoice-meta {
-      text-align: right;
-      color: #475569;
-      font-size: 13px;
-    }
-
-    .invoice-parties {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 28px;
-      margin-bottom: 30px;
-    }
-
-    .invoice-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .14em;
-      color: #64748b;
-      font-weight: 900;
-      margin-bottom: 7px;
-    }
-
-    .invoice-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 26px 0;
-      font-size: 13px;
-    }
-
-    .invoice-table th {
-      background: var(--brand);
-      color: white;
-      text-align: left;
-      padding: 11px;
-    }
-
-    .invoice-table td {
-      border-bottom: 1px solid #e2e8f0;
-      padding: 11px;
-      vertical-align: top;
-    }
-
-    .invoice-table th:nth-child(2), .invoice-table th:nth-child(3), .invoice-table th:nth-child(4),
-    .invoice-table td:nth-child(2), .invoice-table td:nth-child(3), .invoice-table td:nth-child(4) {
-      text-align: right;
-    }
-
-    .invoice-totals {
-      margin-left: auto;
-      width: min(360px, 100%);
-      font-size: 14px;
-    }
-
-    .invoice-totals .line {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .invoice-totals .grand {
-      color: var(--brand);
-      font-size: 18px;
-      font-weight: 900;
-      border-bottom: 0;
-      border-top: 3px solid var(--brand);
-      margin-top: 8px;
-      padding-top: 12px;
-    }
-
-    @media print {
-      body { background: white !important; }
-      header, main, footer, .print-toolbar, .no-print { display: none !important; }
-      .print-view { position: static; padding: 0; background: white; }
-      .invoice-sheet { box-shadow: none; max-width: 100%; min-height: 0; padding: 0; }
-    }
-
-    @media (max-width: 900px) {
-      .hero-grid, .workspace, .grid-2, .grid-3, .list-grid, .invoice-parties { grid-template-columns: 1fr; }
-      .topbar { align-items: flex-start; flex-direction: column; padding: 14px 0; }
-      .duration-grid { grid-template-columns: 1fr; }
-      .invoice-header { flex-direction: column; }
-      .invoice-meta { text-align: left; }
-      .invoice-sheet { padding: 28px; }
-    }
-  </style>
+  <link rel="stylesheet" href="../assets/css/admin.css">
 </head>
+
 <body>
   <header class="no-print">
     <div class="container topbar">
       <div class="brand-block">
-        <img src="../JJC_Logo.png" alt="Jeff Jones Consulting Logo" class="logo-mark">
+        <img data-brand-logo class="site-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting logo">
         <div>
-          <p class="brand-title">Jeff Jones Consulting</p>
+          <p class="brand-title" data-brand-company>Jeff Jones Consulting</p>
           <p class="brand-subtitle">Private estimate & invoice console</p>
         </div>
       </div>
@@ -591,132 +30,76 @@
 
   <main class="container no-print">
     <section class="hero">
-      <div class="hero-grid">
-        <div class="card">
-          <span class="eyebrow">Admin Workspace</span>
-          <h1>Estimates, invoices, and Working Genius pricing in one private console.</h1>
-          <p class="muted" style="margin-top:18px;">This version keeps your dark workspace, removes the unfinished cloud sync center, preserves your rate structure, and uses the same core brand color as the public site.</p>
-        </div>
-        <div class="card">
-          <div class="section-title">
-            <h2>Current Pricing Snapshot</h2>
-            <button class="button ghost small-btn" onclick="resetDefaults()">Reset</button>
-          </div>
-          <div class="estimate-row"><span>Corporate hourly</span><strong id="snapFpHourly">$300</strong></div>
-          <div class="estimate-row"><span>Nonprofit hourly</span><strong id="snapNpHourly">$100</strong></div>
-          <div class="estimate-row"><span>Corporate assessment</span><strong id="snapFpAdmin">$25/person</strong></div>
-          <div class="estimate-row"><span>Nonprofit assessment</span><strong id="snapNpAdmin">$20/person</strong></div>
-          <div class="estimate-row"><span>Individual debrief</span><strong id="snapIndiv">$100</strong></div>
-        </div>
+      <div class="card">
+        <span class="eyebrow">Admin Workspace</span>
+        <h1>Estimates, invoices, and Working Genius pricing in one private console.</h1>
+        <p class="muted">Rates load from Google Sheets. Estimates and invoices save locally and also send rows to your spreadsheet.</p>
       </div>
     </section>
 
     <section class="grid workspace" style="margin-bottom:22px;">
       <div class="grid">
         <div class="card">
-          <div class="section-title">
-            <h2>Billing Profile</h2>
-            <span class="tiny muted">Used on invoices</span>
-          </div>
-          <div class="field">
-            <label for="senderName">Company / Consultant Name</label>
-            <input id="senderName" type="text" oninput="saveState()" />
-          </div>
+          <div class="section-title"><h2>Billing Profile</h2><span class="tiny muted">Used on invoices</span></div>
+          <div class="field"><label>Company / Consultant Name</label><input id="senderName" type="text"></div>
           <div class="grid grid-2">
-            <div class="field">
-              <label for="senderEmail">Billing Email</label>
-              <input id="senderEmail" type="email" oninput="saveState()" />
-            </div>
-            <div class="field">
-              <label for="senderPhone">Contact Phone</label>
-              <input id="senderPhone" type="text" oninput="saveState()" />
-            </div>
+            <div class="field"><label>Billing Email</label><input id="senderEmail" type="email"></div>
+            <div class="field"><label>Contact Phone</label><input id="senderPhone" type="text"></div>
           </div>
-          <div class="field">
-            <label for="senderAddress">Mailing Address</label>
-            <textarea id="senderAddress" rows="3" oninput="saveState()"></textarea>
-          </div>
+          <div class="field"><label>Mailing Address</label><textarea id="senderAddress" rows="3"></textarea></div>
         </div>
 
         <div class="card">
-          <div class="section-title">
-            <h2>Rates & Default Fees</h2>
-            <span class="tiny muted">Private admin values</span>
-          </div>
-
-          <h3>Corporate / For-Profit</h3>
+          <div class="section-title"><h2>Rates from Google Sheets</h2><span class="tiny muted">Loaded on page open</span></div>
           <div class="grid grid-3">
-            <div class="field"><label>Hourly</label><input id="rateFpHourly" type="number" min="0" oninput="recalculateAndSave()" /></div>
-            <div class="field"><label>Prep Fee / 12p</label><input id="rateFpPrep" type="number" min="0" oninput="recalculateAndSave()" /></div>
-            <div class="field"><label>Assessment / Person</label><input id="rateFpAdmin" type="number" min="0" oninput="recalculateAndSave()" /></div>
+            <div class="field"><label>Corporate Hourly</label><input id="rateFpHourly" type="number" readonly></div>
+            <div class="field"><label>Corporate Prep / 12p</label><input id="rateFpPrep" type="number" readonly></div>
+            <div class="field"><label>Corporate Assessment</label><input id="rateFpAdmin" type="number" readonly></div>
+            <div class="field"><label>Nonprofit Hourly</label><input id="rateNpHourly" type="number" readonly></div>
+            <div class="field"><label>Nonprofit Prep / 12p</label><input id="rateNpPrep" type="number" readonly></div>
+            <div class="field"><label>Nonprofit Assessment</label><input id="rateNpAdmin" type="number" readonly></div>
           </div>
-
-          <h3>Nonprofit / Government</h3>
-          <div class="grid grid-3">
-            <div class="field"><label>Hourly</label><input id="rateNpHourly" type="number" min="0" oninput="recalculateAndSave()" /></div>
-            <div class="field"><label>Prep Fee / 12p</label><input id="rateNpPrep" type="number" min="0" oninput="recalculateAndSave()" /></div>
-            <div class="field"><label>Assessment / Person</label><input id="rateNpAdmin" type="number" min="0" oninput="recalculateAndSave()" /></div>
-          </div>
-
-          <h3>Individual Package</h3>
-          <div class="field"><label>Individual Debrief Flat Fee</label><input id="rateIndivFlat" type="number" min="0" oninput="recalculateAndSave()" /></div>
+          <div class="field"><label>Individual Debrief</label><input id="rateIndivFlat" type="number" readonly></div>
+          <p class="muted small">To change public/admin rates, edit the Rates tab in Google Sheets.</p>
         </div>
       </div>
 
       <div class="grid">
         <div class="card">
-          <div class="section-title">
-            <h2>Interactive Cost Calculator</h2>
-            <span class="tiny muted">Client-facing rate is locked</span>
-          </div>
+          <div class="section-title"><h2>Interactive Cost Calculator</h2><span class="tiny muted">Uses shared rates</span></div>
 
           <div class="grid grid-2">
             <div>
               <label>Organization Type</label>
               <div class="radio-stack">
-                <label class="radio-card"><input type="radio" name="orgType" value="for_profit" checked onchange="onTypeChange()"> Corporate / For-Profit</label>
-                <label class="radio-card"><input type="radio" name="orgType" value="non_profit" onchange="onTypeChange()"> Nonprofit / Government</label>
-                <label class="radio-card"><input type="radio" name="orgType" value="individual_debrief" onchange="onTypeChange()"> Individual Debrief</label>
+                <label class="radio-card"><input type="radio" name="orgType" value="for_profit" checked> Corporate / For-Profit</label>
+                <label class="radio-card"><input type="radio" name="orgType" value="non_profit"> Nonprofit / Government</label>
+                <label class="radio-card"><input type="radio" name="orgType" value="individual_debrief"> Individual Debrief</label>
               </div>
             </div>
-
             <div>
-              <div id="participantsWrap" class="field">
-                <div style="display:flex; justify-content:space-between;">
-                  <label for="participants">Participants</label>
-                  <strong id="participantsVal">12</strong>
-                </div>
-                <input id="participants" type="range" min="3" max="60" value="12" oninput="updateParticipants()" />
-              </div>
-
+              <div id="participantsWrap" class="field"><label>Participants</label><input id="participants" type="number" min="1" value="12"></div>
               <div id="hoursWrap" class="field">
                 <label>Consulting Duration</label>
                 <div class="duration-grid">
-                  <label><input type="radio" name="hours" value="2" onchange="recalculateAndSave()">2 Hours</label>
-                  <label><input type="radio" name="hours" value="3" checked onchange="recalculateAndSave()">3 Hours</label>
-                  <label><input type="radio" name="hours" value="4" onchange="recalculateAndSave()">4 Hours</label>
+                  <label><input type="radio" name="hours" value="2">2 Hours</label>
+                  <label><input type="radio" name="hours" value="3" checked>3 Hours</label>
+                  <label><input type="radio" name="hours" value="4">4 Hours</label>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="card-soft" style="margin-top:16px;">
-            <h3>Discount Overrides</h3>
-            <div class="grid grid-3">
-              <div class="field"><label>Consulting Discount</label><input id="consultingDiscount" type="number" min="0" placeholder="0" oninput="recalculateAndSave()" /></div>
-              <div class="field" id="prepDiscountWrap"><label>Prep Fee Discount</label><input id="prepDiscount" type="number" min="0" placeholder="0" oninput="recalculateAndSave()" /></div>
-              <div class="field" id="assessmentDiscountWrap"><label>Assessment Discount</label><input id="assessmentDiscount" type="number" min="0" placeholder="0" oninput="recalculateAndSave()" /></div>
-            </div>
+          <div class="grid grid-3">
+            <div class="field"><label>Consulting Discount</label><input id="consultingDiscount" type="number" min="0" placeholder="0"></div>
+            <div class="field" id="prepDiscountWrap"><label>Prep Fee Discount</label><input id="prepDiscount" type="number" min="0" placeholder="0"></div>
+            <div class="field" id="assessmentDiscountWrap"><label>Assessment Discount</label><input id="assessmentDiscount" type="number" min="0" placeholder="0"></div>
           </div>
 
-          <div class="estimate-box" style="margin-top:16px;">
-            <div style="display:flex; justify-content:space-between; gap:14px; margin-bottom:8px;">
-              <h2>Fee Estimate Summary</h2>
-              <span class="eyebrow" id="outputTypeTag" style="margin:0;">Corporate</span>
-            </div>
-            <div class="estimate-row"><span>Working Genius consulting / facilitation</span><strong id="feeConsulting">$0.00</strong></div>
-            <div class="estimate-row" id="feePrepRow"><span>Comprehensive materials prep fee</span><strong id="feePrep">$0.00</strong></div>
-            <div class="estimate-row" id="feeAdminRow"><span>Attendee assessment fee</span><strong id="feeAdmin">$0.00</strong></div>
+          <div class="estimate-box">
+            <div class="estimate-row"><span>Consulting / facilitation</span><strong id="feeConsulting">$0.00</strong></div>
+            <div class="estimate-row" id="feePrepRow"><span>Preparation fee</span><strong id="feePrep">$0.00</strong></div>
+            <div class="estimate-row" id="feeAdminRow"><span>Assessment/admin fee</span><strong id="feeAdmin">$0.00</strong></div>
             <div class="total-row"><span>Total Fee Estimate</span><span id="grandTotalVal">$0.00</span></div>
           </div>
 
@@ -733,57 +116,37 @@
         <button id="tabScenariosBtn" class="tab active" onclick="switchTab('scenarios')">Saved Estimates</button>
         <button id="tabInvoicesBtn" class="tab" onclick="switchTab('invoices')">Invoices</button>
       </div>
-
-      <div id="tabScenarios">
-        <div id="scenariosList" class="list-grid"></div>
-        <p id="noScenariosMsg" class="muted small">No saved estimate scenarios yet.</p>
-      </div>
-
-      <div id="tabInvoices" class="hidden">
-        <div id="invoicesList" class="list-grid"></div>
-        <p id="noInvoicesMsg" class="muted small">No invoices yet.</p>
-      </div>
+      <div id="tabScenarios"><div id="scenariosList" class="list-grid"></div><p id="noScenariosMsg" class="muted small">No saved estimate scenarios yet.</p></div>
+      <div id="tabInvoices" class="hidden"><div id="invoicesList" class="list-grid"></div><p id="noInvoicesMsg" class="muted small">No invoices yet.</p></div>
     </section>
   </main>
 
   <div id="invoiceModal" class="modal hidden no-print">
     <div class="modal-panel">
-      <div class="section-title">
-        <h2>Create Invoice</h2>
-        <button class="button ghost small-btn" onclick="closeInvoiceModal()">Close</button>
-      </div>
-
+      <div class="section-title"><h2>Create Invoice</h2><button class="button ghost small-btn" onclick="closeInvoiceModal()">Close</button></div>
       <div class="grid grid-2">
-        <div class="field"><label for="invNo">Invoice Number</label><input id="invNo" type="text"></div>
-        <div class="field"><label for="invTerms">Terms</label><select id="invTerms"><option>Due on Receipt</option><option>Net 15</option><option selected>Net 30</option><option>Net 45</option></select></div>
+        <div class="field"><label>Invoice Number</label><input id="invNo" type="text"></div>
+        <div class="field"><label>Terms</label><select id="invTerms"><option>Due on Receipt</option><option>Net 15</option><option selected>Net 30</option><option>Net 45</option></select></div>
       </div>
-      <div class="field"><label for="invClientName">Client Business / Contact Name</label><input id="invClientName" type="text" placeholder="Client or organization name"></div>
-      <div class="field"><label for="invClientEmail">Client Email</label><input id="invClientEmail" type="email" placeholder="client@example.com"></div>
+      <div class="field"><label>Client Business / Contact Name</label><input id="invClientName" type="text"></div>
+      <div class="field"><label>Client Email</label><input id="invClientEmail" type="email"></div>
       <div class="grid grid-2">
-        <div class="field"><label for="invIssueDate">Issue Date</label><input id="invIssueDate" type="date"></div>
-        <div class="field"><label for="invDueDate">Due Date</label><input id="invDueDate" type="date"></div>
+        <div class="field"><label>Issue Date</label><input id="invIssueDate" type="date"></div>
+        <div class="field"><label>Due Date</label><input id="invDueDate" type="date"></div>
       </div>
-
-      <div class="actions">
-        <button class="button secondary" onclick="closeInvoiceModal()">Cancel</button>
-        <button class="button" onclick="createInvoice()">Prepare Invoice</button>
-      </div>
+      <div class="actions"><button class="button secondary" onclick="closeInvoiceModal()">Cancel</button><button class="button" onclick="createInvoice()">Prepare Invoice</button></div>
     </div>
   </div>
 
   <div id="printView" class="print-view hidden">
     <div class="print-toolbar no-print">
       <strong>Printable invoice preview</strong>
-      <div class="actions" style="margin:0;">
-        <button class="button secondary small-btn" onclick="closePrintView()">Close</button>
-        <button class="button small-btn" onclick="window.print()">Print / Save PDF</button>
-      </div>
+      <div class="actions" style="margin:0;"><button class="button secondary small-btn" onclick="closePrintView()">Close</button><button class="button small-btn" onclick="window.print()">Print / Save PDF</button></div>
     </div>
-
     <div class="invoice-sheet">
       <div class="invoice-header">
         <div>
-          <img src="../JJC_Logo.png" alt="Jeff Jones Consulting logo" class="invoice-logo-img">
+          <img data-brand-logo class="invoice-logo-img" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting logo">
           <h2 style="color:#111827; margin:0;" id="printSenderName">Jeff Jones Consulting</h2>
           <div style="color:#64748b; font-size:13px;">Working Genius Facilitation & Consulting</div>
         </div>
@@ -795,286 +158,112 @@
           <div>Terms: <strong id="printTerms">-</strong></div>
         </div>
       </div>
-
       <div class="invoice-parties">
-        <div>
-          <div class="invoice-label">Prepared By</div>
-          <strong id="printPreparedBy">Jeff Jones Consulting</strong>
-          <div id="printAddress" style="white-space:pre-wrap; color:#475569; margin-top:6px;"></div>
-          <div style="color:#475569; margin-top:6px;"><span id="printEmail"></span> • <span id="printPhone"></span></div>
-        </div>
-        <div>
-          <div class="invoice-label">Billed To</div>
-          <strong id="printClientName">-</strong>
-          <div id="printClientEmail" style="color:#475569; margin-top:6px;">-</div>
-        </div>
+        <div><div class="invoice-label">Prepared By</div><strong id="printPreparedBy">Jeff Jones Consulting</strong><div id="printAddress" style="white-space:pre-wrap; color:#475569; margin-top:6px;"></div><div style="color:#475569; margin-top:6px;"><span id="printEmail"></span> • <span id="printPhone"></span></div></div>
+        <div><div class="invoice-label">Billed To</div><strong id="printClientName">-</strong><div id="printClientEmail" style="color:#475569; margin-top:6px;">-</div></div>
       </div>
-
-      <table class="invoice-table">
-        <thead>
-          <tr>
-            <th>Service Description</th>
-            <th>Qty</th>
-            <th>Rate</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody id="printTableBody"></tbody>
-      </table>
-
-      <div class="invoice-totals">
-        <div class="line"><span>Subtotal</span><strong id="printSubtotal">$0.00</strong></div>
-        <div class="line" id="printDiscountLine"><span>Discounts</span><strong id="printDiscount">-$0.00</strong></div>
-        <div class="line grand"><span>Total Due</span><span id="printGrandTotal">$0.00</span></div>
-      </div>
-
-      <div style="border-top:1px solid #e2e8f0; margin-top:54px; padding-top:22px; color:#64748b; text-align:center; font-size:12px;">
-        Thank you for partnering with Jeff Jones Consulting. Please reach out with any questions about this invoice.
-      </div>
+      <table class="invoice-table"><thead><tr><th>Service Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody id="printTableBody"></tbody></table>
+      <div class="invoice-totals"><div class="line"><span>Subtotal</span><strong id="printSubtotal">$0.00</strong></div><div class="line" id="printDiscountLine"><span>Discounts</span><strong id="printDiscount">-$0.00</strong></div><div class="line grand"><span>Total Due</span><span id="printGrandTotal">$0.00</span></div></div>
     </div>
   </div>
 
-  <footer class="no-print">
-    Jeff Jones Consulting Admin Console • Data is stored locally in this browser unless we later add a real backend.
-  </footer>
+  <footer class="no-print">Jeff Jones Consulting Admin Console</footer>
 
+  <script src="../assets/js/branding.js"></script>
+  <script src="../assets/js/googleSheets.js"></script>
+  <script src="../assets/js/rates.js"></script>
+  <script src="../assets/js/estimates.js"></script>
+  <script src="../assets/js/invoices.js"></script>
   <script>
-    const STORAGE_KEY = "jjc_admin_console_v2";
-
-    const defaults = {
+    const profile = {
       senderName: "Jeff Jones Consulting",
       senderEmail: "jeff@jeffjonesconsulting.com",
-      senderPhone: "559-978-7598",
-      senderAddress: "",
-      rateFpHourly: 300,
-      rateFpPrep: 100,
-      rateFpAdmin: 25,
-      rateNpHourly: 100,
-      rateNpPrep: 50,
-      rateNpAdmin: 20,
-      rateIndivFlat: 100,
-      savedScenarios: [],
-      savedInvoices: []
+      senderPhone: "(559) 978-7598",
+      senderAddress: ""
     };
 
-    let state = { ...defaults };
-    let currentInvoice = null;
+    let savedScenarios = Estimates.loadLocal();
+    let savedInvoices = Invoices.loadLocal();
 
-    function money(n) {
-      return "$" + Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    function loadProfile() {
+      const p = JSON.parse(localStorage.getItem("jjc_profile") || "{}");
+      Object.assign(profile, p);
+      document.getElementById("senderName").value = profile.senderName;
+      document.getElementById("senderEmail").value = profile.senderEmail;
+      document.getElementById("senderPhone").value = profile.senderPhone;
+      document.getElementById("senderAddress").value = profile.senderAddress;
     }
 
-    function wholeMoney(n) {
-      return "$" + Number(n || 0).toLocaleString();
+    function saveProfile() {
+      profile.senderName = document.getElementById("senderName").value || "Jeff Jones Consulting";
+      profile.senderEmail = document.getElementById("senderEmail").value || "jeff@jeffjonesconsulting.com";
+      profile.senderPhone = document.getElementById("senderPhone").value || "(559) 978-7598";
+      profile.senderAddress = document.getElementById("senderAddress").value || "";
+      localStorage.setItem("jjc_profile", JSON.stringify(profile));
     }
 
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) state = { ...defaults, ...JSON.parse(raw) };
-      } catch (e) {
-        console.error(e);
-      }
+    function showRates() {
+      const r = window.JJC_RATES;
+      document.getElementById("rateFpHourly").value = r.CorporateHourly;
+      document.getElementById("rateFpPrep").value = r.CorporatePrep;
+      document.getElementById("rateFpAdmin").value = r.CorporateAssessment;
+      document.getElementById("rateNpHourly").value = r.NonprofitHourly;
+      document.getElementById("rateNpPrep").value = r.NonprofitPrep;
+      document.getElementById("rateNpAdmin").value = r.NonprofitAssessment;
+      document.getElementById("rateIndivFlat").value = r.IndividualDebrief;
     }
 
-    function saveState() {
-      state.senderName = document.getElementById("senderName").value || defaults.senderName;
-      state.senderEmail = document.getElementById("senderEmail").value || defaults.senderEmail;
-      state.senderPhone = document.getElementById("senderPhone").value || defaults.senderPhone;
-      state.senderAddress = document.getElementById("senderAddress").value || defaults.senderAddress;
-
-      state.rateFpHourly = Number(document.getElementById("rateFpHourly").value || defaults.rateFpHourly);
-      state.rateFpPrep = Number(document.getElementById("rateFpPrep").value || defaults.rateFpPrep);
-      state.rateFpAdmin = Number(document.getElementById("rateFpAdmin").value || defaults.rateFpAdmin);
-      state.rateNpHourly = Number(document.getElementById("rateNpHourly").value || defaults.rateNpHourly);
-      state.rateNpPrep = Number(document.getElementById("rateNpPrep").value || defaults.rateNpPrep);
-      state.rateNpAdmin = Number(document.getElementById("rateNpAdmin").value || defaults.rateNpAdmin);
-      state.rateIndivFlat = Number(document.getElementById("rateIndivFlat").value || defaults.rateIndivFlat);
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      updateSnapshot();
-    }
-
-    function initFields() {
-      document.getElementById("senderName").value = state.senderName;
-      document.getElementById("senderEmail").value = state.senderEmail;
-      document.getElementById("senderPhone").value = state.senderPhone;
-      document.getElementById("senderAddress").value = state.senderAddress;
-
-      document.getElementById("rateFpHourly").value = state.rateFpHourly;
-      document.getElementById("rateFpPrep").value = state.rateFpPrep;
-      document.getElementById("rateFpAdmin").value = state.rateFpAdmin;
-      document.getElementById("rateNpHourly").value = state.rateNpHourly;
-      document.getElementById("rateNpPrep").value = state.rateNpPrep;
-      document.getElementById("rateNpAdmin").value = state.rateNpAdmin;
-      document.getElementById("rateIndivFlat").value = state.rateIndivFlat;
-    }
-
-    function updateSnapshot() {
-      document.getElementById("snapFpHourly").textContent = wholeMoney(state.rateFpHourly);
-      document.getElementById("snapNpHourly").textContent = wholeMoney(state.rateNpHourly);
-      document.getElementById("snapFpAdmin").textContent = wholeMoney(state.rateFpAdmin) + "/person";
-      document.getElementById("snapNpAdmin").textContent = wholeMoney(state.rateNpAdmin) + "/person";
-      document.getElementById("snapIndiv").textContent = wholeMoney(state.rateIndivFlat);
-    }
-
-    function updateParticipants() {
-      document.getElementById("participantsVal").textContent = document.getElementById("participants").value;
-      recalculateAndSave();
-    }
-
-    function onTypeChange() {
-      const type = getType();
-      const disabled = type === "individual_debrief";
-
-      document.getElementById("participantsWrap").style.opacity = disabled ? ".38" : "1";
-      document.getElementById("hoursWrap").style.opacity = disabled ? ".38" : "1";
-      document.getElementById("prepDiscountWrap").style.opacity = disabled ? ".38" : "1";
-      document.getElementById("assessmentDiscountWrap").style.opacity = disabled ? ".38" : "1";
-
-      document.getElementById("outputTypeTag").textContent =
-        type === "for_profit" ? "Corporate" :
-        type === "non_profit" ? "Nonprofit" :
-        "Individual";
-
-      recalculateAndSave();
-    }
-
-    function getType() {
-      return document.querySelector('input[name="orgType"]:checked').value;
-    }
-
-    function getHours() {
-      return Number(document.querySelector('input[name="hours"]:checked').value);
-    }
-
-    function calc() {
-      const orgType = getType();
-      const isIndiv = orgType === "individual_debrief";
-      const participants = isIndiv ? 1 : Number(document.getElementById("participants").value || 0);
-      const hours = isIndiv ? 1 : getHours();
-
-      const consultingDiscount = Number(document.getElementById("consultingDiscount").value || 0);
-      const prepDiscount = isIndiv ? 0 : Number(document.getElementById("prepDiscount").value || 0);
-      const assessmentDiscount = isIndiv ? 0 : Number(document.getElementById("assessmentDiscount").value || 0);
-
-      const hourly = orgType === "for_profit" ? state.rateFpHourly : state.rateNpHourly;
-      const prepRate = orgType === "for_profit" ? state.rateFpPrep : state.rateNpPrep;
-      const assessmentRate = orgType === "for_profit" ? state.rateFpAdmin : state.rateNpAdmin;
-
-      const consultingGross = isIndiv ? state.rateIndivFlat : hourly * hours;
-      const prepGross = isIndiv ? 0 : Math.ceil(participants / 12) * prepRate;
-      const assessmentGross = isIndiv ? 0 : participants * assessmentRate;
-
-      const consultingNet = Math.max(0, consultingGross - consultingDiscount);
-      const prepNet = Math.max(0, prepGross - prepDiscount);
-      const assessmentNet = Math.max(0, assessmentGross - assessmentDiscount);
-
-      const subtotal = consultingGross + prepGross + assessmentGross;
-      const discounts = (consultingGross - consultingNet) + (prepGross - prepNet) + (assessmentGross - assessmentNet);
-      const total = consultingNet + prepNet + assessmentNet;
-
+    function getCalcInput() {
       return {
-        orgType, isIndiv, participants, hours,
-        hourly, prepRate, assessmentRate,
-        consultingGross, prepGross, assessmentGross,
-        consultingDiscount, prepDiscount, assessmentDiscount,
-        consultingNet, prepNet, assessmentNet,
-        subtotal, discounts, total
+        orgType: document.querySelector('input[name="orgType"]:checked').value,
+        participants: document.getElementById("participants").value,
+        hours: document.querySelector('input[name="hours"]:checked').value,
+        discounts: {
+          consulting: document.getElementById("consultingDiscount").value,
+          prep: document.getElementById("prepDiscount").value,
+          assessment: document.getElementById("assessmentDiscount").value
+        }
       };
     }
 
     function recalculate() {
-      const c = calc();
-      document.getElementById("feeConsulting").textContent = money(c.consultingNet);
-      document.getElementById("feePrep").textContent = money(c.prepNet);
-      document.getElementById("feeAdmin").textContent = money(c.assessmentNet);
-      document.getElementById("grandTotalVal").textContent = money(c.total);
-
-      document.getElementById("feePrepRow").classList.toggle("hidden", c.isIndiv);
-      document.getElementById("feeAdminRow").classList.toggle("hidden", c.isIndiv);
-
+      saveProfile();
+      const c = Rates.calculate(getCalcInput());
+      const isIndividual = c.orgType === "individual_debrief";
+      document.getElementById("participantsWrap").style.opacity = isIndividual ? ".38" : "1";
+      document.getElementById("hoursWrap").style.opacity = isIndividual ? ".38" : "1";
+      document.getElementById("prepDiscountWrap").style.opacity = isIndividual ? ".38" : "1";
+      document.getElementById("assessmentDiscountWrap").style.opacity = isIndividual ? ".38" : "1";
+      document.getElementById("feePrepRow").classList.toggle("hidden", isIndividual);
+      document.getElementById("feeAdminRow").classList.toggle("hidden", isIndividual);
+      document.getElementById("feeConsulting").textContent = JJC_money(c.consultingNet);
+      document.getElementById("feePrep").textContent = JJC_money(c.prepNet);
+      document.getElementById("feeAdmin").textContent = JJC_money(c.assessmentNet);
+      document.getElementById("grandTotalVal").textContent = JJC_money(c.total);
       return c;
-    }
-
-    function recalculateAndSave() {
-      saveState();
-      recalculate();
-    }
-
-    function resetDefaults() {
-      if (!confirm("Reset profile and rates to defaults? Saved estimates and invoices will remain.")) return;
-      state = { ...state, ...defaults, savedScenarios: state.savedScenarios, savedInvoices: state.savedInvoices };
-      initFields();
-      recalculateAndSave();
-      toast("Defaults restored.");
     }
 
     function saveScenario() {
       const c = recalculate();
-      const fallback = "Estimate " + (state.savedScenarios.length + 1);
+      const fallback = "Estimate " + (savedScenarios.length + 1);
       const name = prompt("Name this estimate scenario:", fallback);
       if (name === null) return;
-
-      state.savedScenarios.unshift({
-        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
-        name: name.trim() || fallback,
-        createdAt: new Date().toISOString(),
-        ...c
-      });
-
-      saveState();
+      const estimate = { id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2), name: name.trim() || fallback, createdAt: new Date().toISOString(), ...c };
+      savedScenarios = Estimates.saveToLocal(estimate);
+      Database.saveEstimate(Estimates.createSheetRow(estimate));
       renderScenarios();
-      toast("Estimate scenario saved.");
-    }
-
-    function loadScenario(id) {
-      const s = state.savedScenarios.find(x => x.id === id);
-      if (!s) return;
-
-      document.querySelector(`input[name="orgType"][value="${s.orgType}"]`).checked = true;
-      document.getElementById("participants").value = s.participants || 12;
-      document.getElementById("participantsVal").textContent = s.participants || 12;
-      const hr = document.querySelector(`input[name="hours"][value="${s.hours || 3}"]`);
-      if (hr) hr.checked = true;
-
-      document.getElementById("consultingDiscount").value = s.consultingDiscount || "";
-      document.getElementById("prepDiscount").value = s.prepDiscount || "";
-      document.getElementById("assessmentDiscount").value = s.assessmentDiscount || "";
-
-      onTypeChange();
-      toast("Estimate loaded.");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    function deleteScenario(id) {
-      if (!confirm("Delete this saved estimate?")) return;
-      state.savedScenarios = state.savedScenarios.filter(x => x.id !== id);
-      saveState();
-      renderScenarios();
-      toast("Estimate deleted.");
+      toast("Estimate saved locally and sent to Google Sheets.");
     }
 
     function renderScenarios() {
       const wrap = document.getElementById("scenariosList");
       const empty = document.getElementById("noScenariosMsg");
       wrap.innerHTML = "";
-
-      empty.classList.toggle("hidden", state.savedScenarios.length > 0);
-
-      state.savedScenarios.forEach(s => {
-        const type = s.orgType === "for_profit" ? "Corporate" : s.orgType === "non_profit" ? "Nonprofit" : "Individual";
+      empty.classList.toggle("hidden", savedScenarios.length > 0);
+      savedScenarios.forEach(s => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `
-          <div class="record-title">${escapeHtml(s.name)}</div>
-          <div class="tiny muted">${type}${s.isIndiv ? "" : ` • ${s.participants} participants • ${s.hours} hours`}</div>
-          <div class="record-total">${money(s.total)}</div>
-          <div class="actions">
-            <button class="button secondary small-btn" onclick="loadScenario('${s.id}')">Load</button>
-            <button class="button danger small-btn" onclick="deleteScenario('${s.id}')">Delete</button>
-          </div>
-        `;
+        el.innerHTML = `<div class="record-title">${escapeHtml(s.name)}</div><div class="tiny muted">${escapeHtml(s.orgType)} • ${s.participants} participants • ${s.hours} hours</div><div class="record-total">${JJC_money(s.total)}</div>`;
         wrap.appendChild(el);
       });
     }
@@ -1083,26 +272,18 @@
       const today = new Date();
       const due = new Date();
       due.setDate(today.getDate() + 30);
-
-      document.getElementById("invNo").value = "JJC-" + today.getFullYear() + "-" + String(state.savedInvoices.length + 1).padStart(3, "0");
-      document.getElementById("invIssueDate").value = today.toISOString().slice(0,10);
-      document.getElementById("invDueDate").value = due.toISOString().slice(0,10);
-      document.getElementById("invClientName").value = "";
-      document.getElementById("invClientEmail").value = "";
+      document.getElementById("invNo").value = Invoices.nextNumber(savedInvoices.length);
+      document.getElementById("invIssueDate").value = today.toISOString().slice(0, 10);
+      document.getElementById("invDueDate").value = due.toISOString().slice(0, 10);
       document.getElementById("invoiceModal").classList.remove("hidden");
     }
 
-    function closeInvoiceModal() {
-      document.getElementById("invoiceModal").classList.add("hidden");
-    }
+    function closeInvoiceModal() { document.getElementById("invoiceModal").classList.add("hidden"); }
+    function closePrintView() { document.getElementById("printView").classList.add("hidden"); }
 
     function createInvoice() {
       const clientName = document.getElementById("invClientName").value.trim();
-      if (!clientName) {
-        alert("Client name is required.");
-        return;
-      }
-
+      if (!clientName) return alert("Client name is required.");
       const c = recalculate();
       const invoice = {
         id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
@@ -1112,27 +293,19 @@
         clientEmail: document.getElementById("invClientEmail").value.trim(),
         issueDate: document.getElementById("invIssueDate").value,
         dueDate: document.getElementById("invDueDate").value,
-        createdAt: new Date().toISOString(),
-        profile: {
-          senderName: state.senderName,
-          senderEmail: state.senderEmail,
-          senderPhone: state.senderPhone,
-          senderAddress: state.senderAddress
-        },
+        profile: { ...profile },
         ...c
       };
-
-      state.savedInvoices.unshift(invoice);
-      saveState();
+      savedInvoices = Invoices.saveToLocal(invoice);
+      Database.saveInvoice(Invoices.createSheetRow(invoice));
       renderInvoices();
       closeInvoiceModal();
       showInvoice(invoice);
-      toast("Invoice created.");
+      toast("Invoice saved locally and sent to Google Sheets.");
     }
 
     function showInvoice(inv) {
-      currentInvoice = inv;
-
+      JJC_applyBranding("admin");
       document.getElementById("printSenderName").textContent = inv.profile.senderName;
       document.getElementById("printPreparedBy").textContent = inv.profile.senderName;
       document.getElementById("printAddress").textContent = inv.profile.senderAddress || "";
@@ -1146,81 +319,28 @@
       document.getElementById("printClientEmail").textContent = inv.clientEmail || "-";
 
       const rows = [];
-      rows.push({
-        desc: inv.isIndiv ? "Working Genius individual debrief session" : "Working Genius consulting / facilitation",
-        qty: inv.isIndiv ? 1 : inv.hours,
-        rate: inv.isIndiv ? inv.consultingGross : inv.hourly,
-        amount: inv.consultingGross
-      });
-
-      if (!inv.isIndiv) {
-        rows.push({
-          desc: "Comprehensive materials preparation fee",
-          qty: Math.ceil(inv.participants / 12),
-          rate: inv.prepRate,
-          amount: inv.prepGross
-        });
-        rows.push({
-          desc: "Working Genius assessment administration fee",
-          qty: inv.participants,
-          rate: inv.assessmentRate,
-          amount: inv.assessmentGross
-        });
+      rows.push({ desc: inv.isIndividual ? "Working Genius individual debrief session" : "Working Genius consulting / facilitation", qty: inv.isIndividual ? 1 : inv.hours, rate: inv.isIndividual ? inv.consultingGross : inv.hourly, amount: inv.consultingGross });
+      if (!inv.isIndividual) {
+        rows.push({ desc: "Comprehensive materials preparation fee", qty: Math.ceil(inv.participants / 12), rate: inv.prepRate, amount: inv.prepGross });
+        rows.push({ desc: "Working Genius assessment administration fee", qty: inv.participants, rate: inv.assessmentRate, amount: inv.assessmentGross });
       }
-
-      document.getElementById("printTableBody").innerHTML = rows.map(r => `
-        <tr>
-          <td>${escapeHtml(r.desc)}</td>
-          <td>${r.qty}</td>
-          <td>${money(r.rate)}</td>
-          <td>${money(r.amount)}</td>
-        </tr>
-      `).join("");
-
-      document.getElementById("printSubtotal").textContent = money(inv.subtotal);
-      document.getElementById("printDiscount").textContent = "-" + money(inv.discounts);
+      document.getElementById("printTableBody").innerHTML = rows.map(r => `<tr><td>${escapeHtml(r.desc)}</td><td>${r.qty}</td><td>${JJC_money(r.rate)}</td><td>${JJC_money(r.amount)}</td></tr>`).join("");
+      document.getElementById("printSubtotal").textContent = JJC_money(inv.subtotal);
+      document.getElementById("printDiscount").textContent = "-" + JJC_money(inv.discounts);
       document.getElementById("printDiscountLine").style.display = inv.discounts > 0 ? "flex" : "none";
-      document.getElementById("printGrandTotal").textContent = money(inv.total);
-
+      document.getElementById("printGrandTotal").textContent = JJC_money(inv.total);
       document.getElementById("printView").classList.remove("hidden");
-    }
-
-    function closePrintView() {
-      document.getElementById("printView").classList.add("hidden");
-    }
-
-    function printSavedInvoice(id) {
-      const inv = state.savedInvoices.find(x => x.id === id);
-      if (inv) showInvoice(inv);
-    }
-
-    function deleteInvoice(id) {
-      if (!confirm("Delete this invoice?")) return;
-      state.savedInvoices = state.savedInvoices.filter(x => x.id !== id);
-      saveState();
-      renderInvoices();
-      toast("Invoice deleted.");
     }
 
     function renderInvoices() {
       const wrap = document.getElementById("invoicesList");
       const empty = document.getElementById("noInvoicesMsg");
       wrap.innerHTML = "";
-
-      empty.classList.toggle("hidden", state.savedInvoices.length > 0);
-
-      state.savedInvoices.forEach(inv => {
+      empty.classList.toggle("hidden", savedInvoices.length > 0);
+      savedInvoices.forEach(inv => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `
-          <div class="record-title">${escapeHtml(inv.clientName)}</div>
-          <div class="tiny muted">${escapeHtml(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${escapeHtml(inv.terms)}</div>
-          <div class="record-total">${money(inv.total)}</div>
-          <div class="actions">
-            <button class="button secondary small-btn" onclick="printSavedInvoice('${inv.id}')">View / Print</button>
-            <button class="button danger small-btn" onclick="deleteInvoice('${inv.id}')">Delete</button>
-          </div>
-        `;
+        el.innerHTML = `<div class="record-title">${escapeHtml(inv.clientName)}</div><div class="tiny muted">${escapeHtml(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${escapeHtml(inv.terms)}</div><div class="record-total">${JJC_money(inv.total)}</div><div class="actions"><button class="button secondary small-btn" onclick='showInvoice(${JSON.stringify(inv).replaceAll("'", "&#039;")})'>View / Print</button></div>`;
         wrap.appendChild(el);
       });
     }
@@ -1233,34 +353,19 @@
       document.getElementById("tabInvoicesBtn").classList.toggle("active", !isScen);
     }
 
-    function formatDate(s) {
-      if (!s) return "-";
-      const d = new Date(s + "T00:00:00");
-      return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-    }
+    function formatDate(s) { if (!s) return "-"; return new Date(s + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); }
+    function escapeHtml(str) { return String(str || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+    function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 
-    function escapeHtml(str) {
-      return String(str || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
+    document.querySelectorAll("input, select, textarea").forEach(el => el.addEventListener("input", recalculate));
+    document.querySelectorAll('input[name="orgType"], input[name="hours"]').forEach(el => el.addEventListener("change", recalculate));
 
-    function toast(msg) {
-      const t = document.createElement("div");
-      t.className = "toast";
-      t.textContent = msg;
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 2600);
-    }
-
-    window.addEventListener("load", () => {
-      loadState();
-      initFields();
-      updateSnapshot();
-      onTypeChange();
+    window.addEventListener("load", async () => {
+      JJC_applyBranding("admin");
+      loadProfile();
+      await Rates.load();
+      showRates();
+      recalculate();
       renderScenarios();
       renderInvoices();
     });
