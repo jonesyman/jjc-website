@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>JJC Admin | Estimates & Invoices</title>
+  <title>JJC Admin Console</title>
 
   <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
@@ -12,136 +12,453 @@
   <link rel="manifest" href="../assets/images/site.webmanifest">
 
   <link rel="stylesheet" href="../assets/css/admin.css">
+
+  <style>
+    .admin-shell {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      background: rgba(7,11,19,.96);
+      border-right: 1px solid var(--line);
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 26px;
+    }
+
+    .sidebar-logo {
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .sidebar-title {
+      font-weight: 900;
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .sidebar-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .side-nav {
+      display: grid;
+      gap: 8px;
+    }
+
+    .side-nav button {
+      width: 100%;
+      text-align: left;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #cbd5e1;
+      border-radius: 14px;
+      padding: 12px 13px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .side-nav button:hover {
+      background: rgba(38,56,96,.28);
+      border-color: rgba(148,163,184,.14);
+    }
+
+    .side-nav button.active {
+      background: rgba(38,56,96,.55);
+      border-color: rgba(148,163,184,.22);
+      color: white;
+    }
+
+    .admin-main {
+      min-width: 0;
+    }
+
+    .admin-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(7,11,19,.88);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+      padding: 15px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .admin-content {
+      padding: 24px;
+      max-width: 1280px;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .metric {
+      background: linear-gradient(180deg, rgba(17,28,49,.96), rgba(15,23,42,.96));
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+
+    .metric-value {
+      font-size: 30px;
+      font-weight: 900;
+      margin-top: 10px;
+      color: #dbeafe;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 15px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table.admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    table.admin-table th,
+    table.admin-table td {
+      border-bottom: 1px solid rgba(148,163,184,.13);
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    table.admin-table th {
+      color: #cbd5e1;
+      font-size: 11px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+    }
+
+    @media (max-width: 980px) {
+      .admin-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: 285px;
+        transform: translateX(-110%);
+        transition: transform .2s ease;
+        z-index: 50;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .mobile-menu-btn {
+        display: inline-flex;
+      }
+
+      .dashboard-grid,
+      .form-row,
+      .form-row-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-content {
+        padding: 16px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <header class="no-print">
-    <div class="container topbar">
-      <div class="brand-block">
-        <img data-brand-logo class="site-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting logo">
+  <div class="admin-shell">
+    <aside id="sidebar" class="sidebar no-print">
+      <div class="sidebar-brand">
+        <img data-brand-logo class="sidebar-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting logo">
         <div>
-          <p class="brand-title" data-brand-company>Jeff Jones Consulting</p>
-          <p class="brand-subtitle">Private estimate & invoice console</p>
+          <p class="sidebar-title">JJC Admin</p>
+          <p class="sidebar-subtitle">Private Console</p>
         </div>
       </div>
-      <div class="status-pill"><span class="status-dot"></span><span>Protected by Cloudflare Access</span></div>
-    </div>
-  </header>
 
-  <main class="container no-print">
-    <section class="hero">
-      <div class="card">
-        <span class="eyebrow">Admin Workspace</span>
-        <h1>Estimates, invoices, and Working Genius pricing in one private console.</h1>
-        <p class="muted">Rates load from Google Sheets. Estimates and invoices save locally and also send rows to your spreadsheet.</p>
-      </div>
-    </section>
+      <nav class="side-nav">
+        <button class="active" data-view-btn="dashboard">🏠 Dashboard</button>
+        <button data-view-btn="clients">👥 Clients</button>
+        <button data-view-btn="workshops">📅 Workshops</button>
+        <button data-view-btn="estimates">📝 Estimates</button>
+        <button data-view-btn="invoices">💵 Invoices</button>
+        <button data-view-btn="settings">⚙️ Settings</button>
+      </nav>
+    </aside>
 
-    <section class="grid workspace" style="margin-bottom:22px;">
-      <div class="grid">
-        <div class="card">
-          <div class="section-title"><h2>Billing Profile</h2><span class="tiny muted">Used on invoices</span></div>
-          <div class="field"><label>Company / Consultant Name</label><input id="senderName" type="text"></div>
-          <div class="grid grid-2">
-            <div class="field"><label>Billing Email</label><input id="senderEmail" type="email"></div>
-            <div class="field"><label>Contact Phone</label><input id="senderPhone" type="text"></div>
+    <div class="admin-main">
+      <div class="admin-topbar no-print">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <button class="button secondary small-btn mobile-menu-btn" onclick="toggleSidebar()">Menu</button>
+          <div>
+            <h2 id="pageTitle">Dashboard</h2>
+            <div class="tiny muted">Jeff Jones Consulting business console</div>
           </div>
-          <div class="field"><label>Mailing Address</label><textarea id="senderAddress" rows="3"></textarea></div>
         </div>
-
-        <div class="card">
-          <div class="section-title"><h2>Rates from Google Sheets</h2><span class="tiny muted">Loaded on page open</span></div>
-          <div class="grid grid-3">
-            <div class="field"><label>Corporate Hourly</label><input id="rateFpHourly" type="number" readonly></div>
-            <div class="field"><label>Corporate Prep / 12p</label><input id="rateFpPrep" type="number" readonly></div>
-            <div class="field"><label>Corporate Assessment</label><input id="rateFpAdmin" type="number" readonly></div>
-            <div class="field"><label>Nonprofit Hourly</label><input id="rateNpHourly" type="number" readonly></div>
-            <div class="field"><label>Nonprofit Prep / 12p</label><input id="rateNpPrep" type="number" readonly></div>
-            <div class="field"><label>Nonprofit Assessment</label><input id="rateNpAdmin" type="number" readonly></div>
-          </div>
-          <div class="field"><label>Individual Debrief</label><input id="rateIndivFlat" type="number" readonly></div>
-          <p class="muted small">To change public/admin rates, edit the Rates tab in Google Sheets.</p>
-        </div>
+        <div class="status-pill"><span class="status-dot"></span><span>Cloudflare Protected</span></div>
       </div>
 
-      <div class="grid">
-        <div class="card">
-          <div class="section-title"><h2>Interactive Cost Calculator</h2><span class="tiny muted">Uses shared rates</span></div>
+      <main class="admin-content no-print">
+        <!-- DASHBOARD -->
+        <section id="view-dashboard" class="view active">
+          <div class="dashboard-grid">
+            <div class="metric"><div class="metric-label">Clients</div><div id="metricClients" class="metric-value">0</div></div>
+            <div class="metric"><div class="metric-label">Workshops</div><div id="metricWorkshops" class="metric-value">0</div></div>
+            <div class="metric"><div class="metric-label">Estimates</div><div id="metricEstimates" class="metric-value">0</div></div>
+            <div class="metric"><div class="metric-label">Invoices</div><div id="metricInvoices" class="metric-value">0</div></div>
+          </div>
 
-          <div class="grid grid-2">
-            <div>
+          <div class="card">
+            <div class="section-title">
+              <h2>Quick Actions</h2>
+              <span class="tiny muted">Start common tasks</span>
+            </div>
+            <div class="actions">
+              <button class="button" onclick="showView('clients')">Add Client</button>
+              <button class="button" onclick="showView('workshops')">Add Workshop</button>
+              <button class="button" onclick="showView('estimates')">Create Estimate</button>
+              <button class="button" onclick="showView('invoices')">Create Invoice</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- CLIENTS -->
+        <section id="view-clients" class="view">
+          <div class="grid workspace">
+            <div class="card">
+              <div class="section-title"><h2>Client Form</h2><button class="button ghost small-btn" onclick="resetClientForm()">New</button></div>
+              <div class="field"><label>Client ID</label><input id="clientId" placeholder="CLI-0001"></div>
+              <div class="field"><label>Organization</label><input id="clientOrg"></div>
+              <div class="form-row">
+                <div class="field"><label>Contact</label><input id="clientContact"></div>
+                <div class="field"><label>Email</label><input id="clientEmail" type="email"></div>
+              </div>
+              <div class="field"><label>Phone</label><input id="clientPhone"></div>
+              <div class="field"><label>Notes</label><textarea id="clientNotes" rows="5"></textarea></div>
+              <div class="actions">
+                <button class="button" onclick="saveClient()">Save Client</button>
+                <button class="button secondary" onclick="resetClientForm()">Clear</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>Client List</h2><input id="clientSearch" placeholder="Search..." oninput="renderClients()"></div>
+              <div id="clientsList" class="list-grid"></div>
+              <p id="noClientsMsg" class="muted small">No clients yet.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- WORKSHOPS -->
+        <section id="view-workshops" class="view">
+          <div class="grid workspace">
+            <div class="card">
+              <div class="section-title"><h2>Workshop Form</h2><button class="button ghost small-btn" onclick="resetWorkshopForm()">New</button></div>
+              <div class="form-row">
+                <div class="field"><label>Workshop ID</label><input id="workshopId" placeholder="WRK-0001"></div>
+                <div class="field"><label>Client ID</label><input id="workshopClientId" placeholder="CLI-0001"></div>
+              </div>
+              <div class="field"><label>Organization</label><input id="workshopOrg"></div>
+              <div class="form-row-3">
+                <div class="field"><label>Date</label><input id="workshopDate" type="date"></div>
+                <div class="field"><label>Type</label><select id="workshopType"><option>Corporate</option><option>Nonprofit</option><option>Government</option><option>Church</option><option>Individual Debrief</option></select></div>
+                <div class="field"><label>Status</label><select id="workshopStatus"><option>Prospect</option><option>Estimated</option><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></div>
+              </div>
+              <div class="form-row-3">
+                <div class="field"><label>Participants</label><input id="workshopParticipants" type="number" value="12"></div>
+                <div class="field"><label>Hours</label><input id="workshopHours" type="number" value="3" step=".5"></div>
+                <div class="field"><label>Location</label><input id="workshopLocation"></div>
+              </div>
+              <div class="form-row">
+                <div class="field"><label>Estimate ID</label><input id="workshopEstimateId"></div>
+                <div class="field"><label>Invoice #</label><input id="workshopInvoiceId"></div>
+              </div>
+              <div class="field"><label>Notes</label><textarea id="workshopNotes" rows="5"></textarea></div>
+              <div class="actions">
+                <button class="button" onclick="saveWorkshop()">Save Workshop</button>
+                <button class="button secondary" onclick="resetWorkshopForm()">Clear</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>Workshop List</h2><input id="workshopSearch" placeholder="Search..." oninput="renderWorkshops()"></div>
+              <div id="workshopsList" class="list-grid"></div>
+              <p id="noWorkshopsMsg" class="muted small">No workshops yet.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ESTIMATES -->
+        <section id="view-estimates" class="view">
+          <div class="grid workspace">
+            <div class="card">
+              <div class="section-title"><h2>Estimate Calculator</h2><span class="tiny muted">Uses Google Sheets rates</span></div>
+
               <label>Organization Type</label>
-              <div class="radio-stack">
+              <div class="radio-stack" style="margin-bottom:15px;">
                 <label class="radio-card"><input type="radio" name="orgType" value="for_profit" checked> Corporate / For-Profit</label>
                 <label class="radio-card"><input type="radio" name="orgType" value="non_profit"> Nonprofit / Government</label>
                 <label class="radio-card"><input type="radio" name="orgType" value="individual_debrief"> Individual Debrief</label>
               </div>
-            </div>
-            <div>
-              <div id="participantsWrap" class="field"><label>Participants</label><input id="participants" type="number" min="1" value="12"></div>
-              <div id="hoursWrap" class="field">
-                <label>Consulting Duration</label>
-                <div class="duration-grid">
-                  <label><input type="radio" name="hours" value="2">2 Hours</label>
-                  <label><input type="radio" name="hours" value="3" checked>3 Hours</label>
-                  <label><input type="radio" name="hours" value="4">4 Hours</label>
-                </div>
+
+              <div class="form-row">
+                <div class="field"><label>Participants</label><input id="participants" type="number" min="1" value="12"></div>
+                <div class="field"><label>Hours</label><select id="hours"><option value="2">2 Hours</option><option value="3" selected>3 Hours</option><option value="4">4 Hours</option></select></div>
+              </div>
+
+              <div class="form-row-3">
+                <div class="field"><label>Consulting Discount</label><input id="consultingDiscount" type="number" min="0" placeholder="0"></div>
+                <div class="field"><label>Prep Discount</label><input id="prepDiscount" type="number" min="0" placeholder="0"></div>
+                <div class="field"><label>Assessment Discount</label><input id="assessmentDiscount" type="number" min="0" placeholder="0"></div>
+              </div>
+
+              <div class="field"><label>Estimate Name / Notes</label><input id="estimateName" placeholder="Loma Vista Staff Retreat"></div>
+
+              <div class="estimate-box">
+                <div class="estimate-row"><span>Consulting</span><strong id="feeConsulting">$0.00</strong></div>
+                <div class="estimate-row" id="feePrepRow"><span>Prep</span><strong id="feePrep">$0.00</strong></div>
+                <div class="estimate-row" id="feeAdminRow"><span>Assessment/Admin</span><strong id="feeAdmin">$0.00</strong></div>
+                <div class="total-row"><span>Total</span><span id="grandTotalVal">$0.00</span></div>
+              </div>
+
+              <div class="actions">
+                <button class="button" onclick="saveEstimate()">Save Estimate</button>
               </div>
             </div>
+
+            <div class="card">
+              <div class="section-title"><h2>Saved Estimates</h2><span class="tiny muted">Local + Google Sheet</span></div>
+              <div id="estimatesList" class="list-grid"></div>
+              <p id="noEstimatesMsg" class="muted small">No estimates yet.</p>
+            </div>
           </div>
+        </section>
 
-          <div class="grid grid-3">
-            <div class="field"><label>Consulting Discount</label><input id="consultingDiscount" type="number" min="0" placeholder="0"></div>
-            <div class="field" id="prepDiscountWrap"><label>Prep Fee Discount</label><input id="prepDiscount" type="number" min="0" placeholder="0"></div>
-            <div class="field" id="assessmentDiscountWrap"><label>Assessment Discount</label><input id="assessmentDiscount" type="number" min="0" placeholder="0"></div>
+        <!-- INVOICES -->
+        <section id="view-invoices" class="view">
+          <div class="grid workspace">
+            <div class="card">
+              <div class="section-title"><h2>Create Invoice</h2><span class="tiny muted">Based on current estimate calculator</span></div>
+              <div class="form-row">
+                <div class="field"><label>Invoice #</label><input id="invNo"></div>
+                <div class="field"><label>Terms</label><select id="invTerms"><option>Due on Receipt</option><option>Net 15</option><option selected>Net 30</option><option>Net 45</option></select></div>
+              </div>
+              <div class="field"><label>Client / Organization</label><input id="invClientName"></div>
+              <div class="field"><label>Client Email</label><input id="invClientEmail" type="email"></div>
+              <div class="form-row">
+                <div class="field"><label>Issue Date</label><input id="invIssueDate" type="date"></div>
+                <div class="field"><label>Due Date</label><input id="invDueDate" type="date"></div>
+              </div>
+              <div class="actions">
+                <button class="button" onclick="createInvoice()">Create Invoice From Current Estimate</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="section-title"><h2>Invoices</h2><span class="tiny muted">Local + Google Sheet</span></div>
+              <div id="invoicesList" class="list-grid"></div>
+              <p id="noInvoicesMsg" class="muted small">No invoices yet.</p>
+            </div>
           </div>
+        </section>
 
-          <div class="estimate-box">
-            <div class="estimate-row"><span>Consulting / facilitation</span><strong id="feeConsulting">$0.00</strong></div>
-            <div class="estimate-row" id="feePrepRow"><span>Preparation fee</span><strong id="feePrep">$0.00</strong></div>
-            <div class="estimate-row" id="feeAdminRow"><span>Assessment/admin fee</span><strong id="feeAdmin">$0.00</strong></div>
-            <div class="total-row"><span>Total Fee Estimate</span><span id="grandTotalVal">$0.00</span></div>
+        <!-- SETTINGS -->
+        <section id="view-settings" class="view">
+          <div class="card">
+            <div class="section-title"><h2>Settings</h2><span class="tiny muted">Billing profile and current rates</span></div>
+            <div class="form-row">
+              <div class="field"><label>Company</label><input id="senderName"></div>
+              <div class="field"><label>Email</label><input id="senderEmail"></div>
+            </div>
+            <div class="form-row">
+              <div class="field"><label>Phone</label><input id="senderPhone"></div>
+              <div class="field"><label>Address</label><input id="senderAddress"></div>
+            </div>
+            <div class="actions">
+              <button class="button" onclick="saveProfile()">Save Profile</button>
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--line); margin:24px 0;">
+
+            <h2>Loaded Rates</h2>
+            <p class="muted small">Edit these in Google Sheets, not here.</p>
+            <div class="form-row-3">
+              <div class="field"><label>Corporate Hourly</label><input id="rateCorporateHourly" readonly></div>
+              <div class="field"><label>Corporate Prep</label><input id="rateCorporatePrep" readonly></div>
+              <div class="field"><label>Corporate Assessment</label><input id="rateCorporateAssessment" readonly></div>
+              <div class="field"><label>Nonprofit Hourly</label><input id="rateNonprofitHourly" readonly></div>
+              <div class="field"><label>Nonprofit Prep</label><input id="rateNonprofitPrep" readonly></div>
+              <div class="field"><label>Nonprofit Assessment</label><input id="rateNonprofitAssessment" readonly></div>
+              <div class="field"><label>Individual Debrief</label><input id="rateIndividualDebrief" readonly></div>
+            </div>
           </div>
-
-          <div class="actions">
-            <button class="button secondary" onclick="saveScenario()">Save Estimate Scenario</button>
-            <button class="button" onclick="openInvoiceModal()">Generate Invoice</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="card" style="margin-bottom:28px;">
-      <div class="tabs">
-        <button id="tabScenariosBtn" class="tab active" onclick="switchTab('scenarios')">Saved Estimates</button>
-        <button id="tabInvoicesBtn" class="tab" onclick="switchTab('invoices')">Invoices</button>
-      </div>
-      <div id="tabScenarios"><div id="scenariosList" class="list-grid"></div><p id="noScenariosMsg" class="muted small">No saved estimate scenarios yet.</p></div>
-      <div id="tabInvoices" class="hidden"><div id="invoicesList" class="list-grid"></div><p id="noInvoicesMsg" class="muted small">No invoices yet.</p></div>
-    </section>
-  </main>
-
-  <div id="invoiceModal" class="modal hidden no-print">
-    <div class="modal-panel">
-      <div class="section-title"><h2>Create Invoice</h2><button class="button ghost small-btn" onclick="closeInvoiceModal()">Close</button></div>
-      <div class="grid grid-2">
-        <div class="field"><label>Invoice Number</label><input id="invNo" type="text"></div>
-        <div class="field"><label>Terms</label><select id="invTerms"><option>Due on Receipt</option><option>Net 15</option><option selected>Net 30</option><option>Net 45</option></select></div>
-      </div>
-      <div class="field"><label>Client Business / Contact Name</label><input id="invClientName" type="text"></div>
-      <div class="field"><label>Client Email</label><input id="invClientEmail" type="email"></div>
-      <div class="grid grid-2">
-        <div class="field"><label>Issue Date</label><input id="invIssueDate" type="date"></div>
-        <div class="field"><label>Due Date</label><input id="invDueDate" type="date"></div>
-      </div>
-      <div class="actions"><button class="button secondary" onclick="closeInvoiceModal()">Cancel</button><button class="button" onclick="createInvoice()">Prepare Invoice</button></div>
+        </section>
+      </main>
     </div>
   </div>
 
+  <!-- PRINT VIEW -->
   <div id="printView" class="print-view hidden">
     <div class="print-toolbar no-print">
       <strong>Printable invoice preview</strong>
-      <div class="actions" style="margin:0;"><button class="button secondary small-btn" onclick="closePrintView()">Close</button><button class="button small-btn" onclick="window.print()">Print / Save PDF</button></div>
+      <div class="actions" style="margin:0;">
+        <button class="button secondary small-btn" onclick="closePrintView()">Close</button>
+        <button class="button small-btn" onclick="window.print()">Print / Save PDF</button>
+      </div>
     </div>
     <div class="invoice-sheet">
       <div class="invoice-header">
@@ -159,132 +476,253 @@
         </div>
       </div>
       <div class="invoice-parties">
-        <div><div class="invoice-label">Prepared By</div><strong id="printPreparedBy">Jeff Jones Consulting</strong><div id="printAddress" style="white-space:pre-wrap; color:#475569; margin-top:6px;"></div><div style="color:#475569; margin-top:6px;"><span id="printEmail"></span> • <span id="printPhone"></span></div></div>
-        <div><div class="invoice-label">Billed To</div><strong id="printClientName">-</strong><div id="printClientEmail" style="color:#475569; margin-top:6px;">-</div></div>
+        <div>
+          <div class="invoice-label">Prepared By</div>
+          <strong id="printPreparedBy">Jeff Jones Consulting</strong>
+          <div id="printAddress" style="white-space:pre-wrap; color:#475569; margin-top:6px;"></div>
+          <div style="color:#475569; margin-top:6px;"><span id="printEmail"></span> • <span id="printPhone"></span></div>
+        </div>
+        <div>
+          <div class="invoice-label">Billed To</div>
+          <strong id="printClientName">-</strong>
+          <div id="printClientEmail" style="color:#475569; margin-top:6px;">-</div>
+        </div>
       </div>
-      <table class="invoice-table"><thead><tr><th>Service Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead><tbody id="printTableBody"></tbody></table>
-      <div class="invoice-totals"><div class="line"><span>Subtotal</span><strong id="printSubtotal">$0.00</strong></div><div class="line" id="printDiscountLine"><span>Discounts</span><strong id="printDiscount">-$0.00</strong></div><div class="line grand"><span>Total Due</span><span id="printGrandTotal">$0.00</span></div></div>
+      <table class="invoice-table">
+        <thead><tr><th>Service Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+        <tbody id="printTableBody"></tbody>
+      </table>
+      <div class="invoice-totals">
+        <div class="line"><span>Subtotal</span><strong id="printSubtotal">$0.00</strong></div>
+        <div class="line" id="printDiscountLine"><span>Discounts</span><strong id="printDiscount">-$0.00</strong></div>
+        <div class="line grand"><span>Total Due</span><span id="printGrandTotal">$0.00</span></div>
+      </div>
     </div>
   </div>
-
-  <footer class="no-print">Jeff Jones Consulting Admin Console</footer>
 
   <script src="../assets/js/branding.js"></script>
   <script src="../assets/js/googleSheets.js"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js"></script>
   <script src="../assets/js/invoices.js"></script>
+
   <script>
-    const profile = {
+    const K = {
+      clients: "jjc_clients",
+      workshops: "jjc_workshops",
+      estimates: "jjc_saved_estimates",
+      invoices: "jjc_saved_invoices",
+      profile: "jjc_profile"
+    };
+
+    let clients = [];
+    let workshops = [];
+    let estimates = [];
+    let invoices = [];
+
+    let profile = {
       senderName: "Jeff Jones Consulting",
       senderEmail: "jeff@jeffjonesconsulting.com",
       senderPhone: "(559) 978-7598",
       senderAddress: ""
     };
 
-    let savedScenarios = Estimates.loadLocal();
-    let savedInvoices = Invoices.loadLocal();
-
-    function loadProfile() {
-      const p = JSON.parse(localStorage.getItem("jjc_profile") || "{}");
-      Object.assign(profile, p);
-      document.getElementById("senderName").value = profile.senderName;
-      document.getElementById("senderEmail").value = profile.senderEmail;
-      document.getElementById("senderPhone").value = profile.senderPhone;
-      document.getElementById("senderAddress").value = profile.senderAddress;
+    function loadAllLocal() {
+      clients = JSON.parse(localStorage.getItem(K.clients) || "[]");
+      workshops = JSON.parse(localStorage.getItem(K.workshops) || "[]");
+      estimates = JSON.parse(localStorage.getItem(K.estimates) || "[]");
+      invoices = JSON.parse(localStorage.getItem(K.invoices) || "[]");
+      profile = { ...profile, ...JSON.parse(localStorage.getItem(K.profile) || "{}") };
     }
 
-    function saveProfile() {
-      profile.senderName = document.getElementById("senderName").value || "Jeff Jones Consulting";
-      profile.senderEmail = document.getElementById("senderEmail").value || "jeff@jeffjonesconsulting.com";
-      profile.senderPhone = document.getElementById("senderPhone").value || "(559) 978-7598";
-      profile.senderAddress = document.getElementById("senderAddress").value || "";
-      localStorage.setItem("jjc_profile", JSON.stringify(profile));
+    function saveLocal(key, data) {
+      localStorage.setItem(key, JSON.stringify(data));
+      updateMetrics();
     }
 
-    function showRates() {
-      const r = window.JJC_RATES;
-      document.getElementById("rateFpHourly").value = r.CorporateHourly;
-      document.getElementById("rateFpPrep").value = r.CorporatePrep;
-      document.getElementById("rateFpAdmin").value = r.CorporateAssessment;
-      document.getElementById("rateNpHourly").value = r.NonprofitHourly;
-      document.getElementById("rateNpPrep").value = r.NonprofitPrep;
-      document.getElementById("rateNpAdmin").value = r.NonprofitAssessment;
-      document.getElementById("rateIndivFlat").value = r.IndividualDebrief;
+    function showView(view) {
+      document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+      document.getElementById("view-" + view).classList.add("active");
+
+      document.querySelectorAll("[data-view-btn]").forEach(btn => btn.classList.toggle("active", btn.dataset.viewBtn === view));
+      document.getElementById("pageTitle").textContent = view.charAt(0).toUpperCase() + view.slice(1);
+      document.getElementById("sidebar").classList.remove("open");
+      location.hash = view;
     }
 
-    function getCalcInput() {
-      return {
+    document.querySelectorAll("[data-view-btn]").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.viewBtn)));
+    function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
+
+    function updateMetrics() {
+      document.getElementById("metricClients").textContent = clients.length;
+      document.getElementById("metricWorkshops").textContent = workshops.length;
+      document.getElementById("metricEstimates").textContent = estimates.length;
+      document.getElementById("metricInvoices").textContent = invoices.length;
+    }
+
+    function nextId(collection, prefix, field) {
+      const max = collection.map(x => String(x[field] || "").match(new RegExp("^" + prefix + "-(\\\\d+)$"))).filter(Boolean).map(m => Number(m[1])).reduce((a,b) => Math.max(a,b), 0);
+      return prefix + "-" + String(max + 1).padStart(4, "0");
+    }
+
+    function resetClientForm() {
+      document.getElementById("clientId").value = nextId(clients, "CLI", "ClientID");
+      ["clientOrg", "clientContact", "clientEmail", "clientPhone", "clientNotes"].forEach(id => document.getElementById(id).value = "");
+    }
+
+    function saveClient() {
+      const c = {
+        ClientID: document.getElementById("clientId").value.trim(),
+        Organization: document.getElementById("clientOrg").value.trim(),
+        Contact: document.getElementById("clientContact").value.trim(),
+        Email: document.getElementById("clientEmail").value.trim(),
+        Phone: document.getElementById("clientPhone").value.trim(),
+        Notes: document.getElementById("clientNotes").value.trim()
+      };
+      if (!c.ClientID || !c.Organization) return alert("ClientID and Organization are required.");
+      clients = [c, ...clients.filter(x => x.ClientID !== c.ClientID)];
+      saveLocal(K.clients, clients);
+      Database.postNoCors("saveClient", c);
+      resetClientForm();
+      renderClients();
+      toast("Client saved.");
+    }
+
+    function renderClients() {
+      const q = (document.getElementById("clientSearch")?.value || "").toLowerCase();
+      const wrap = document.getElementById("clientsList");
+      const filtered = clients.filter(c => Object.values(c).join(" ").toLowerCase().includes(q));
+      wrap.innerHTML = "";
+      document.getElementById("noClientsMsg").classList.toggle("hidden", filtered.length > 0);
+      filtered.forEach(c => {
+        const el = document.createElement("div");
+        el.className = "record-card";
+        el.innerHTML = `<div class="record-title">${esc(c.Organization)}</div><div class="tiny muted">${esc(c.ClientID)} • ${esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button secondary small-btn" onclick="editClient('${esc(c.ClientID)}')">Edit</button></div>`;
+        wrap.appendChild(el);
+      });
+    }
+
+    function editClient(id) {
+      const c = clients.find(x => x.ClientID === id);
+      if (!c) return;
+      document.getElementById("clientId").value = c.ClientID || "";
+      document.getElementById("clientOrg").value = c.Organization || "";
+      document.getElementById("clientContact").value = c.Contact || "";
+      document.getElementById("clientEmail").value = c.Email || "";
+      document.getElementById("clientPhone").value = c.Phone || "";
+      document.getElementById("clientNotes").value = c.Notes || "";
+    }
+
+    function resetWorkshopForm() {
+      document.getElementById("workshopId").value = nextId(workshops, "WRK", "WorkshopID");
+      ["workshopClientId", "workshopOrg", "workshopEstimateId", "workshopInvoiceId", "workshopLocation", "workshopNotes"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("workshopDate").value = "";
+      document.getElementById("workshopParticipants").value = 12;
+      document.getElementById("workshopHours").value = 3;
+    }
+
+    function saveWorkshop() {
+      const w = {
+        WorkshopID: document.getElementById("workshopId").value.trim(),
+        ClientID: document.getElementById("workshopClientId").value.trim(),
+        Organization: document.getElementById("workshopOrg").value.trim(),
+        WorkshopDate: document.getElementById("workshopDate").value,
+        Type: document.getElementById("workshopType").value,
+        Status: document.getElementById("workshopStatus").value,
+        Participants: document.getElementById("workshopParticipants").value,
+        Hours: document.getElementById("workshopHours").value,
+        EstimateID: document.getElementById("workshopEstimateId").value.trim(),
+        InvoiceID: document.getElementById("workshopInvoiceId").value.trim(),
+        Location: document.getElementById("workshopLocation").value.trim(),
+        Notes: document.getElementById("workshopNotes").value.trim()
+      };
+      if (!w.WorkshopID || !w.Organization) return alert("WorkshopID and Organization are required.");
+      workshops = [w, ...workshops.filter(x => x.WorkshopID !== w.WorkshopID)];
+      saveLocal(K.workshops, workshops);
+      Database.postNoCors("saveWorkshop", w);
+      resetWorkshopForm();
+      renderWorkshops();
+      toast("Workshop saved.");
+    }
+
+    function renderWorkshops() {
+      const q = (document.getElementById("workshopSearch")?.value || "").toLowerCase();
+      const wrap = document.getElementById("workshopsList");
+      const filtered = workshops.filter(w => Object.values(w).join(" ").toLowerCase().includes(q));
+      wrap.innerHTML = "";
+      document.getElementById("noWorkshopsMsg").classList.toggle("hidden", filtered.length > 0);
+      filtered.forEach(w => {
+        const el = document.createElement("div");
+        el.className = "record-card";
+        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(w.WorkshopDate || "No date")} • ${esc(w.Status)}</div><div class="tiny muted">${esc(w.Type)} • ${esc(w.Participants)} participants • ${esc(w.Hours)} hours</div>`;
+        wrap.appendChild(el);
+      });
+    }
+
+    function currentCalc() {
+      return Rates.calculate({
         orgType: document.querySelector('input[name="orgType"]:checked').value,
         participants: document.getElementById("participants").value,
-        hours: document.querySelector('input[name="hours"]:checked').value,
+        hours: document.getElementById("hours").value,
         discounts: {
           consulting: document.getElementById("consultingDiscount").value,
           prep: document.getElementById("prepDiscount").value,
           assessment: document.getElementById("assessmentDiscount").value
         }
-      };
+      });
     }
 
-    function recalculate() {
-      saveProfile();
-      const c = Rates.calculate(getCalcInput());
-      const isIndividual = c.orgType === "individual_debrief";
-      document.getElementById("participantsWrap").style.opacity = isIndividual ? ".38" : "1";
-      document.getElementById("hoursWrap").style.opacity = isIndividual ? ".38" : "1";
-      document.getElementById("prepDiscountWrap").style.opacity = isIndividual ? ".38" : "1";
-      document.getElementById("assessmentDiscountWrap").style.opacity = isIndividual ? ".38" : "1";
-      document.getElementById("feePrepRow").classList.toggle("hidden", isIndividual);
-      document.getElementById("feeAdminRow").classList.toggle("hidden", isIndividual);
+    function recalc() {
+      const c = currentCalc();
       document.getElementById("feeConsulting").textContent = JJC_money(c.consultingNet);
       document.getElementById("feePrep").textContent = JJC_money(c.prepNet);
       document.getElementById("feeAdmin").textContent = JJC_money(c.assessmentNet);
       document.getElementById("grandTotalVal").textContent = JJC_money(c.total);
+      document.getElementById("feePrepRow").classList.toggle("hidden", c.isIndividual);
+      document.getElementById("feeAdminRow").classList.toggle("hidden", c.isIndividual);
       return c;
     }
 
-    function saveScenario() {
-      const c = recalculate();
-      const fallback = "Estimate " + (savedScenarios.length + 1);
-      const name = prompt("Name this estimate scenario:", fallback);
-      if (name === null) return;
-      const estimate = { id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2), name: name.trim() || fallback, createdAt: new Date().toISOString(), ...c };
-      savedScenarios = Estimates.saveToLocal(estimate);
+    function saveEstimate() {
+      const c = recalc();
+      const estimate = {
+        id: nextId(estimates, "EST", "id"),
+        name: document.getElementById("estimateName").value.trim() || "Estimate " + (estimates.length + 1),
+        createdAt: new Date().toISOString(),
+        ...c
+      };
+      estimates = [estimate, ...estimates.filter(x => x.id !== estimate.id)];
+      saveLocal(K.estimates, estimates);
       Database.saveEstimate(Estimates.createSheetRow(estimate));
-      renderScenarios();
-      toast("Estimate saved locally and sent to Google Sheets.");
+      renderEstimates();
+      toast("Estimate saved.");
     }
 
-    function renderScenarios() {
-      const wrap = document.getElementById("scenariosList");
-      const empty = document.getElementById("noScenariosMsg");
+    function renderEstimates() {
+      const wrap = document.getElementById("estimatesList");
       wrap.innerHTML = "";
-      empty.classList.toggle("hidden", savedScenarios.length > 0);
-      savedScenarios.forEach(s => {
+      document.getElementById("noEstimatesMsg").classList.toggle("hidden", estimates.length > 0);
+      estimates.forEach(e => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${escapeHtml(s.name)}</div><div class="tiny muted">${escapeHtml(s.orgType)} • ${s.participants} participants • ${s.hours} hours</div><div class="record-total">${JJC_money(s.total)}</div>`;
+        el.innerHTML = `<div class="record-title">${esc(e.name)}</div><div class="tiny muted">${esc(e.id)} • ${esc(e.orgType)}</div><div class="record-total">${JJC_money(e.total)}</div>`;
         wrap.appendChild(el);
       });
     }
 
-    function openInvoiceModal() {
+    function prepareInvoiceDefaults() {
       const today = new Date();
       const due = new Date();
       due.setDate(today.getDate() + 30);
-      document.getElementById("invNo").value = Invoices.nextNumber(savedInvoices.length);
+      document.getElementById("invNo").value = nextId(invoices, "INV", "invoiceNo");
       document.getElementById("invIssueDate").value = today.toISOString().slice(0, 10);
       document.getElementById("invDueDate").value = due.toISOString().slice(0, 10);
-      document.getElementById("invoiceModal").classList.remove("hidden");
     }
-
-    function closeInvoiceModal() { document.getElementById("invoiceModal").classList.add("hidden"); }
-    function closePrintView() { document.getElementById("printView").classList.add("hidden"); }
 
     function createInvoice() {
       const clientName = document.getElementById("invClientName").value.trim();
       if (!clientName) return alert("Client name is required.");
-      const c = recalculate();
+      const c = recalc();
       const invoice = {
         id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
         invoiceNo: document.getElementById("invNo").value.trim(),
@@ -296,16 +734,28 @@
         profile: { ...profile },
         ...c
       };
-      savedInvoices = Invoices.saveToLocal(invoice);
+      invoices = [invoice, ...invoices.filter(x => x.invoiceNo !== invoice.invoiceNo)];
+      saveLocal(K.invoices, invoices);
       Database.saveInvoice(Invoices.createSheetRow(invoice));
       renderInvoices();
-      closeInvoiceModal();
+      prepareInvoiceDefaults();
       showInvoice(invoice);
-      toast("Invoice saved locally and sent to Google Sheets.");
+      toast("Invoice saved.");
+    }
+
+    function renderInvoices() {
+      const wrap = document.getElementById("invoicesList");
+      wrap.innerHTML = "";
+      document.getElementById("noInvoicesMsg").classList.toggle("hidden", invoices.length > 0);
+      invoices.forEach(inv => {
+        const el = document.createElement("div");
+        el.className = "record-card";
+        el.innerHTML = `<div class="record-title">${esc(inv.clientName)}</div><div class="tiny muted">${esc(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${esc(inv.terms)}</div><div class="record-total">${JJC_money(inv.total)}</div>`;
+        wrap.appendChild(el);
+      });
     }
 
     function showInvoice(inv) {
-      JJC_applyBranding("admin");
       document.getElementById("printSenderName").textContent = inv.profile.senderName;
       document.getElementById("printPreparedBy").textContent = inv.profile.senderName;
       document.getElementById("printAddress").textContent = inv.profile.senderAddress || "";
@@ -318,13 +768,14 @@
       document.getElementById("printClientName").textContent = inv.clientName;
       document.getElementById("printClientEmail").textContent = inv.clientEmail || "-";
 
-      const rows = [];
-      rows.push({ desc: inv.isIndividual ? "Working Genius individual debrief session" : "Working Genius consulting / facilitation", qty: inv.isIndividual ? 1 : inv.hours, rate: inv.isIndividual ? inv.consultingGross : inv.hourly, amount: inv.consultingGross });
+      const rows = [
+        { desc: inv.isIndividual ? "Working Genius individual debrief session" : "Working Genius consulting / facilitation", qty: inv.isIndividual ? 1 : inv.hours, rate: inv.isIndividual ? inv.consultingGross : inv.hourly, amount: inv.consultingGross }
+      ];
       if (!inv.isIndividual) {
         rows.push({ desc: "Comprehensive materials preparation fee", qty: Math.ceil(inv.participants / 12), rate: inv.prepRate, amount: inv.prepGross });
         rows.push({ desc: "Working Genius assessment administration fee", qty: inv.participants, rate: inv.assessmentRate, amount: inv.assessmentGross });
       }
-      document.getElementById("printTableBody").innerHTML = rows.map(r => `<tr><td>${escapeHtml(r.desc)}</td><td>${r.qty}</td><td>${JJC_money(r.rate)}</td><td>${JJC_money(r.amount)}</td></tr>`).join("");
+      document.getElementById("printTableBody").innerHTML = rows.map(r => `<tr><td>${esc(r.desc)}</td><td>${r.qty}</td><td>${JJC_money(r.rate)}</td><td>${JJC_money(r.amount)}</td></tr>`).join("");
       document.getElementById("printSubtotal").textContent = JJC_money(inv.subtotal);
       document.getElementById("printDiscount").textContent = "-" + JJC_money(inv.discounts);
       document.getElementById("printDiscountLine").style.display = inv.discounts > 0 ? "flex" : "none";
@@ -332,42 +783,58 @@
       document.getElementById("printView").classList.remove("hidden");
     }
 
-    function renderInvoices() {
-      const wrap = document.getElementById("invoicesList");
-      const empty = document.getElementById("noInvoicesMsg");
-      wrap.innerHTML = "";
-      empty.classList.toggle("hidden", savedInvoices.length > 0);
-      savedInvoices.forEach(inv => {
-        const el = document.createElement("div");
-        el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${escapeHtml(inv.clientName)}</div><div class="tiny muted">${escapeHtml(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${escapeHtml(inv.terms)}</div><div class="record-total">${JJC_money(inv.total)}</div><div class="actions"><button class="button secondary small-btn" onclick='showInvoice(${JSON.stringify(inv).replaceAll("'", "&#039;")})'>View / Print</button></div>`;
-        wrap.appendChild(el);
-      });
+    function closePrintView() { document.getElementById("printView").classList.add("hidden"); }
+
+    function loadProfile() {
+      document.getElementById("senderName").value = profile.senderName;
+      document.getElementById("senderEmail").value = profile.senderEmail;
+      document.getElementById("senderPhone").value = profile.senderPhone;
+      document.getElementById("senderAddress").value = profile.senderAddress;
     }
 
-    function switchTab(tab) {
-      const isScen = tab === "scenarios";
-      document.getElementById("tabScenarios").classList.toggle("hidden", !isScen);
-      document.getElementById("tabInvoices").classList.toggle("hidden", isScen);
-      document.getElementById("tabScenariosBtn").classList.toggle("active", isScen);
-      document.getElementById("tabInvoicesBtn").classList.toggle("active", !isScen);
+    function saveProfile() {
+      profile.senderName = document.getElementById("senderName").value || profile.senderName;
+      profile.senderEmail = document.getElementById("senderEmail").value || profile.senderEmail;
+      profile.senderPhone = document.getElementById("senderPhone").value || profile.senderPhone;
+      profile.senderAddress = document.getElementById("senderAddress").value || profile.senderAddress;
+      localStorage.setItem(K.profile, JSON.stringify(profile));
+      toast("Profile saved.");
+    }
+
+    function showRates() {
+      document.getElementById("rateCorporateHourly").value = JJC_RATES.CorporateHourly;
+      document.getElementById("rateCorporatePrep").value = JJC_RATES.CorporatePrep;
+      document.getElementById("rateCorporateAssessment").value = JJC_RATES.CorporateAssessment;
+      document.getElementById("rateNonprofitHourly").value = JJC_RATES.NonprofitHourly;
+      document.getElementById("rateNonprofitPrep").value = JJC_RATES.NonprofitPrep;
+      document.getElementById("rateNonprofitAssessment").value = JJC_RATES.NonprofitAssessment;
+      document.getElementById("rateIndividualDebrief").value = JJC_RATES.IndividualDebrief;
     }
 
     function formatDate(s) { if (!s) return "-"; return new Date(s + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); }
-    function escapeHtml(str) { return String(str || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+    function esc(str) { return String(str || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
     function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 
-    document.querySelectorAll("input, select, textarea").forEach(el => el.addEventListener("input", recalculate));
-    document.querySelectorAll('input[name="orgType"], input[name="hours"]').forEach(el => el.addEventListener("change", recalculate));
+    document.querySelectorAll("#view-estimates input, #view-estimates select").forEach(el => el.addEventListener("input", recalc));
+    document.querySelectorAll('input[name="orgType"]').forEach(el => el.addEventListener("change", recalc));
 
     window.addEventListener("load", async () => {
       JJC_applyBranding("admin");
+      loadAllLocal();
       loadProfile();
       await Rates.load();
       showRates();
-      recalculate();
-      renderScenarios();
+      resetClientForm();
+      resetWorkshopForm();
+      prepareInvoiceDefaults();
+      recalc();
+      renderClients();
+      renderWorkshops();
+      renderEstimates();
       renderInvoices();
+      updateMetrics();
+      const initial = location.hash ? location.hash.replace("#", "") : "dashboard";
+      if (document.getElementById("view-" + initial)) showView(initial);
     });
   </script>
 </body>
