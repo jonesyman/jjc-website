@@ -57,7 +57,7 @@ p { margin: 0 0 16px; }
 .fee-list li { display: flex; justify-content: space-between; gap: 18px; padding: 10px 0; border-bottom: 1px solid rgba(148,163,184,.12); }
 .calculator { display: grid; grid-template-columns: .9fr 1.1fr; gap: 28px; align-items: start; }
 label { display: block; font-weight: 900; font-size: 14px; color: #cbd5e1; margin-bottom: 6px; }
-input, select, textarea { width: 100%; padding: 13px 14px; border: 1px solid #2b3b55; border-radius: 14px; font: inherit; background: #0a1221; color: var(--ink); }
+input, select, textarea { width: 100%; padding: 13px 14px; min-height: 44px; border: 1px solid #2b3b55; border-radius: 14px; font: inherit; font-size: 16px; background: #0a1221; color: var(--ink); }
 .field { margin-bottom: 16px; }
 .estimate { background: var(--brand); color: #fff; border-radius: var(--radius); padding: 22px; margin-top: 18px; border: 1px solid rgba(255,255,255,.12); }
 .estimate-row { display: flex; justify-content: space-between; gap: 16px; padding: 7px 0; color: #e2e8f0; }
@@ -69,4 +69,20 @@ footer { border-top: 1px solid var(--line); background: rgba(7,11,19,.92); paddi
   .hero-grid, .grid-3, .grid-2, .genius-grid, .calculator, .rates-grid { grid-template-columns: 1fr; }
   .nav { align-items: flex-start; flex-direction: column; }
   nav ul { justify-content: flex-start; }
+}
+
+
+@media (max-width: 700px) {
+  .container { padding: 0 16px; }
+  .hero { padding: 48px 0 42px; }
+  .section { padding: 46px 0; }
+  .card { padding: 20px; border-radius: 18px; }
+  .nav { gap: 14px; }
+  nav ul { width: 100%; gap: 6px; }
+  nav a { padding: 8px 10px; font-size: 13px; }
+  .lead { font-size: 17px; }
+  .buttons { display: grid; grid-template-columns: 1fr; }
+  .button { width: 100%; text-align: center; min-height: 44px; }
+  .estimate-row, .estimate-total, .fee-list li { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .estimate-total span:last-child { font-size: 30px; }
 }
