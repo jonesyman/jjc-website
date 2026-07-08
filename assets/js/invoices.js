@@ -7,18 +7,18 @@ window.Invoices = {
   },
 
   createSheetRow(invoice) {
-    return {
-      "Invoice_#": invoice.invoiceNo,
-      EstimateID: invoice.estimateId || "",
-      Date: invoice.issueDate,
-      Due: invoice.dueDate,
-      Amount: invoice.total,
-      Paid: invoice.paid || "No",
-      PaidDate: invoice.paidDate || "",
-      "Check_#": invoice.checkNumber || "",
-      "ACH_#": invoice.achNumber || "",
-      StripeID: invoice.stripeId || ""
-    };
+return {
+  invoiceNo: invoice.invoiceNo,
+  estimateId: invoice.estimateId || "",
+  issueDate: invoice.issueDate,
+  dueDate: invoice.dueDate,
+  total: invoice.total,
+  paid: invoice.paid || "No",
+  paidDate: invoice.paidDate || "",
+  checkNumber: invoice.checkNumber || "",
+  achNumber: invoice.achNumber || "",
+  stripeId: invoice.stripeId || ""
+};
   },
 
   saveToLocal(invoice) {
