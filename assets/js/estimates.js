@@ -2,20 +2,20 @@
 // Estimate-specific helpers.
 window.Estimates = {
   createSheetRow(estimate) {
-    return {
-      EstimateID: estimate.id,
-      ClientID: estimate.clientId || "",
-      Date: (estimate.createdAt || new Date().toISOString()).slice(0, 10),
-      Type: estimate.orgType,
-      Hours: estimate.hours,
-      Participants: estimate.participants,
-      Total: estimate.total,
-      Status: estimate.status || "Draft",
-      Discount: estimate.discounts || 0,
-      "Workshop Date": estimate.workshopDate || "",
-      Notes: estimate.notes || estimate.name || "",
-      Probability: estimate.probability || ""
-    };
+return {
+  id: estimate.id,
+  ClientID: estimate.clientId || "",
+  createdAt: (estimate.createdAt || new Date().toISOString()).slice(0, 10),
+  orgType: estimate.orgType,
+  hours: estimate.hours,
+  participants: estimate.participants,
+  total: estimate.total,
+  status: estimate.status || "Draft",
+  discounts: estimate.discounts || 0,
+  workshopDate: estimate.workshopDate || "",
+  name: estimate.name || "",
+  probability: estimate.probability || ""
+};
   },
 
   saveToLocal(estimate) {
