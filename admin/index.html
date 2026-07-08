@@ -595,10 +595,18 @@ async function loadAllLocal() {
       document.getElementById("metricInvoices").textContent = invoices.length;
     }
 
-    function nextId(collection, prefix, field) {
-      const max = collection.map(x => String(x[field] || "").match(new RegExp("^" + prefix + "-(\\\\d+)$"))).filter(Boolean).map(m => Number(m[1])).reduce((a,b) => Math.max(a,b), 0);
-      return prefix + "-" + String(max + 1).padStart(4, "0");
-    }
+function nextId(collection, prefix, field) {
+  const usedNumbers = collection
+    .map(item => String(item[field] || "").trim())
+    .map(value => {
+      const match = value.match(new RegExp("^" + prefix + "-(\\d+)$", "i"));
+      return match ? Number(match[1]) : 0;
+    });
+
+  const max = usedNumbers.length ? Math.max(...usedNumbers) : 0;
+
+  return prefix + "-" + String(max + 1).padStart(4, "0");
+}
 
     function resetClientForm() {
       document.getElementById("clientId").value = nextId(clients, "CLI", "ClientID");
