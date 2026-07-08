@@ -565,7 +565,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.07.4";
+    const APP_VERSION = "2026.07.07.5";
 
     const K = {
       clients: "jjc_clients",
@@ -1028,6 +1028,40 @@ Sanger, CA 93657"></textarea>
       prepareInvoiceDefaults();
     }
 
+    function getStoredLineDiscounts(inv = {}) {
+      const consultingGross = Number(inv.consultingGross || 0);
+      const prepGross = Number(inv.prepGross || 0);
+      const assessmentGross = Number(inv.assessmentGross || 0);
+
+      let consultingDiscount = Number(inv.consultingDiscount || inv.ConsultingDiscount || 0);
+      let prepDiscount = Number(inv.prepDiscount || inv.PrepDiscount || 0);
+      let assessmentDiscount = Number(inv.assessmentDiscount || inv.AssessmentDiscount || 0);
+
+      if (!consultingDiscount && Number(inv.consultingNet || 0) < consultingGross) {
+        consultingDiscount = consultingGross - Number(inv.consultingNet || 0);
+      }
+      if (!prepDiscount && Number(inv.prepNet || 0) < prepGross) {
+        prepDiscount = prepGross - Number(inv.prepNet || 0);
+      }
+      if (!assessmentDiscount && Number(inv.assessmentNet || 0) < assessmentGross) {
+        assessmentDiscount = assessmentGross - Number(inv.assessmentNet || 0);
+      }
+
+      // Older saved invoices only had one total discount column. If the line-level
+      // discount fields are blank, allocate the saved total across the invoice lines
+      // so editing and previewing reproduce the saved invoice total.
+      if (!consultingDiscount && !prepDiscount && !assessmentDiscount && Number(inv.discounts || 0) > 0) {
+        let remaining = Number(inv.discounts || 0);
+        consultingDiscount = Math.min(consultingGross, remaining);
+        remaining -= consultingDiscount;
+        prepDiscount = Math.min(prepGross, remaining);
+        remaining -= prepDiscount;
+        assessmentDiscount = Math.min(assessmentGross, remaining);
+      }
+
+      return { consultingDiscount, prepDiscount, assessmentDiscount };
+    }
+
     function invoiceCalcFromSource(source) {
       const base = source || {};
       const consultingGross = Number(base.consultingGross || 0);
@@ -1045,6 +1079,9 @@ Sanger, CA 93657"></textarea>
         consultingGross,
         prepGross,
         assessmentGross,
+        consultingDiscount,
+        prepDiscount,
+        assessmentDiscount,
         consultingNet,
         prepNet,
         assessmentNet,
@@ -1114,9 +1151,10 @@ Sanger, CA 93657"></textarea>
       document.getElementById("invStatus").value = inv.status || "Draft";
       document.getElementById("invClientName").value = inv.clientName || "";
       document.getElementById("invClientEmail").value = inv.clientEmail || "";
-      document.getElementById("invConsultingDiscount").value = Number(inv.consultingGross || 0) - Number(inv.consultingNet || 0) || "";
-      document.getElementById("invPrepDiscount").value = Number(inv.prepGross || 0) - Number(inv.prepNet || 0) || "";
-      document.getElementById("invAssessmentDiscount").value = Number(inv.assessmentGross || 0) - Number(inv.assessmentNet || 0) || "";
+      const lineDiscounts = getStoredLineDiscounts(inv);
+      document.getElementById("invConsultingDiscount").value = lineDiscounts.consultingDiscount || "";
+      document.getElementById("invPrepDiscount").value = lineDiscounts.prepDiscount || "";
+      document.getElementById("invAssessmentDiscount").value = lineDiscounts.assessmentDiscount || "";
       document.getElementById("invIssueDate").value = normalizeDateInput(inv.issueDate);
       document.getElementById("invDueDate").value = normalizeDateInput(inv.dueDate);
       showView("invoices");
@@ -1269,6 +1307,14 @@ Sanger, CA 93657"></textarea>
     function normalizeInvoice(inv) {
       const calcSource = inv.estimateId ? estimates.find(e => e.id === inv.estimateId) : null;
       const merged = normalizeEstimate({ ...(calcSource || {}), ...inv, id: inv.estimateId || inv.id || "" });
+      const lineDiscounts = getStoredLineDiscounts({ ...merged, ...inv });
+      const consultingGross = Number(inv.consultingGross || merged.consultingGross || 0);
+      const prepGross = Number(inv.prepGross || merged.prepGross || 0);
+      const assessmentGross = Number(inv.assessmentGross || merged.assessmentGross || 0);
+      const consultingNet = Math.max(0, consultingGross - lineDiscounts.consultingDiscount);
+      const prepNet = Math.max(0, prepGross - lineDiscounts.prepDiscount);
+      const assessmentNet = Math.max(0, assessmentGross - lineDiscounts.assessmentDiscount);
+      const discounts = lineDiscounts.consultingDiscount + lineDiscounts.prepDiscount + lineDiscounts.assessmentDiscount;
       return {
         ...merged,
         ...inv,
@@ -1279,6 +1325,16 @@ Sanger, CA 93657"></textarea>
         status: inv.status || inv.Status || "Draft",
         issueDate: normalizeDateInput(inv.issueDate) || new Date().toISOString().slice(0, 10),
         dueDate: normalizeDateInput(inv.dueDate),
+        consultingGross,
+        prepGross,
+        assessmentGross,
+        ...lineDiscounts,
+        consultingNet,
+        prepNet,
+        assessmentNet,
+        discounts: discounts || Number(inv.discounts || 0),
+        subtotal: consultingGross + prepGross + assessmentGross,
+        total: Number(inv.total || (consultingNet + prepNet + assessmentNet)),
         profile: { ...profile, ...(inv.profile || {}), invoiceFooter: inv.invoiceFooter || inv.InvoiceFooter || profile.invoiceFooter, paymentInstructions: inv.paymentInstructions || inv.PaymentInstructions || profile.paymentInstructions, checksPayableTo: inv.checksPayableTo || profile.checksPayableTo }
       };
     }
