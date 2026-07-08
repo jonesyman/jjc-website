@@ -594,6 +594,30 @@ async function loadAllLocal() {
       document.getElementById("metricEstimates").textContent = estimates.length;
       document.getElementById("metricInvoices").textContent = invoices.length;
     }
+    function convertEstimateToInvoice(estimateId) {
+  const estimate = estimates.find(e => e.id === estimateId);
+  if (!estimate) {
+    alert("Estimate not found.");
+    return;
+  }
+
+  showView("invoices");
+
+  document.getElementById("invNo").value = nextId(invoices, "INV", "invoiceNo");
+  document.getElementById("invClientName").value = estimate.name || "";
+  document.getElementById("invClientEmail").value = "";
+
+  const today = new Date();
+  const due = new Date();
+  due.setDate(today.getDate() + 30);
+
+  document.getElementById("invIssueDate").value = today.toISOString().slice(0, 10);
+  document.getElementById("invDueDate").value = due.toISOString().slice(0, 10);
+
+  window.currentEstimateForInvoice = estimate;
+
+  toast("Estimate loaded for invoice.");
+}
 
 function nextId(collection, prefix, field) {
   const usedNumbers = collection
@@ -741,17 +765,30 @@ function nextId(collection, prefix, field) {
       toast("Estimate saved.");
     }
 
-    function renderEstimates() {
-      const wrap = document.getElementById("estimatesList");
-      wrap.innerHTML = "";
-      document.getElementById("noEstimatesMsg").classList.toggle("hidden", estimates.length > 0);
-      estimates.forEach(e => {
-        const el = document.createElement("div");
-        el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(e.name)}</div><div class="tiny muted">${esc(e.id)} • ${esc(e.orgType)}</div><div class="record-total">${JJC_money(e.total)}</div>`;
-        wrap.appendChild(el);
-      });
-    }
+function renderEstimates() {
+  const wrap = document.getElementById("estimatesList");
+  wrap.innerHTML = "";
+
+  document.getElementById("noEstimatesMsg").classList.toggle("hidden", estimates.length > 0);
+
+  estimates.forEach(e => {
+    const el = document.createElement("div");
+    el.className = "record-card";
+
+    el.innerHTML = `
+      <div class="record-title">${esc(e.name)}</div>
+      <div class="tiny muted">${esc(e.id)} • ${esc(e.orgType)}</div>
+      <div class="record-total">${JJC_money(e.total)}</div>
+      <div class="actions">
+        <button class="button small-btn" onclick="convertEstimateToInvoice('${esc(e.id)}')">
+          Convert to Invoice
+        </button>
+      </div>
+    `;
+
+    wrap.appendChild(el);
+  });
+}
 
     function prepareInvoiceDefaults() {
       const today = new Date();
@@ -769,6 +806,7 @@ function nextId(collection, prefix, field) {
       const invoice = {
         id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
         invoiceNo: document.getElementById("invNo").value.trim(),
+        estimateId: window.currentEstimateForInvoice?.id || "",
         terms: document.getElementById("invTerms").value,
         clientName,
         clientEmail: document.getElementById("invClientEmail").value.trim(),
