@@ -13,6 +13,7 @@ return {
   clientName: invoice.clientName || "",
   clientEmail: invoice.clientEmail || "",
   terms: invoice.terms || "Net 30",
+  status: invoice.status || "Draft",
   issueDate: invoice.issueDate,
   dueDate: invoice.dueDate,
   subtotal: invoice.subtotal || 0,
@@ -35,7 +36,10 @@ return {
   paidDate: invoice.paidDate || "",
   checkNumber: invoice.checkNumber || "",
   achNumber: invoice.achNumber || "",
-  stripeId: invoice.stripeId || ""
+  stripeId: invoice.stripeId || "",
+  invoiceFooter: invoice.profile?.invoiceFooter || invoice.invoiceFooter || "",
+  paymentInstructions: invoice.profile?.paymentInstructions || invoice.paymentInstructions || "",
+  checksPayableTo: invoice.profile?.checksPayableTo || invoice.checksPayableTo || ""
 };
   },
 

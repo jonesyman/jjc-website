@@ -417,8 +417,15 @@
                 <div class="field"><label>Invoice #</label><input id="invNo" list="invoicesDatalist"></div>
                 <div class="field"><label>Terms</label><select id="invTerms"><option>Due on Receipt</option><option>Net 15</option><option selected>Net 30</option><option>Net 45</option></select></div>
               </div>
+              <div class="field"><label>Status</label><select id="invStatus"><option>Draft</option><option>Sent</option><option>Paid</option><option>Partially Paid</option><option>Cancelled</option><option>Void</option></select></div>
               <div class="field"><label>Client / Organization</label><input id="invClientName" list="clientsDatalist" onchange="selectInvoiceClient()" oninput="selectInvoiceClient(false)"></div>
               <div class="field"><label>Client Email</label><input id="invClientEmail" type="email"></div>
+              <div class="form-row-3">
+                <div class="field"><label>Consulting Discount</label><input id="invConsultingDiscount" type="number" min="0" placeholder="0"></div>
+                <div class="field"><label>Prep Discount</label><input id="invPrepDiscount" type="number" min="0" placeholder="0"></div>
+                <div class="field"><label>Assessment Discount</label><input id="invAssessmentDiscount" type="number" min="0" placeholder="0"></div>
+              </div>
+              <p class="muted small" style="margin-top:-6px;">Use these only when the invoice needs a different discount than the estimate.</p>
               <div class="form-row">
                 <div class="field"><label>Issue Date</label><input id="invIssueDate" type="date"></div>
                 <div class="field"><label>Due Date</label><input id="invDueDate" type="date"></div>
@@ -545,19 +552,20 @@ Sanger, CA 93657"></textarea>
       <div id="printPaymentInstructions" style="margin-top:32px; padding:16px; border:1px solid #e2e8f0; border-radius:12px; color:#475569; white-space:pre-wrap; font-size:13px;"></div>
         <div
           id="printInvoiceFooter"
+          class="invoice-footer-note"
           style="border-top:1px solid #e2e8f0; margin-top:44px; padding-top:18px; color:#64748b; text-align:center; font-size:12px; white-space:pre-wrap;">
         </div>
     </div>
   </div>
 
   <script src="../assets/js/branding.js"></script>
-  <script src="../assets/js/googleSheets.js?v=2"></script>
+  <script src="../assets/js/googleSheets.js?v=3"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js"></script>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.07.2";
+    const APP_VERSION = "2026.07.07.3";
 
     const K = {
       clients: "jjc_clients",
@@ -584,6 +592,15 @@ Sanger, CA 93657"></textarea>
       paymentInstructions: "",
       invoiceFooter: "Thank you for partnering with Jeff Jones Consulting."
     };
+
+    function settingValue(...keys) {
+      for (const key of keys) {
+        if (settings && settings[key] !== undefined && settings[key] !== null && String(settings[key]).trim() !== "") {
+          return settings[key];
+        }
+      }
+      return "";
+    }
 
     async function loadAllLocal() {
       try {
@@ -633,13 +650,13 @@ Sanger, CA 93657"></textarea>
     async function loadSettings() {
       try {
         settings = await Database.getSettings();
-        profile.senderName = settings.businessName || profile.senderName;
-        profile.senderEmail = settings.email || profile.senderEmail;
-        profile.senderPhone = settings.phone || profile.senderPhone;
-        profile.senderAddress = settings.address || profile.senderAddress;
-        profile.invoiceFooter = settings.invoiceFooter || "";
-        profile.paymentInstructions = settings.paymentInstructions || "";
-        profile.checksPayableTo = settings.checksPayableTo || "Jeff Jones";
+        profile.senderName = settingValue("businessName", "Business Name", "Company", "company") || profile.senderName;
+        profile.senderEmail = settingValue("email", "Email") || profile.senderEmail;
+        profile.senderPhone = settingValue("phone", "Phone") || profile.senderPhone;
+        profile.senderAddress = settingValue("address", "Address") || profile.senderAddress;
+        profile.invoiceFooter = settingValue("invoiceFooter", "Invoice Footer");
+        profile.paymentInstructions = settingValue("paymentInstructions", "Payment Instructions");
+        profile.checksPayableTo = settingValue("checksPayableTo", "Checks Payable To") || "Jeff Jones";
         localStorage.setItem(K.profile, JSON.stringify(profile));
       } catch (err) {
         console.warn("Unable to load settings from Google Sheets.", err);
@@ -981,6 +998,9 @@ Sanger, CA 93657"></textarea>
       document.getElementById("invNo").value = nextId(invoices, "INV", "invoiceNo");
       document.getElementById("invClientName").value = estimate.name || "";
       document.getElementById("invClientEmail").value = "";
+      document.getElementById("invConsultingDiscount").value = Number(estimate.consultingGross || 0) - Number(estimate.consultingNet || 0) || "";
+      document.getElementById("invPrepDiscount").value = Number(estimate.prepGross || 0) - Number(estimate.prepNet || 0) || "";
+      document.getElementById("invAssessmentDiscount").value = Number(estimate.assessmentGross || 0) - Number(estimate.assessmentNet || 0) || "";
       window.currentEstimateForInvoice = estimate;
       toast("Estimate loaded for invoice. Preview it before saving.");
     }
@@ -999,9 +1019,37 @@ Sanger, CA 93657"></textarea>
       window.currentEstimateForInvoice = null;
       document.getElementById("invoiceFormTitle").textContent = "Create Invoice";
       document.getElementById("invTerms").value = "Net 30";
+      document.getElementById("invStatus").value = "Draft";
       document.getElementById("invClientName").value = "";
       document.getElementById("invClientEmail").value = "";
+      ["invConsultingDiscount", "invPrepDiscount", "invAssessmentDiscount"].forEach(id => document.getElementById(id).value = "");
       prepareInvoiceDefaults();
+    }
+
+    function invoiceCalcFromSource(source) {
+      const base = source || {};
+      const consultingGross = Number(base.consultingGross || 0);
+      const prepGross = Number(base.prepGross || 0);
+      const assessmentGross = Number(base.assessmentGross || 0);
+      const consultingDiscount = Number(document.getElementById("invConsultingDiscount").value || 0);
+      const prepDiscount = Number(document.getElementById("invPrepDiscount").value || 0);
+      const assessmentDiscount = Number(document.getElementById("invAssessmentDiscount").value || 0);
+      const consultingNet = Math.max(0, consultingGross - consultingDiscount);
+      const prepNet = Math.max(0, prepGross - prepDiscount);
+      const assessmentNet = Math.max(0, assessmentGross - assessmentDiscount);
+      const discounts = (consultingGross - consultingNet) + (prepGross - prepNet) + (assessmentGross - assessmentNet);
+      return {
+        ...base,
+        consultingGross,
+        prepGross,
+        assessmentGross,
+        consultingNet,
+        prepNet,
+        assessmentNet,
+        discounts,
+        subtotal: consultingGross + prepGross + assessmentGross,
+        total: consultingNet + prepNet + assessmentNet
+      };
     }
 
     function getInvoiceFromForm() {
@@ -1010,12 +1058,13 @@ Sanger, CA 93657"></textarea>
         alert("Client / Organization is required.");
         return null;
       }
-      const c = window.currentEstimateForInvoice || recalc();
+      const c = window.currentEstimateForInvoice ? invoiceCalcFromSource(window.currentEstimateForInvoice) : recalc();
       return normalizeInvoice({
         id: editingInvoiceNo || (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)),
         invoiceNo: document.getElementById("invNo").value.trim() || nextId(invoices, "INV", "invoiceNo"),
         estimateId: window.currentEstimateForInvoice?.id || "",
         terms: document.getElementById("invTerms").value,
+        status: document.getElementById("invStatus").value,
         clientName,
         clientEmail: document.getElementById("invClientEmail").value.trim(),
         issueDate: document.getElementById("invIssueDate").value,
@@ -1051,8 +1100,12 @@ Sanger, CA 93657"></textarea>
       document.getElementById("invoiceFormTitle").textContent = "Edit Invoice " + inv.invoiceNo;
       document.getElementById("invNo").value = inv.invoiceNo || "";
       document.getElementById("invTerms").value = inv.terms || "Net 30";
+      document.getElementById("invStatus").value = inv.status || "Draft";
       document.getElementById("invClientName").value = inv.clientName || "";
       document.getElementById("invClientEmail").value = inv.clientEmail || "";
+      document.getElementById("invConsultingDiscount").value = Number(inv.consultingGross || 0) - Number(inv.consultingNet || 0) || "";
+      document.getElementById("invPrepDiscount").value = Number(inv.prepGross || 0) - Number(inv.prepNet || 0) || "";
+      document.getElementById("invAssessmentDiscount").value = Number(inv.assessmentGross || 0) - Number(inv.assessmentNet || 0) || "";
       document.getElementById("invIssueDate").value = normalizeDateInput(inv.issueDate);
       document.getElementById("invDueDate").value = normalizeDateInput(inv.dueDate);
       showView("invoices");
@@ -1075,7 +1128,7 @@ Sanger, CA 93657"></textarea>
       invoices.forEach(inv => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(inv.clientName)}</div><div class="tiny muted">${esc(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${esc(inv.terms)}</div><div class="record-total">${JJC_money(inv.total)}</div><div class="actions"><button class="button secondary small-btn" onclick="showSavedInvoice('${jsEsc(inv.invoiceNo)}')">Preview</button><button class="button secondary small-btn" onclick="editInvoice('${jsEsc(inv.invoiceNo)}')">Edit</button><button class="button danger small-btn" onclick="deleteInvoice('${jsEsc(inv.invoiceNo)}')">Delete</button></div>`;
+        el.innerHTML = `<div class="record-title">${esc(inv.clientName)}</div><div class="tiny muted">${esc(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${esc(inv.terms)} • ${esc(inv.status || "Draft")}</div><div class="record-total">${JJC_money(inv.total)}</div><div class="actions"><button class="button secondary small-btn" onclick="showSavedInvoice('${jsEsc(inv.invoiceNo)}')">Preview</button><button class="button secondary small-btn" onclick="editInvoice('${jsEsc(inv.invoiceNo)}')">Edit</button><button class="button danger small-btn" onclick="deleteInvoice('${jsEsc(inv.invoiceNo)}')">Delete</button></div>`;
         wrap.appendChild(el);
       });
     }
@@ -1087,7 +1140,7 @@ Sanger, CA 93657"></textarea>
     }
 
     function showDocumentPreview(doc, type = "Invoice") {
-      const docProfile = doc.profile || profile;
+      const docProfile = { ...profile, ...(doc.profile || {}) };
       document.getElementById("printPreviewLabel").textContent = `Printable ${type.toLowerCase()} preview`;
       document.getElementById("printDocumentTitle").textContent = type;
       document.getElementById("printSenderName").textContent = docProfile.senderName || profile.senderName;
@@ -1119,7 +1172,9 @@ Sanger, CA 93657"></textarea>
       const paymentText = type === "Invoice" ? (docProfile.paymentInstructions || (docProfile.checksPayableTo ? "Please make checks payable to " + docProfile.checksPayableTo + "." : "")) : "";
       document.getElementById("printPaymentInstructions").textContent = paymentText;
       document.getElementById("printPaymentInstructions").style.display = paymentText ? "block" : "none";
-      document.getElementById("printInvoiceFooter").textContent = docProfile.invoiceFooter || "Thank you for partnering with Jeff Jones Consulting.";
+      const footerText = docProfile.invoiceFooter || settingValue("invoiceFooter", "Invoice Footer") || "Thank you for partnering with Jeff Jones Consulting.";
+      document.getElementById("printInvoiceFooter").textContent = footerText;
+      document.getElementById("printInvoiceFooter").style.display = footerText ? "block" : "none";
       document.getElementById("printView").classList.remove("hidden");
     }
 
@@ -1210,9 +1265,10 @@ Sanger, CA 93657"></textarea>
         clientName: inv.clientName || inv.name || "",
         clientEmail: inv.clientEmail || "",
         terms: inv.terms || "Net 30",
+        status: inv.status || inv.Status || "Draft",
         issueDate: normalizeDateInput(inv.issueDate) || new Date().toISOString().slice(0, 10),
         dueDate: normalizeDateInput(inv.dueDate),
-        profile: inv.profile || { ...profile }
+        profile: { ...profile, ...(inv.profile || {}), invoiceFooter: inv.invoiceFooter || inv.InvoiceFooter || profile.invoiceFooter, paymentInstructions: inv.paymentInstructions || inv.PaymentInstructions || profile.paymentInstructions, checksPayableTo: inv.checksPayableTo || profile.checksPayableTo }
       };
     }
 

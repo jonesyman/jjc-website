@@ -74,7 +74,7 @@ input, select, textarea { width: 100%; color: var(--ink); background: #0a1221; b
 .toast { position: fixed; right: 18px; bottom: 18px; z-index: 70; background: var(--brand); color: white; border: 1px solid rgba(255,255,255,.16); border-radius: 16px; padding: 13px 15px; font-weight: 900; box-shadow: 0 18px 50px rgba(0,0,0,.35); }
 .print-view { z-index: 60; overflow: auto; background: #e5e7eb; color: #111827; display: block; }
 .print-toolbar { max-width: 900px; margin: 0 auto 16px; background: white; border-radius: 15px; padding: 12px; display: flex; justify-content: space-between; gap: 12px; }
-.invoice-sheet { max-width: 900px; min-height: 1080px; margin: 0 auto; background: white; padding: 54px; box-shadow: 0 22px 70px rgba(0,0,0,.18); }
+.invoice-sheet { max-width: 900px; min-height: 1080px; margin: 0 auto; background: white; padding: 54px; box-shadow: 0 22px 70px rgba(0,0,0,.18); display: flex; flex-direction: column; }
 .invoice-logo-img { width: 72px; height: 72px; object-fit: contain; margin-bottom: 10px; }
 .invoice-header { display: flex; justify-content: space-between; gap: 28px; border-bottom: 3px solid var(--brand); padding-bottom: 22px; margin-bottom: 26px; }
 .invoice-title { font-size: 31px; font-weight: 900; color: var(--brand); margin: 0; }
@@ -87,12 +87,13 @@ input, select, textarea { width: 100%; color: var(--ink); background: #0a1221; b
 .invoice-totals { margin-left: auto; width: min(360px, 100%); font-size: 14px; }
 .invoice-totals .line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; }
 .invoice-totals .grand { color: var(--brand); font-size: 18px; font-weight: 900; border-bottom: 0; border-top: 3px solid var(--brand); margin-top: 8px; padding-top: 12px; }
+.invoice-footer-note { margin-top: auto !important; }
 footer { padding: 28px 0 38px; color: #64748b; text-align: center; font-size: 12px; }
 @media print {
   body { background: white !important; }
   header, main, footer, .print-toolbar, .no-print { display: none !important; }
   .print-view { position: static; padding: 0; background: white; }
-  .invoice-sheet { box-shadow: none; max-width: 100%; min-height: 0; padding: 0; }
+  .invoice-sheet { box-shadow: none; max-width: 100%; min-height: 10in; padding: 0; }
 }
 @media (max-width: 900px) {
   .workspace, .grid-2, .grid-3, .list-grid, .invoice-parties { grid-template-columns: 1fr; }
