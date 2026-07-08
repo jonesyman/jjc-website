@@ -427,12 +427,28 @@
             <div class="form-row">
               <div class="field"><label>Phone</label><input id="senderPhone"></div>
               <label>Address</label>
-<textarea
-    id="senderAddress"
-    rows="3"
-    placeholder="2650 Mary Ave.
-Sanger, CA 93657"></textarea>
+                <textarea
+                    id="senderAddress"
+                    rows="3"
+                    placeholder="2650 Mary Ave.
+                Sanger, CA 93657"></textarea>
             </div>
+
+            <div class="field">
+              <label>Checks Payable To</label>
+              <input id="checksPayableTo">
+            </div>
+            
+            <div class="field">
+              <label>Payment Instructions</label>
+              <textarea id="paymentInstructions" rows="3"></textarea>
+            </div>
+            
+            <div class="field">
+              <label>Invoice Footer</label>
+              <textarea id="invoiceFooter" rows="4"></textarea>
+            </div>
+            
             <div class="actions">
               <button class="button" onclick="saveProfile()">Save Profile</button>
             </div>
@@ -502,6 +518,10 @@ Sanger, CA 93657"></textarea>
         <div class="line" id="printDiscountLine"><span>Discounts</span><strong id="printDiscount">-$0.00</strong></div>
         <div class="line grand"><span>Total Due</span><span id="printGrandTotal">$0.00</span></div>
       </div>
+        <div
+          id="printInvoiceFooter"
+          style="border-top:1px solid #e2e8f0; margin-top:44px; padding-top:18px; color:#64748b; text-align:center; font-size:12px; white-space:pre-wrap;">
+        </div>
     </div>
   </div>
 
@@ -524,6 +544,7 @@ Sanger, CA 93657"></textarea>
     let workshops = [];
     let estimates = [];
     let invoices = [];
+    let settings = [];
 
     let profile = {
       senderName: "Jeff Jones Consulting",
@@ -573,6 +594,27 @@ async function loadAllLocal() {
     ...profile,
     ...JSON.parse(localStorage.getItem(K.profile) || "{}")
   };
+}
+    async function loadSettings() {
+  try {
+    settings = await Database.getSettings();
+
+    profile.senderName = settings.businessName || profile.senderName;
+    profile.senderEmail = settings.email || profile.senderEmail;
+    profile.senderPhone = settings.phone || profile.senderPhone;
+    profile.senderAddress = settings.address || profile.senderAddress;
+    profile.invoiceFooter = settings.invoiceFooter || "";
+    profile.paymentInstructions = settings.paymentInstructions || "";
+    profile.checksPayableTo = settings.checksPayableTo || "Jeff Jones";
+
+    localStorage.setItem(K.profile, JSON.stringify(profile));
+  } catch (err) {
+    console.warn("Unable to load settings from Google Sheets.", err);
+    profile = {
+      ...profile,
+      ...JSON.parse(localStorage.getItem(K.profile) || "{}")
+    };
+  }
 }
 
     function saveLocal(key, data) {
@@ -866,6 +908,8 @@ function renderEstimates() {
       document.getElementById("printDiscount").textContent = "-" + JJC_money(inv.discounts);
       document.getElementById("printDiscountLine").style.display = inv.discounts > 0 ? "flex" : "none";
       document.getElementById("printGrandTotal").textContent = JJC_money(inv.total);
+      document.getElementById("printInvoiceFooter").textContent =
+        profile.invoiceFooter || "Thank you for partnering with Jeff Jones Consulting.";
       document.getElementById("printView").classList.remove("hidden");
     }
 
@@ -876,6 +920,9 @@ function renderEstimates() {
       document.getElementById("senderEmail").value = profile.senderEmail;
       document.getElementById("senderPhone").value = profile.senderPhone;
       document.getElementById("senderAddress").value = profile.senderAddress;
+      document.getElementById("checksPayableTo").value = profile.checksPayableTo || "Jeff Jones";
+      document.getElementById("paymentInstructions").value = profile.paymentInstructions || "";
+      document.getElementById("invoiceFooter").value = profile.invoiceFooter || "";
     }
 
     function saveProfile() {
@@ -883,8 +930,23 @@ function renderEstimates() {
       profile.senderEmail = document.getElementById("senderEmail").value || profile.senderEmail;
       profile.senderPhone = document.getElementById("senderPhone").value || profile.senderPhone;
       profile.senderAddress = document.getElementById("senderAddress").value || profile.senderAddress;
+      profile.invoiceFooter = document.getElementById("invoiceFooter").value || profile.invoiceFooter;
+      profile.paymentInstructions = document.getElementById("paymentInstructions").value || profile.paymentInstructions;
+      profile.checksPayableTo = document.getElementById("checksPayableTo").value || profile.checksPayableTo;
+    
       localStorage.setItem(K.profile, JSON.stringify(profile));
-      toast("Profile saved.");
+    
+      Database.saveSettings({
+        businessName: profile.senderName,
+        email: profile.senderEmail,
+        phone: profile.senderPhone,
+        address: profile.senderAddress,
+        invoiceFooter: profile.invoiceFooter,
+        paymentInstructions: profile.paymentInstructions,
+        checksPayableTo: profile.checksPayableTo
+      });
+    
+      toast("Settings saved locally and sent to Google Sheets.");
     }
 
     function showRates() {
@@ -907,6 +969,7 @@ function renderEstimates() {
     window.addEventListener("load", async () => {
       JJC_applyBranding("admin");
       await loadAllLocal();
+      await loadSettings();
       loadProfile();
       await Rates.load();
       showRates();
