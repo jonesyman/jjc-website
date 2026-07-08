@@ -856,8 +856,6 @@ async function loadAllLocal() {
     window.addEventListener("load", async () => {
       JJC_applyBranding("admin");
       await loadAllLocal();
-      console.log("Clients after loadAllLocal:", clients);
-console.log("Workshops after loadAllLocal:", workshops);
       loadProfile();
       await Rates.load();
       showRates();
