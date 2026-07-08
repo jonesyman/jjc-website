@@ -559,13 +559,13 @@ Sanger, CA 93657"></textarea>
   </div>
 
   <script src="../assets/js/branding.js"></script>
-  <script src="../assets/js/googleSheets.js?v=3"></script>
+  <script src="../assets/js/googleSheets.js?v=4"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js"></script>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.07.3";
+    const APP_VERSION = "2026.07.07.4";
 
     const K = {
       clients: "jjc_clients",
@@ -582,6 +582,7 @@ Sanger, CA 93657"></textarea>
     let settings = {};
     let editingEstimateId = "";
     let editingInvoiceNo = "";
+    let editingInvoiceSource = null;
 
     let profile = {
       senderName: "Jeff Jones Consulting",
@@ -1017,6 +1018,7 @@ Sanger, CA 93657"></textarea>
     function resetInvoiceForm() {
       editingInvoiceNo = "";
       window.currentEstimateForInvoice = null;
+      editingInvoiceSource = null;
       document.getElementById("invoiceFormTitle").textContent = "Create Invoice";
       document.getElementById("invTerms").value = "Net 30";
       document.getElementById("invStatus").value = "Draft";
@@ -1052,17 +1054,25 @@ Sanger, CA 93657"></textarea>
       };
     }
 
+    function getInvoiceSourceForForm() {
+      // When editing an existing invoice, use the invoice itself as the pricing source.
+      // Do not recalculate from the original estimate, because the invoice may have its own final discount/status.
+      return editingInvoiceSource || window.currentEstimateForInvoice || null;
+    }
+
     function getInvoiceFromForm() {
       const clientName = document.getElementById("invClientName").value.trim();
       if (!clientName) {
         alert("Client / Organization is required.");
         return null;
       }
-      const c = window.currentEstimateForInvoice ? invoiceCalcFromSource(window.currentEstimateForInvoice) : recalc();
+      const source = getInvoiceSourceForForm();
+      const c = source ? invoiceCalcFromSource(source) : recalc();
+      const preservedEstimateId = source?.estimateId || window.currentEstimateForInvoice?.id || "";
       return normalizeInvoice({
         id: editingInvoiceNo || (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)),
         invoiceNo: document.getElementById("invNo").value.trim() || nextId(invoices, "INV", "invoiceNo"),
-        estimateId: window.currentEstimateForInvoice?.id || "",
+        estimateId: preservedEstimateId,
         terms: document.getElementById("invTerms").value,
         status: document.getElementById("invStatus").value,
         clientName,
@@ -1096,7 +1106,8 @@ Sanger, CA 93657"></textarea>
       const inv = invoices.find(x => x.invoiceNo === invoiceNo);
       if (!inv) return;
       editingInvoiceNo = inv.invoiceNo;
-      window.currentEstimateForInvoice = inv.estimateId ? estimates.find(e => e.id === inv.estimateId) || inv : inv;
+      editingInvoiceSource = inv;
+      window.currentEstimateForInvoice = null;
       document.getElementById("invoiceFormTitle").textContent = "Edit Invoice " + inv.invoiceNo;
       document.getElementById("invNo").value = inv.invoiceNo || "";
       document.getElementById("invTerms").value = inv.terms || "Net 30";
