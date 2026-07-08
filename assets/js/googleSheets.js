@@ -111,6 +111,10 @@ saveSettings(data) {
         return this.post("saveWorkshop", data);
     },
 
+    deleteWorkshop(id) {
+        return this.post("deleteWorkshop", { id });
+    },
+
     //----------------------------------------------------
     // Estimates
     //----------------------------------------------------
@@ -123,6 +127,10 @@ saveSettings(data) {
         return this.post("saveEstimate", data);
     },
 
+    deleteEstimate(id) {
+        return this.post("deleteEstimate", { id });
+    },
+
     //----------------------------------------------------
     // Invoices
     //----------------------------------------------------
@@ -133,6 +141,10 @@ saveSettings(data) {
 
     saveInvoice(data) {
         return this.post("saveInvoice", data);
+    },
+
+    deleteInvoice(invoiceNo) {
+        return this.post("deleteInvoice", { invoiceNo });
     }
 
 };

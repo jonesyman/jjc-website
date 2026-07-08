@@ -9,12 +9,23 @@ return {
   orgType: estimate.orgType,
   hours: estimate.hours,
   participants: estimate.participants,
+  subtotal: estimate.subtotal,
+  discounts: estimate.discounts || 0,
   total: estimate.total,
   status: estimate.status || "Draft",
-  discounts: estimate.discounts || 0,
   workshopDate: estimate.workshopDate || "",
   name: estimate.name || "",
-  probability: estimate.probability || ""
+  probability: estimate.probability || "",
+  consultingGross: estimate.consultingGross || 0,
+  prepGross: estimate.prepGross || 0,
+  assessmentGross: estimate.assessmentGross || 0,
+  consultingNet: estimate.consultingNet || 0,
+  prepNet: estimate.prepNet || 0,
+  assessmentNet: estimate.assessmentNet || 0,
+  hourly: estimate.hourly || 0,
+  prepRate: estimate.prepRate || 0,
+  assessmentRate: estimate.assessmentRate || 0,
+  isIndividual: estimate.isIndividual ? "TRUE" : "FALSE"
 };
   },
 
