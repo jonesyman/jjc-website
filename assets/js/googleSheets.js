@@ -28,6 +28,10 @@ window.Database = {
 
         const data = await response.json();
 
+        if (data && data.error) {
+            throw new Error(data.error);
+        }
+
         console.log(`Loaded ${action}:`, data);
 
         return data;
@@ -38,6 +42,12 @@ window.Database = {
     //----------------------------------------------------
 
     post(action, data) {
+
+        return this.postNoCors(action, data);
+
+    },
+
+    postNoCors(action, data) {
 
         return fetch(this.apiUrl, {
 

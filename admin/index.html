@@ -63,6 +63,15 @@
       gap: 8px;
     }
 
+    .sidebar-version {
+      margin-top: 26px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(148,163,184,.13);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
     .side-nav button {
       width: 100%;
       text-align: left;
@@ -241,6 +250,11 @@
         <button data-view-btn="invoices">💵 Invoices</button>
         <button data-view-btn="settings">⚙️ Settings</button>
       </nav>
+
+      <div class="sidebar-version">
+        Version <strong id="appVersionLabel">2026.07.07.1</strong><br>
+        Settings sync enabled
+      </div>
     </aside>
 
     <div class="admin-main">
@@ -426,12 +440,11 @@
             </div>
             <div class="form-row">
               <div class="field"><label>Phone</label><input id="senderPhone"></div>
-              <label>Address</label>
-                <textarea
-                    id="senderAddress"
-                    rows="3"
-                    placeholder="2650 Mary Ave.
-                Sanger, CA 93657"></textarea>
+              <div class="field">
+                <label>Address</label>
+                <textarea id="senderAddress" rows="3" placeholder="2650 Mary Ave.
+Sanger, CA 93657"></textarea>
+              </div>
             </div>
 
             <div class="field">
@@ -518,6 +531,7 @@
         <div class="line" id="printDiscountLine"><span>Discounts</span><strong id="printDiscount">-$0.00</strong></div>
         <div class="line grand"><span>Total Due</span><span id="printGrandTotal">$0.00</span></div>
       </div>
+      <div id="printPaymentInstructions" style="margin-top:32px; padding:16px; border:1px solid #e2e8f0; border-radius:12px; color:#475569; white-space:pre-wrap; font-size:13px;"></div>
         <div
           id="printInvoiceFooter"
           style="border-top:1px solid #e2e8f0; margin-top:44px; padding-top:18px; color:#64748b; text-align:center; font-size:12px; white-space:pre-wrap;">
@@ -532,6 +546,8 @@
   <script src="../assets/js/invoices.js"></script>
 
   <script>
+    const APP_VERSION = "2026.07.07.1";
+
     const K = {
       clients: "jjc_clients",
       workshops: "jjc_workshops",
@@ -544,13 +560,16 @@
     let workshops = [];
     let estimates = [];
     let invoices = [];
-    let settings = [];
+    let settings = {};
 
     let profile = {
       senderName: "Jeff Jones Consulting",
       senderEmail: "jeff@jeffjonesconsulting.com",
       senderPhone: "(559) 978-7598",
-      senderAddress: ""
+      senderAddress: "2650 Mary Ave.\nSanger, CA 93657",
+      checksPayableTo: "Jeff Jones",
+      paymentInstructions: "",
+      invoiceFooter: "Thank you for partnering with Jeff Jones Consulting."
     };
 
 async function loadAllLocal() {
@@ -908,8 +927,12 @@ function renderEstimates() {
       document.getElementById("printDiscount").textContent = "-" + JJC_money(inv.discounts);
       document.getElementById("printDiscountLine").style.display = inv.discounts > 0 ? "flex" : "none";
       document.getElementById("printGrandTotal").textContent = JJC_money(inv.total);
+      const paymentText = inv.profile.paymentInstructions || inv.profile.checksPayableTo ?
+        (inv.profile.paymentInstructions || ("Please make checks payable to " + inv.profile.checksPayableTo + ".")) : "";
+      document.getElementById("printPaymentInstructions").textContent = paymentText;
+      document.getElementById("printPaymentInstructions").style.display = paymentText ? "block" : "none";
       document.getElementById("printInvoiceFooter").textContent =
-        profile.invoiceFooter || "Thank you for partnering with Jeff Jones Consulting.";
+        inv.profile.invoiceFooter || "Thank you for partnering with Jeff Jones Consulting.";
       document.getElementById("printView").classList.remove("hidden");
     }
 
@@ -925,28 +948,32 @@ function renderEstimates() {
       document.getElementById("invoiceFooter").value = profile.invoiceFooter || "";
     }
 
-    function saveProfile() {
-      profile.senderName = document.getElementById("senderName").value || profile.senderName;
-      profile.senderEmail = document.getElementById("senderEmail").value || profile.senderEmail;
-      profile.senderPhone = document.getElementById("senderPhone").value || profile.senderPhone;
-      profile.senderAddress = document.getElementById("senderAddress").value || profile.senderAddress;
-      profile.invoiceFooter = document.getElementById("invoiceFooter").value || profile.invoiceFooter;
-      profile.paymentInstructions = document.getElementById("paymentInstructions").value || profile.paymentInstructions;
-      profile.checksPayableTo = document.getElementById("checksPayableTo").value || profile.checksPayableTo;
-    
+    async function saveProfile() {
+      profile.senderName = document.getElementById("senderName").value.trim() || "Jeff Jones Consulting";
+      profile.senderEmail = document.getElementById("senderEmail").value.trim();
+      profile.senderPhone = document.getElementById("senderPhone").value.trim();
+      profile.senderAddress = document.getElementById("senderAddress").value;
+      profile.invoiceFooter = document.getElementById("invoiceFooter").value;
+      profile.paymentInstructions = document.getElementById("paymentInstructions").value;
+      profile.checksPayableTo = document.getElementById("checksPayableTo").value.trim();
+
       localStorage.setItem(K.profile, JSON.stringify(profile));
-    
-      Database.saveSettings({
-        businessName: profile.senderName,
-        email: profile.senderEmail,
-        phone: profile.senderPhone,
-        address: profile.senderAddress,
-        invoiceFooter: profile.invoiceFooter,
-        paymentInstructions: profile.paymentInstructions,
-        checksPayableTo: profile.checksPayableTo
-      });
-    
-      toast("Settings saved locally and sent to Google Sheets.");
+
+      try {
+        await Database.saveSettings({
+          businessName: profile.senderName,
+          email: profile.senderEmail,
+          phone: profile.senderPhone,
+          address: profile.senderAddress,
+          invoiceFooter: profile.invoiceFooter,
+          paymentInstructions: profile.paymentInstructions,
+          checksPayableTo: profile.checksPayableTo
+        });
+        toast("Settings saved locally and sent to Google Sheets.");
+      } catch (err) {
+        console.warn("Settings saved locally but Google Sheets save may have failed.", err);
+        toast("Settings saved locally. Check Apps Script deployment if Google Sheets did not update.");
+      }
     }
 
     function showRates() {
@@ -967,6 +994,7 @@ function renderEstimates() {
     document.querySelectorAll('input[name="orgType"]').forEach(el => el.addEventListener("change", recalc));
 
     window.addEventListener("load", async () => {
+      document.getElementById("appVersionLabel").textContent = APP_VERSION;
       JJC_applyBranding("admin");
       await loadAllLocal();
       await loadSettings();
