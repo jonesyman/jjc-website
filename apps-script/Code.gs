@@ -13,6 +13,12 @@ const PDF_ESTIMATE_FOLDER = "Estimates";
 const PDF_INVOICE_FOLDER = "Invoices";
 const LOGO_URL = "https://jeffjonesconsulting.com/assets/images/JJC_Logo.png";
 
+function authorizeDriveAccess() {
+  getOrCreatePdfFolder(PDF_ESTIMATE_FOLDER);
+  getOrCreatePdfFolder(PDF_INVOICE_FOLDER);
+  return "Drive access authorized for Jeff Jones Consulting PDF generation.";
+}
+
 function doGet(e) {
   const action = (e && e.parameter && e.parameter.action) || "";
 
