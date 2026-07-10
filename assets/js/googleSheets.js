@@ -137,6 +137,10 @@ saveSettings(data) {
         return this.post("saveClient", data);
     },
 
+    deleteClient(id) {
+        return this.post("deleteClient", { id });
+    },
+
     //----------------------------------------------------
     // Workshops
     //----------------------------------------------------
@@ -199,6 +203,12 @@ window.Database.writeVerification = {
         readAction: "clients",
         verify(rows, data) {
             return hasVerifiedRow(rows, data, ["id", "clientId", "ClientID"]);
+        }
+    },
+    deleteClient: {
+        readAction: "clients",
+        verify(rows, data) {
+            return !hasMatchingRow(rows, data, ["id", "clientId", "ClientID"]);
         }
     },
     saveWorkshop: {

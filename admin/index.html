@@ -853,7 +853,7 @@ Sanger, CA 93657"></textarea>
       filtered.forEach(c => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(c.Organization)}</div><div class="tiny muted">${esc(c.ClientID)} • ${esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button secondary small-btn" onclick="editClient('${jsEsc(c.ClientID)}')">Edit</button></div>`;
+        el.innerHTML = `<div class="record-title">${esc(c.Organization)}</div><div class="tiny muted">${esc(c.ClientID)} • ${esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button secondary small-btn" onclick="editClient('${jsEsc(c.ClientID)}')">Edit</button><button class="button ghost small-btn" onclick="deleteClient('${jsEsc(c.ClientID)}')">Delete</button></div>`;
         wrap.appendChild(el);
       });
     }
@@ -867,6 +867,16 @@ Sanger, CA 93657"></textarea>
       document.getElementById("clientEmail").value = c.Email || "";
       document.getElementById("clientPhone").value = c.Phone || "";
       document.getElementById("clientNotes").value = c.Notes || "";
+    }
+
+    async function deleteClient(id) {
+      if (!confirm("Delete this client?")) return;
+      clients = clients.filter(c => c.ClientID !== id);
+      saveLocal(K.clients, clients);
+      await Database.deleteClient(id);
+      renderClients();
+      resetClientForm();
+      toast("Client deleted.");
     }
 
     function resetWorkshopForm() {
