@@ -310,7 +310,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.09.6</strong><br>
+        Version <strong id="appVersionLabel">2026.07.09.7</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -624,7 +624,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.09.6";
+    const APP_VERSION = "2026.07.09.7";
 
     const K = {
       clients: "jjc_clients",
@@ -998,7 +998,7 @@ Sanger, CA 93657"></textarea>
 
     async function saveEstimate() {
       const estimate = getEstimateFromForm();
-      estimates = [estimate, ...estimates.filter(x => x.id !== estimate.id)];
+      estimates = upsertPreservingOrder(estimates, estimate, "id");
       saveLocal(K.estimates, estimates);
       renderEstimates();
       await Database.saveEstimate(Estimates.createSheetRow(estimate));
@@ -1011,7 +1011,7 @@ Sanger, CA 93657"></textarea>
         pdfFileId: confirmed.pdfFileId || estimate.pdfFileId || "",
         pdfGeneratedDate: confirmed.pdfGeneratedDate || estimate.pdfGeneratedDate || ""
       });
-      estimates = [mergedEstimate, ...freshEstimates.filter(e => e.id !== estimate.id)];
+      estimates = mergePreservingOrder(estimates, [mergedEstimate, ...freshEstimates.filter(e => e.id !== estimate.id)], "id");
       localStorage.setItem(K.estimates, JSON.stringify(estimates));
       editingEstimateId = "";
       resetEstimateForm();
@@ -1065,7 +1065,7 @@ Sanger, CA 93657"></textarea>
       if (!estimate) return toast("Estimate not found.");
       await withPdfButtonLoading(button, estimate.pdfUrl ? "Regenerating..." : "Generating...", async () => {
         await Database.generateEstimatePdf(id);
-        estimates = (await Database.getEstimates()).map(normalizeEstimate);
+        estimates = mergePreservingOrder(estimates, (await Database.getEstimates()).map(normalizeEstimate), "id");
         localStorage.setItem(K.estimates, JSON.stringify(estimates));
         renderEstimates();
         const updated = estimates.find(e => e.id === id);
@@ -1243,7 +1243,7 @@ Sanger, CA 93657"></textarea>
     async function saveInvoiceFromForm() {
       const invoice = getInvoiceFromForm();
       if (!invoice) return;
-      invoices = [invoice, ...invoices.filter(x => x.invoiceNo !== invoice.invoiceNo)];
+      invoices = upsertPreservingOrder(invoices, invoice, "invoiceNo");
       saveLocal(K.invoices, invoices);
       renderInvoices();
       await Database.saveInvoice(Invoices.createSheetRow(invoice));
@@ -1256,7 +1256,7 @@ Sanger, CA 93657"></textarea>
         pdfFileId: confirmed.pdfFileId || invoice.pdfFileId || "",
         pdfGeneratedDate: confirmed.pdfGeneratedDate || invoice.pdfGeneratedDate || ""
       });
-      invoices = [mergedInvoice, ...freshInvoices.filter(inv => inv.invoiceNo !== invoice.invoiceNo)];
+      invoices = mergePreservingOrder(invoices, [mergedInvoice, ...freshInvoices.filter(inv => inv.invoiceNo !== invoice.invoiceNo)], "invoiceNo");
       localStorage.setItem(K.invoices, JSON.stringify(invoices));
       renderInvoices();
       showDocumentPreview(invoice, "Invoice");
@@ -1300,7 +1300,7 @@ Sanger, CA 93657"></textarea>
       if (!invoice) return toast("Invoice not found.");
       await withPdfButtonLoading(button, invoice.pdfUrl ? "Regenerating..." : "Generating...", async () => {
         await Database.generateInvoicePdf(invoiceNo);
-        invoices = (await Database.getInvoices()).map(normalizeInvoice);
+        invoices = mergePreservingOrder(invoices, (await Database.getInvoices()).map(normalizeInvoice), "invoiceNo");
         localStorage.setItem(K.invoices, JSON.stringify(invoices));
         renderInvoices();
         const updated = invoices.find(inv => inv.invoiceNo === invoiceNo);
@@ -1514,6 +1514,32 @@ Sanger, CA 93657"></textarea>
       if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
       const d = new Date(s);
       return isNaN(d) ? "" : d.toISOString().slice(0, 10);
+    }
+
+    function upsertPreservingOrder(collection, item, key) {
+      const index = collection.findIndex(existing => String(existing[key]) === String(item[key]));
+      if (index === -1) return [item, ...collection];
+
+      const next = [...collection];
+      next[index] = item;
+      return next;
+    }
+
+    function mergePreservingOrder(current, fresh, key) {
+      const freshByKey = new Map(fresh.map(item => [String(item[key]), item]));
+      const seen = new Set();
+      const merged = current.map(item => {
+        const itemKey = String(item[key]);
+        seen.add(itemKey);
+        return freshByKey.get(itemKey) || item;
+      });
+
+      fresh.forEach(item => {
+        const itemKey = String(item[key]);
+        if (!seen.has(itemKey)) merged.unshift(item);
+      });
+
+      return merged;
     }
 
     function formatDate(s) { if (!s) return "-"; return new Date(String(s).slice(0, 10) + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); }
