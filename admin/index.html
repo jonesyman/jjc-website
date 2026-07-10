@@ -310,7 +310,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.09.4</strong><br>
+        Version <strong id="appVersionLabel">2026.07.09.5</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -624,7 +624,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.09.4";
+    const APP_VERSION = "2026.07.09.5";
 
     const K = {
       clients: "jjc_clients",
@@ -1001,6 +1001,8 @@ Sanger, CA 93657"></textarea>
       estimates = [estimate, ...estimates.filter(x => x.id !== estimate.id)];
       saveLocal(K.estimates, estimates);
       await Database.saveEstimate(Estimates.createSheetRow(estimate));
+      estimates = (await Database.getEstimates()).map(normalizeEstimate);
+      localStorage.setItem(K.estimates, JSON.stringify(estimates));
       editingEstimateId = "";
       resetEstimateForm();
       renderEstimates();
@@ -1234,6 +1236,8 @@ Sanger, CA 93657"></textarea>
       invoices = [invoice, ...invoices.filter(x => x.invoiceNo !== invoice.invoiceNo)];
       saveLocal(K.invoices, invoices);
       await Database.saveInvoice(Invoices.createSheetRow(invoice));
+      invoices = (await Database.getInvoices()).map(normalizeInvoice);
+      localStorage.setItem(K.invoices, JSON.stringify(invoices));
       renderInvoices();
       showDocumentPreview(invoice, "Invoice");
       resetInvoiceForm();
