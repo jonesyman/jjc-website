@@ -310,7 +310,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.09.5</strong><br>
+        Version <strong id="appVersionLabel">2026.07.09.6</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -624,7 +624,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.09.5";
+    const APP_VERSION = "2026.07.09.6";
 
     const K = {
       clients: "jjc_clients",
@@ -1000,8 +1000,18 @@ Sanger, CA 93657"></textarea>
       const estimate = getEstimateFromForm();
       estimates = [estimate, ...estimates.filter(x => x.id !== estimate.id)];
       saveLocal(K.estimates, estimates);
+      renderEstimates();
       await Database.saveEstimate(Estimates.createSheetRow(estimate));
-      estimates = (await Database.getEstimates()).map(normalizeEstimate);
+      const freshEstimates = (await Database.getEstimates()).map(normalizeEstimate);
+      const confirmed = freshEstimates.find(e => e.id === estimate.id) || {};
+      const mergedEstimate = normalizeEstimate({
+        ...confirmed,
+        ...estimate,
+        pdfUrl: confirmed.pdfUrl || estimate.pdfUrl || "",
+        pdfFileId: confirmed.pdfFileId || estimate.pdfFileId || "",
+        pdfGeneratedDate: confirmed.pdfGeneratedDate || estimate.pdfGeneratedDate || ""
+      });
+      estimates = [mergedEstimate, ...freshEstimates.filter(e => e.id !== estimate.id)];
       localStorage.setItem(K.estimates, JSON.stringify(estimates));
       editingEstimateId = "";
       resetEstimateForm();
@@ -1235,8 +1245,18 @@ Sanger, CA 93657"></textarea>
       if (!invoice) return;
       invoices = [invoice, ...invoices.filter(x => x.invoiceNo !== invoice.invoiceNo)];
       saveLocal(K.invoices, invoices);
+      renderInvoices();
       await Database.saveInvoice(Invoices.createSheetRow(invoice));
-      invoices = (await Database.getInvoices()).map(normalizeInvoice);
+      const freshInvoices = (await Database.getInvoices()).map(normalizeInvoice);
+      const confirmed = freshInvoices.find(inv => inv.invoiceNo === invoice.invoiceNo) || {};
+      const mergedInvoice = normalizeInvoice({
+        ...confirmed,
+        ...invoice,
+        pdfUrl: confirmed.pdfUrl || invoice.pdfUrl || "",
+        pdfFileId: confirmed.pdfFileId || invoice.pdfFileId || "",
+        pdfGeneratedDate: confirmed.pdfGeneratedDate || invoice.pdfGeneratedDate || ""
+      });
+      invoices = [mergedInvoice, ...freshInvoices.filter(inv => inv.invoiceNo !== invoice.invoiceNo)];
       localStorage.setItem(K.invoices, JSON.stringify(invoices));
       renderInvoices();
       showDocumentPreview(invoice, "Invoice");
