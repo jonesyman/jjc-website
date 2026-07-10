@@ -41,9 +41,10 @@ window.Database = {
     // Generic POST
     //----------------------------------------------------
 
-    post(action, data) {
+    async post(action, data) {
 
-        return this.postNoCors(action, data);
+        await this.postNoCors(action, data);
+        return this.verifyWrite(action, data);
 
     },
 
@@ -65,6 +66,43 @@ window.Database = {
             })
 
         });
+
+    },
+
+    async verifyWrite(action, data) {
+
+        const rule = this.writeVerification[action];
+        if (!rule) {
+            return { ok: true, verified: false };
+        }
+
+        let lastError = null;
+
+        for (let attempt = 1; attempt <= 4; attempt++) {
+            await this.wait(attempt * 450);
+
+            try {
+                const rows = await this.get(rule.readAction);
+                const verified = rule.verify(rows, data);
+
+                if (verified) {
+                    return { ok: true, verified: true, action };
+                }
+            } catch (error) {
+                lastError = error;
+            }
+        }
+
+        throw new Error(
+            `Google Sheets did not confirm ${action}. ` +
+            (lastError ? lastError.message : "The update was not visible after saving.")
+        );
+
+    },
+
+    wait(ms) {
+
+        return new Promise(resolve => setTimeout(resolve, ms));
 
     },
 
@@ -148,3 +186,112 @@ saveSettings(data) {
     }
 
 };
+
+window.Database.writeVerification = {
+    saveSettings: {
+        readAction: "settings",
+        verify(settings, data) {
+            if (!settings || typeof settings !== "object") return false;
+            return Object.keys(data || {}).every(key => normalizeValue(settings[key]) === normalizeValue(data[key]));
+        }
+    },
+    saveClient: {
+        readAction: "clients",
+        verify(rows, data) {
+            return hasVerifiedRow(rows, data, ["id", "clientId", "ClientID"]);
+        }
+    },
+    saveWorkshop: {
+        readAction: "workshops",
+        verify(rows, data) {
+            return hasVerifiedRow(rows, data, ["id", "workshopId", "WorkshopID"]);
+        }
+    },
+    deleteWorkshop: {
+        readAction: "workshops",
+        verify(rows, data) {
+            return !hasMatchingRow(rows, data, ["id", "workshopId", "WorkshopID"]);
+        }
+    },
+    saveEstimate: {
+        readAction: "estimates",
+        verify(rows, data) {
+            return hasVerifiedRow(rows, data, ["id", "estimateId", "EstimateID"]);
+        }
+    },
+    deleteEstimate: {
+        readAction: "estimates",
+        verify(rows, data) {
+            return !hasMatchingRow(rows, data, ["id", "estimateId", "EstimateID"]);
+        }
+    },
+    saveInvoice: {
+        readAction: "invoices",
+        verify(rows, data) {
+            return hasVerifiedRow(rows, data, ["invoiceNo", "InvoiceNo", "invoiceId", "InvoiceID"]);
+        }
+    },
+    deleteInvoice: {
+        readAction: "invoices",
+        verify(rows, data) {
+            return !hasMatchingRow(rows, data, ["invoiceNo", "InvoiceNo", "invoiceId", "InvoiceID"]);
+        }
+    }
+};
+
+function hasMatchingRow(rows, data, keys) {
+    if (!Array.isArray(rows) || !data) return false;
+
+    const expected = firstValue(data, keys);
+    if (!expected) return false;
+
+    return rows.some(row => String(firstValue(row, keys) || "") === String(expected));
+}
+
+function hasVerifiedRow(rows, data, keys) {
+    if (!Array.isArray(rows) || !data) return false;
+
+    const expected = firstValue(data, keys);
+    if (!expected) return false;
+
+    const row = rows.find(candidate => String(firstValue(candidate, keys) || "") === String(expected));
+    if (!row) return false;
+
+    return rowMatchesData(row, data);
+}
+
+function rowMatchesData(row, data) {
+    let compared = 0;
+
+    Object.keys(data || {}).forEach(key => {
+        const rowKey = findComparableKey(row, key);
+        if (!rowKey) return;
+
+        compared++;
+        if (normalizeValue(row[rowKey]) !== normalizeValue(data[key])) {
+            compared = -Infinity;
+        }
+    });
+
+    return compared >= 1;
+}
+
+function findComparableKey(row, key) {
+    if (!row || row[key] !== undefined) return key;
+
+    const normalizedKey = key.toLowerCase();
+    return Object.keys(row).find(rowKey => rowKey.toLowerCase() === normalizedKey);
+}
+
+function firstValue(source, keys) {
+    for (const key of keys) {
+        if (source && source[key] !== undefined && source[key] !== null && String(source[key]).trim() !== "") {
+            return source[key];
+        }
+    }
+    return "";
+}
+
+function normalizeValue(value) {
+    return String(value || "").replace(/\r\n/g, "\n").trim();
+}
