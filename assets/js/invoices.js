@@ -42,7 +42,10 @@ return {
   stripeId: invoice.stripeId || "",
   invoiceFooter: invoice.profile?.invoiceFooter || invoice.invoiceFooter || "",
   paymentInstructions: invoice.profile?.paymentInstructions || invoice.paymentInstructions || "",
-  checksPayableTo: invoice.profile?.checksPayableTo || invoice.checksPayableTo || ""
+  checksPayableTo: invoice.profile?.checksPayableTo || invoice.checksPayableTo || "",
+  pdfUrl: invoice.pdfUrl || "",
+  pdfFileId: invoice.pdfFileId || "",
+  pdfGeneratedDate: invoice.pdfGeneratedDate || ""
 };
   },
 

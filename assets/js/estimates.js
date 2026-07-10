@@ -25,7 +25,10 @@ return {
   hourly: estimate.hourly || 0,
   prepRate: estimate.prepRate || 0,
   assessmentRate: estimate.assessmentRate || 0,
-  isIndividual: estimate.isIndividual ? "TRUE" : "FALSE"
+  isIndividual: estimate.isIndividual ? "TRUE" : "FALSE",
+  pdfUrl: estimate.pdfUrl || "",
+  pdfFileId: estimate.pdfFileId || "",
+  pdfGeneratedDate: estimate.pdfGeneratedDate || ""
 };
   },
 

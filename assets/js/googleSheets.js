@@ -169,6 +169,10 @@ saveSettings(data) {
         return this.post("saveEstimate", data);
     },
 
+    generateEstimatePdf(id) {
+        return this.post("generateEstimatePdf", { id });
+    },
+
     deleteEstimate(id) {
         return this.post("deleteEstimate", { id });
     },
@@ -183,6 +187,10 @@ saveSettings(data) {
 
     saveInvoice(data) {
         return this.post("saveInvoice", data);
+    },
+
+    generateInvoicePdf(invoiceNo) {
+        return this.post("generateInvoicePdf", { invoiceNo });
     },
 
     deleteInvoice(invoiceNo) {
@@ -229,6 +237,12 @@ window.Database.writeVerification = {
             return hasVerifiedRow(rows, data, ["id", "estimateId", "EstimateID"]);
         }
     },
+    generateEstimatePdf: {
+        readAction: "estimates",
+        verify(rows, data) {
+            return hasPdfMetadata(rows, data, ["id", "estimateId", "EstimateID"]);
+        }
+    },
     deleteEstimate: {
         readAction: "estimates",
         verify(rows, data) {
@@ -239,6 +253,12 @@ window.Database.writeVerification = {
         readAction: "invoices",
         verify(rows, data) {
             return hasVerifiedRow(rows, data, ["invoiceNo", "InvoiceNo", "invoiceId", "InvoiceID"]);
+        }
+    },
+    generateInvoicePdf: {
+        readAction: "invoices",
+        verify(rows, data) {
+            return hasPdfMetadata(rows, data, ["invoiceNo", "InvoiceNo", "invoiceId", "InvoiceID"]);
         }
     },
     deleteInvoice: {
@@ -268,6 +288,16 @@ function hasVerifiedRow(rows, data, keys) {
     if (!row) return false;
 
     return rowMatchesData(row, data);
+}
+
+function hasPdfMetadata(rows, data, keys) {
+    if (!Array.isArray(rows) || !data) return false;
+
+    const expected = firstValue(data, keys);
+    if (!expected) return false;
+
+    const row = rows.find(candidate => String(firstValue(candidate, keys) || "") === String(expected));
+    return !!(row && row.pdfUrl && row.pdfFileId);
 }
 
 function rowMatchesData(row, data) {
