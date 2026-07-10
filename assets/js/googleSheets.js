@@ -13,9 +13,10 @@ window.Database = {
     // Generic GET
     //----------------------------------------------------
 
-    async get(action) {
+    async get(action, params = {}) {
 
-        const url = `${this.apiUrl}?action=${action}&_=${Date.now()}`;
+        const query = new URLSearchParams({ action, _: Date.now(), ...params });
+        const url = `${this.apiUrl}?${query.toString()}`;
 
         const response = await fetch(url, {
             method: "GET",
@@ -170,7 +171,7 @@ saveSettings(data) {
     },
 
     generateEstimatePdf(id) {
-        return this.post("generateEstimatePdf", { id });
+        return this.get("generateEstimatePdf", { id });
     },
 
     deleteEstimate(id) {
@@ -190,7 +191,7 @@ saveSettings(data) {
     },
 
     generateInvoicePdf(invoiceNo) {
-        return this.post("generateInvoicePdf", { invoiceNo });
+        return this.get("generateInvoicePdf", { invoiceNo });
     },
 
     deleteInvoice(invoiceNo) {

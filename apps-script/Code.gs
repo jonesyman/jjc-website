@@ -23,6 +23,8 @@ function doGet(e) {
     if (action === "estimates") return jsonResponse(getRows(SHEET_NAMES.estimates));
     if (action === "invoices") return jsonResponse(getRows(SHEET_NAMES.invoices));
     if (action === "workshops") return jsonResponse(getRows(SHEET_NAMES.workshops));
+    if (action === "generateEstimatePdf") return jsonResponse(generatePdfForRecord("estimate", e.parameter.id));
+    if (action === "generateInvoicePdf") return jsonResponse(generatePdfForRecord("invoice", e.parameter.invoiceNo));
 
     return jsonResponse({ error: "Unknown action: " + action });
   } catch (err) {
