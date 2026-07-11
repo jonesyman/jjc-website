@@ -410,16 +410,17 @@ function uploadZohoAttachment(blob) {
   const bytes = blob.getBytes();
   if (!bytes.length) throw new Error("PDF attachment is empty before Zoho upload: " + fileName);
 
-  const url = config.mailApiUrl + "/accounts/" + encodeURIComponent(config.accountId) + "/messages/attachments?fileName=" + encodeURIComponent(fileName) + "&isInline=false";
+  const url = config.mailApiUrl + "/accounts/" + encodeURIComponent(config.accountId) + "/messages/attachments?uploadType=multipart&isInline=false";
   const response = UrlFetchApp.fetch(url, {
     method: "post",
     muteHttpExceptions: true,
-    contentType: blob.getContentType() || "application/pdf",
     headers: {
       Accept: "application/json",
       Authorization: "Zoho-oauthtoken " + token
     },
-    payload: bytes
+    payload: {
+      attach: blob.setName(fileName)
+    }
   });
 
   const status = response.getResponseCode();
