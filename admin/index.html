@@ -209,6 +209,43 @@
       display: block;
     }
 
+    .dialog-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      background: rgba(2,6,23,.72);
+      backdrop-filter: blur(3px);
+      padding: 18px;
+      overflow-y: auto;
+    }
+
+    .dialog-backdrop.open {
+      display: grid;
+      place-items: center;
+    }
+
+    .send-dialog {
+      width: min(720px, 100%);
+      background: #0f172a;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.45);
+    }
+
+    .send-dialog textarea {
+      min-height: 180px;
+    }
+
+    .send-dialog-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
 
     @media (max-width: 980px) {
       .admin-shell {
@@ -240,6 +277,21 @@
 
       .admin-content {
         padding: 16px;
+      }
+
+      .dialog-backdrop {
+        align-items: start;
+        padding: 12px;
+      }
+
+      .send-dialog {
+        border-radius: 16px;
+        padding: 16px;
+      }
+
+      .send-dialog-actions {
+        display: grid;
+        grid-template-columns: 1fr;
       }
 
       .admin-topbar {
@@ -310,7 +362,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.09.7</strong><br>
+        Version <strong id="appVersionLabel">2026.07.10.1</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -562,6 +614,26 @@ Sanger, CA 93657"></textarea>
   <datalist id="estimatesDatalist"></datalist>
   <datalist id="invoicesDatalist"></datalist>
 
+  <div id="sendDialogBackdrop" class="dialog-backdrop no-print">
+    <div class="send-dialog" role="dialog" aria-modal="true" aria-labelledby="sendDialogTitle">
+      <div class="section-title">
+        <h2 id="sendDialogTitle">Send Document</h2>
+        <button class="button ghost small-btn" onclick="closeSendDialog()">Close</button>
+      </div>
+      <p id="sendDialogMeta" class="muted small"></p>
+      <input id="sendRecordType" type="hidden">
+      <input id="sendRecordId" type="hidden">
+      <div class="field"><label for="sendTo">To</label><input id="sendTo" type="email" autocomplete="email"></div>
+      <div class="field"><label for="sendCc">CC</label><input id="sendCc" type="text" placeholder="Optional, comma separated"></div>
+      <div class="field"><label for="sendSubject">Subject</label><input id="sendSubject"></div>
+      <div class="field"><label for="sendBody">Message</label><textarea id="sendBody"></textarea></div>
+      <div class="send-dialog-actions">
+        <button class="button secondary" onclick="closeSendDialog()">Cancel</button>
+        <button id="sendEmailButton" class="button" onclick="sendDocumentEmail()">Send Email</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PRINT VIEW -->
   <div id="printView" class="print-view hidden">
     <div class="print-toolbar no-print">
@@ -624,7 +696,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.09.7";
+    const APP_VERSION = "2026.07.10.1";
 
     const K = {
       clients: "jjc_clients",
@@ -1089,6 +1161,7 @@ Sanger, CA 93657"></textarea>
             <button class="button secondary small-btn" onclick="editEstimate('${jsEsc(e.id)}')">Edit</button>
             <button class="button secondary small-btn" onclick="generateEstimatePdf('${jsEsc(e.id)}', this)">${e.pdfUrl ? "Regenerate PDF" : "Generate PDF"}</button>
             ${e.pdfUrl ? `<button class="button secondary small-btn" onclick="openPdf('${jsEsc(e.pdfUrl)}')">Open PDF</button><button class="button secondary small-btn" onclick="openPdf('${jsEsc(e.pdfUrl)}')">Download PDF</button>` : ""}
+            <button class="button secondary small-btn" onclick="openSendDialog('estimate', '${jsEsc(e.id)}')">${e.lastSentDate ? "Resend" : "Send"}</button>
             <button class="button small-btn" onclick="convertEstimateToInvoice('${jsEsc(e.id)}')">Convert to Invoice</button>
             <button class="button danger small-btn" onclick="deleteEstimate('${jsEsc(e.id)}')">Delete</button>
           </div>`;
@@ -1315,7 +1388,7 @@ Sanger, CA 93657"></textarea>
       invoices.forEach(inv => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(inv.clientName)}</div><div class="tiny muted">${esc(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${esc(inv.terms)} • ${esc(inv.status || "Draft")}</div><div class="record-total">${JJC_money(inv.total)}</div><div class="actions"><button class="button secondary small-btn" onclick="showSavedInvoice('${jsEsc(inv.invoiceNo)}')">Preview</button><button class="button secondary small-btn" onclick="editInvoice('${jsEsc(inv.invoiceNo)}')">Edit</button><button class="button secondary small-btn" onclick="generateInvoicePdf('${jsEsc(inv.invoiceNo)}', this)">${inv.pdfUrl ? "Regenerate PDF" : "Generate PDF"}</button>${inv.pdfUrl ? `<button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Open PDF</button><button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Download PDF</button>` : ""}<button class="button danger small-btn" onclick="deleteInvoice('${jsEsc(inv.invoiceNo)}')">Delete</button></div>`;
+        el.innerHTML = `<div class="record-title">${esc(inv.clientName)}</div><div class="tiny muted">${esc(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${esc(inv.terms)} • ${esc(inv.status || "Draft")}</div><div class="record-total">${JJC_money(inv.total)}</div><div class="actions"><button class="button secondary small-btn" onclick="showSavedInvoice('${jsEsc(inv.invoiceNo)}')">Preview</button><button class="button secondary small-btn" onclick="editInvoice('${jsEsc(inv.invoiceNo)}')">Edit</button><button class="button secondary small-btn" onclick="generateInvoicePdf('${jsEsc(inv.invoiceNo)}', this)">${inv.pdfUrl ? "Regenerate PDF" : "Generate PDF"}</button>${inv.pdfUrl ? `<button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Open PDF</button><button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Download PDF</button>` : ""}<button class="button secondary small-btn" onclick="openSendDialog('invoice', '${jsEsc(inv.invoiceNo)}')">${inv.lastSentDate ? "Resend" : "Send"}</button><button class="button danger small-btn" onclick="deleteInvoice('${jsEsc(inv.invoiceNo)}')">Delete</button></div>`;
         wrap.appendChild(el);
       });
     }
@@ -1329,6 +1402,91 @@ Sanger, CA 93657"></textarea>
     function openPdf(url) {
       if (!url) return toast("No PDF has been generated yet.");
       window.open(url, "_blank", "noopener");
+    }
+
+    function openSendDialog(type, id) {
+      const record = type === "invoice"
+        ? invoices.find(inv => inv.invoiceNo === id)
+        : estimates.find(e => e.id === id);
+
+      if (!record) return toast("Record not found.");
+
+      const label = type === "invoice" ? "Invoice" : "Estimate";
+      const number = type === "invoice" ? record.invoiceNo : record.id;
+      document.getElementById("sendRecordType").value = type;
+      document.getElementById("sendRecordId").value = id;
+      document.getElementById("sendDialogTitle").textContent = `${record.lastSentDate ? "Resend" : "Send"} ${label}`;
+      document.getElementById("sendDialogMeta").textContent = `${number} • ${record.pdfUrl ? "PDF ready" : "PDF will be generated before sending"}`;
+      document.getElementById("sendTo").value = record.sentTo || emailForRecord(record, type);
+      document.getElementById("sendCc").value = record.sentCc || "";
+      document.getElementById("sendSubject").value = record.sentSubject || defaultEmailSubject(type, record);
+      document.getElementById("sendBody").value = defaultEmailBody(type, record);
+      document.getElementById("sendDialogBackdrop").classList.add("open");
+      setTimeout(() => document.getElementById("sendTo").focus(), 0);
+    }
+
+    function closeSendDialog() {
+      document.getElementById("sendDialogBackdrop").classList.remove("open");
+    }
+
+    function emailForRecord(record, type) {
+      if (record.clientEmail) return record.clientEmail;
+
+      const name = type === "invoice" ? record.clientName : record.name;
+      const client = clients.find(c => c.Organization === name || c.ClientID === record.ClientID || c.ClientID === record.clientId);
+      return client?.Email || "";
+    }
+
+    function defaultEmailSubject(type, record) {
+      return type === "invoice"
+        ? `Invoice ${record.invoiceNo} from Jeff Jones Consulting`
+        : `Estimate ${record.id} from Jeff Jones Consulting`;
+    }
+
+    function defaultEmailBody(type, record) {
+      const label = type === "invoice" ? "invoice" : "estimate";
+      const number = type === "invoice" ? record.invoiceNo : record.id;
+      return `Hello,\n\nPlease find attached ${label} ${number} from Jeff Jones Consulting.\n\nThank you,\nJeff Jones Consulting`;
+    }
+
+    async function sendDocumentEmail() {
+      const type = document.getElementById("sendRecordType").value;
+      const id = document.getElementById("sendRecordId").value;
+      const to = document.getElementById("sendTo").value.trim();
+      const cc = document.getElementById("sendCc").value.trim();
+      const subject = document.getElementById("sendSubject").value.trim();
+      const body = document.getElementById("sendBody").value.trim();
+
+      if (!to || !subject || !body) return toast("To, subject, and message are required.");
+      if (!confirm(`Send this ${type} email to ${to}?`)) return;
+
+      const button = document.getElementById("sendEmailButton");
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = "Sending...";
+
+      try {
+        if (type === "invoice") {
+          await Database.sendInvoiceEmail({ invoiceNo: id, to, cc, subject, body });
+          invoices = mergePreservingOrder(invoices, (await Database.getInvoices()).map(normalizeInvoice), "invoiceNo");
+          localStorage.setItem(K.invoices, JSON.stringify(invoices));
+          renderInvoices();
+        } else {
+          await Database.sendEstimateEmail({ id, to, cc, subject, body });
+          estimates = mergePreservingOrder(estimates, (await Database.getEstimates()).map(normalizeEstimate), "id");
+          localStorage.setItem(K.estimates, JSON.stringify(estimates));
+          renderEstimates();
+        }
+
+        closeSendDialog();
+        toast("Email sent.");
+      } catch (err) {
+        console.warn("Email send failed.", err);
+        toast(err && err.message ? err.message : "Email send failed.");
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
     }
 
     async function withPdfButtonLoading(button, label, action) {
@@ -1466,7 +1624,14 @@ Sanger, CA 93657"></textarea>
         isIndividual: orgType === "individual_debrief",
         pdfUrl: e.pdfUrl || "",
         pdfFileId: e.pdfFileId || "",
-        pdfGeneratedDate: e.pdfGeneratedDate || ""
+        pdfGeneratedDate: e.pdfGeneratedDate || "",
+        sentDate: e.sentDate || "",
+        firstSentDate: e.firstSentDate || "",
+        lastSentDate: e.lastSentDate || "",
+        sentTo: e.sentTo || "",
+        sentCc: e.sentCc || "",
+        sentSubject: e.sentSubject || "",
+        sendCount: Number(e.sendCount || 0)
       };
     }
 
@@ -1504,6 +1669,13 @@ Sanger, CA 93657"></textarea>
         pdfUrl: inv.pdfUrl || "",
         pdfFileId: inv.pdfFileId || "",
         pdfGeneratedDate: inv.pdfGeneratedDate || "",
+        sentDate: inv.sentDate || "",
+        firstSentDate: inv.firstSentDate || "",
+        lastSentDate: inv.lastSentDate || "",
+        sentTo: inv.sentTo || "",
+        sentCc: inv.sentCc || "",
+        sentSubject: inv.sentSubject || "",
+        sendCount: Number(inv.sendCount || 0),
         profile: { ...profile, ...(inv.profile || {}), invoiceFooter: inv.invoiceFooter || inv.InvoiceFooter || profile.invoiceFooter, paymentInstructions: inv.paymentInstructions || inv.PaymentInstructions || profile.paymentInstructions, checksPayableTo: inv.checksPayableTo || profile.checksPayableTo }
       };
     }

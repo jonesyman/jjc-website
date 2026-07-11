@@ -174,6 +174,10 @@ saveSettings(data) {
         return this.get("generateEstimatePdf", { id });
     },
 
+    sendEstimateEmail(data) {
+        return this.get("sendEstimateEmail", data);
+    },
+
     deleteEstimate(id) {
         return this.post("deleteEstimate", { id });
     },
@@ -192,6 +196,10 @@ saveSettings(data) {
 
     generateInvoicePdf(invoiceNo) {
         return this.get("generateInvoicePdf", { invoiceNo });
+    },
+
+    sendInvoiceEmail(data) {
+        return this.get("sendInvoiceEmail", data);
     },
 
     deleteInvoice(invoiceNo) {
@@ -244,6 +252,12 @@ window.Database.writeVerification = {
             return hasPdfMetadata(rows, data, ["id", "estimateId", "EstimateID"]);
         }
     },
+    sendEstimateEmail: {
+        readAction: "estimates",
+        verify(rows, data) {
+            return hasSentMetadata(rows, data, ["id", "estimateId", "EstimateID"]);
+        }
+    },
     deleteEstimate: {
         readAction: "estimates",
         verify(rows, data) {
@@ -260,6 +274,12 @@ window.Database.writeVerification = {
         readAction: "invoices",
         verify(rows, data) {
             return hasPdfMetadata(rows, data, ["invoiceNo", "InvoiceNo", "invoiceId", "InvoiceID"]);
+        }
+    },
+    sendInvoiceEmail: {
+        readAction: "invoices",
+        verify(rows, data) {
+            return hasSentMetadata(rows, data, ["invoiceNo", "InvoiceNo", "invoiceId", "InvoiceID"]);
         }
     },
     deleteInvoice: {
@@ -299,6 +319,16 @@ function hasPdfMetadata(rows, data, keys) {
 
     const row = rows.find(candidate => String(firstValue(candidate, keys) || "") === String(expected));
     return !!(row && row.pdfUrl && row.pdfFileId);
+}
+
+function hasSentMetadata(rows, data, keys) {
+    if (!Array.isArray(rows) || !data) return false;
+
+    const expected = firstValue(data, keys);
+    if (!expected) return false;
+
+    const row = rows.find(candidate => String(firstValue(candidate, keys) || "") === String(expected));
+    return !!(row && row.lastSentDate && row.sentTo);
 }
 
 function rowMatchesData(row, data) {

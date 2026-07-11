@@ -8,10 +8,13 @@ const SHEET_NAMES = {
 };
 
 const PDF_HEADERS = ["pdfUrl", "pdfFileId", "pdfGeneratedDate"];
+const EMAIL_HEADERS = ["sentDate", "firstSentDate", "lastSentDate", "sentTo", "sentCc", "sentSubject", "sendCount"];
 const PDF_ROOT_FOLDER = "Jeff Jones Consulting PDFs";
 const PDF_ESTIMATE_FOLDER = "Estimates";
 const PDF_INVOICE_FOLDER = "Invoices";
 const LOGO_URL = "https://jeffjonesconsulting.com/assets/images/JJC_Logo.png";
+const ZOHO_DEFAULT_ACCOUNTS_URL = "https://accounts.zoho.com";
+const ZOHO_DEFAULT_MAIL_API_URL = "https://mail.zoho.com/api";
 
 function authorizeDriveAccess() {
   getOrCreatePdfFolder(PDF_ESTIMATE_FOLDER);
@@ -31,6 +34,8 @@ function doGet(e) {
     if (action === "workshops") return jsonResponse(getRows(SHEET_NAMES.workshops));
     if (action === "generateEstimatePdf") return jsonResponse(generatePdfForRecord("estimate", e.parameter.id));
     if (action === "generateInvoicePdf") return jsonResponse(generatePdfForRecord("invoice", e.parameter.invoiceNo));
+    if (action === "sendEstimateEmail") return jsonResponse(sendEmailForRecord("estimate", e.parameter));
+    if (action === "sendInvoiceEmail") return jsonResponse(sendEmailForRecord("invoice", e.parameter));
 
     return jsonResponse({ error: "Unknown action: " + action });
   } catch (err) {
@@ -59,7 +64,7 @@ function doPost(e) {
     }
 
     if (action === "saveEstimate") {
-      ensureHeaders(SHEET_NAMES.estimates, PDF_HEADERS);
+      ensureHeaders(SHEET_NAMES.estimates, PDF_HEADERS.concat(EMAIL_HEADERS));
       upsertRow(SHEET_NAMES.estimates, "id", body.data || {});
       return jsonResponse({ success: true });
     }
@@ -77,7 +82,7 @@ function doPost(e) {
         "invoiceFooter",
         "paymentInstructions",
         "checksPayableTo"
-      ].concat(PDF_HEADERS));
+      ].concat(PDF_HEADERS, EMAIL_HEADERS));
       upsertRow(SHEET_NAMES.invoices, "invoiceNo", body.data || {});
       return jsonResponse({ success: true });
     }
@@ -291,6 +296,189 @@ function generatePdfForRecord(type, idValue) {
 
   updateRowFields(config.sheetName, recordInfo.rowNumber, metadata);
   return { success: true, type: type, id: idValue, ...metadata };
+}
+
+function sendEmailForRecord(type, params) {
+  const config = getPdfConfig(type);
+  const idValue = type === "invoice" ? params.invoiceNo : params.id;
+  if (!idValue) throw new Error("Missing record id for email send.");
+
+  ensureHeaders(config.sheetName, PDF_HEADERS.concat(EMAIL_HEADERS));
+
+  let recordInfo = getRowById(config.sheetName, config.idHeader, idValue);
+  if (!recordInfo) throw new Error(config.label + " not found: " + idValue);
+
+  let record = recordInfo.row;
+  if (!record.pdfFileId) {
+    generatePdfForRecord(type, idValue);
+    recordInfo = getRowById(config.sheetName, config.idHeader, idValue);
+    record = recordInfo.row;
+  }
+
+  if (!record.pdfFileId) throw new Error("A PDF could not be generated for " + idValue + ".");
+
+  const to = String(params.to || "").trim();
+  const cc = String(params.cc || "").trim();
+  const subject = String(params.subject || defaultEmailSubject(type, record)).trim();
+  const body = String(params.body || defaultEmailBody(type, record, getSettings())).trim();
+
+  if (!to) throw new Error("Recipient email is required.");
+  if (!isValidEmailList(to)) throw new Error("Recipient email is invalid.");
+  if (cc && !isValidEmailList(cc)) throw new Error("CC email is invalid.");
+  if (!subject) throw new Error("Email subject is required.");
+  if (!body) throw new Error("Email body is required.");
+
+  const file = DriveApp.getFileById(record.pdfFileId);
+  const attachment = uploadZohoAttachment(file.getBlob().setName(file.getName()));
+  const sendResult = sendZohoMail({
+    to: to,
+    cc: cc,
+    subject: subject,
+    body: body,
+    attachments: [attachment]
+  });
+
+  const now = new Date().toISOString();
+  const sendCount = Number(record.sendCount || 0) + 1;
+  const metadata = {
+    sentDate: now,
+    firstSentDate: record.firstSentDate || now,
+    lastSentDate: now,
+    sentTo: to,
+    sentCc: cc,
+    sentSubject: subject,
+    sendCount: sendCount,
+    status: "Sent"
+  };
+
+  updateRowFields(config.sheetName, recordInfo.rowNumber, metadata);
+
+  return {
+    success: true,
+    type: type,
+    id: idValue,
+    messageId: sendResult.messageId || sendResult.data?.messageId || "",
+    ...metadata
+  };
+}
+
+function getZohoConfig() {
+  const props = PropertiesService.getScriptProperties();
+  const config = {
+    clientId: props.getProperty("ZOHO_CLIENT_ID"),
+    clientSecret: props.getProperty("ZOHO_CLIENT_SECRET"),
+    refreshToken: props.getProperty("ZOHO_REFRESH_TOKEN"),
+    accountId: props.getProperty("ZOHO_ACCOUNT_ID"),
+    fromEmail: props.getProperty("ZOHO_FROM_EMAIL") || "jeff@jeffjonesconsulting.com",
+    accountsUrl: props.getProperty("ZOHO_ACCOUNTS_URL") || ZOHO_DEFAULT_ACCOUNTS_URL,
+    mailApiUrl: props.getProperty("ZOHO_MAIL_API_URL") || ZOHO_DEFAULT_MAIL_API_URL
+  };
+
+  ["clientId", "clientSecret", "refreshToken", "accountId", "fromEmail"].forEach(key => {
+    if (!config[key]) throw new Error("Missing Zoho script property: " + key);
+  });
+
+  return config;
+}
+
+function getZohoAccessToken() {
+  const config = getZohoConfig();
+  const response = UrlFetchApp.fetch(config.accountsUrl + "/oauth/v2/token", {
+    method: "post",
+    muteHttpExceptions: true,
+    payload: {
+      refresh_token: config.refreshToken,
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      grant_type: "refresh_token"
+    }
+  });
+
+  const status = response.getResponseCode();
+  const data = JSON.parse(response.getContentText() || "{}");
+  if (status < 200 || status >= 300 || !data.access_token) {
+    throw new Error("Zoho token refresh failed: " + response.getContentText());
+  }
+
+  return data.access_token;
+}
+
+function uploadZohoAttachment(blob) {
+  const config = getZohoConfig();
+  const token = getZohoAccessToken();
+  const fileName = blob.getName() || "document.pdf";
+  const url = config.mailApiUrl + "/accounts/" + encodeURIComponent(config.accountId) + "/messages/attachments?fileName=" + encodeURIComponent(fileName);
+  const response = UrlFetchApp.fetch(url, {
+    method: "post",
+    muteHttpExceptions: true,
+    headers: { Authorization: "Zoho-oauthtoken " + token },
+    payload: { attach: blob }
+  });
+
+  const status = response.getResponseCode();
+  const data = JSON.parse(response.getContentText() || "{}");
+  if (status < 200 || status >= 300 || data.status?.code >= 300) {
+    throw new Error("Zoho attachment upload failed: " + response.getContentText());
+  }
+
+  const attachment = data.data && (Array.isArray(data.data) ? data.data[0] : data.data);
+  if (!attachment) throw new Error("Zoho attachment upload returned no attachment data.");
+  return attachment;
+}
+
+function sendZohoMail(message) {
+  const config = getZohoConfig();
+  const token = getZohoAccessToken();
+  const payload = {
+    fromAddress: config.fromEmail,
+    toAddress: message.to,
+    subject: message.subject,
+    content: textToHtml(message.body),
+    mailFormat: "html",
+    attachments: message.attachments || []
+  };
+
+  if (message.cc) payload.ccAddress = message.cc;
+
+  const response = UrlFetchApp.fetch(config.mailApiUrl + "/accounts/" + encodeURIComponent(config.accountId) + "/messages", {
+    method: "post",
+    contentType: "application/json",
+    muteHttpExceptions: true,
+    headers: { Authorization: "Zoho-oauthtoken " + token },
+    payload: JSON.stringify(payload)
+  });
+
+  const status = response.getResponseCode();
+  const data = JSON.parse(response.getContentText() || "{}");
+  if (status < 200 || status >= 300 || data.status?.code >= 300) {
+    throw new Error("Zoho email send failed: " + response.getContentText());
+  }
+
+  return data;
+}
+
+function defaultEmailSubject(type, record) {
+  if (type === "invoice") return "Invoice " + record.invoiceNo + " from Jeff Jones Consulting";
+  return "Estimate " + record.id + " from Jeff Jones Consulting";
+}
+
+function defaultEmailBody(type, record, settings) {
+  const name = type === "invoice" ? record.clientName : record.name;
+  const number = type === "invoice" ? record.invoiceNo : record.id;
+  const docLabel = type === "invoice" ? "invoice" : "estimate";
+  return "Hello,\n\nPlease find attached " + docLabel + " " + number + " from " + (settings.businessName || "Jeff Jones Consulting") + ".\n\nThank you,\n" + (settings.businessName || "Jeff Jones Consulting");
+}
+
+function textToHtml(text) {
+  return escHtml(text).replace(/\n/g, "<br>");
+}
+
+function isValidEmailList(value) {
+  return String(value || "")
+    .split(",")
+    .map(item => item.trim())
+    .filter(Boolean)
+    .every(item => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item));
 }
 
 function getPdfConfig(type) {

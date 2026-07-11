@@ -28,7 +28,14 @@ return {
   isIndividual: estimate.isIndividual ? "TRUE" : "FALSE",
   pdfUrl: estimate.pdfUrl || "",
   pdfFileId: estimate.pdfFileId || "",
-  pdfGeneratedDate: estimate.pdfGeneratedDate || ""
+  pdfGeneratedDate: estimate.pdfGeneratedDate || "",
+  sentDate: estimate.sentDate || "",
+  firstSentDate: estimate.firstSentDate || "",
+  lastSentDate: estimate.lastSentDate || "",
+  sentTo: estimate.sentTo || "",
+  sentCc: estimate.sentCc || "",
+  sentSubject: estimate.sentSubject || "",
+  sendCount: estimate.sendCount || 0
 };
   },
 

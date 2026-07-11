@@ -45,7 +45,14 @@ return {
   checksPayableTo: invoice.profile?.checksPayableTo || invoice.checksPayableTo || "",
   pdfUrl: invoice.pdfUrl || "",
   pdfFileId: invoice.pdfFileId || "",
-  pdfGeneratedDate: invoice.pdfGeneratedDate || ""
+  pdfGeneratedDate: invoice.pdfGeneratedDate || "",
+  sentDate: invoice.sentDate || "",
+  firstSentDate: invoice.firstSentDate || "",
+  lastSentDate: invoice.lastSentDate || "",
+  sentTo: invoice.sentTo || "",
+  sentCc: invoice.sentCc || "",
+  sentSubject: invoice.sentSubject || "",
+  sendCount: invoice.sendCount || 0
 };
   },
 
