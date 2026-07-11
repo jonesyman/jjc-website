@@ -9,6 +9,7 @@ const SHEET_NAMES = {
 
 const PDF_HEADERS = ["pdfUrl", "pdfFileId", "pdfGeneratedDate"];
 const EMAIL_HEADERS = ["sentDate", "firstSentDate", "lastSentDate", "sentTo", "sentCc", "sentSubject", "sendCount"];
+const WORKSHOP_HEADERS = ["WorkshopDate", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization"];
 const PDF_ROOT_FOLDER = "Jeff Jones Consulting PDFs";
 const PDF_ESTIMATE_FOLDER = "Estimates";
 const PDF_INVOICE_FOLDER = "Invoices";
@@ -92,6 +93,7 @@ function doPost(e) {
     }
 
     if (action === "saveWorkshop") {
+      ensureHeaders(SHEET_NAMES.workshops, WORKSHOP_HEADERS);
       upsertRow(SHEET_NAMES.workshops, "WorkshopID", body.data || {});
       return jsonResponse({ success: true });
     }

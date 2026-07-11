@@ -246,6 +246,26 @@
       margin-top: 18px;
     }
 
+    .workshop-filters {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(150px, .65fr) auto;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(148,163,184,.22);
+      border-radius: 999px;
+      padding: 3px 8px;
+      margin: 7px 5px 7px 0;
+      color: #dbeafe;
+      background: rgba(30,41,59,.72);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
 
     @media (max-width: 980px) {
       .admin-shell {
@@ -271,7 +291,8 @@
 
       .dashboard-grid,
       .form-row,
-      .form-row-3 {
+      .form-row-3,
+      .workshop-filters {
         grid-template-columns: 1fr;
       }
 
@@ -444,14 +465,23 @@
                 <div class="field"><label>Organization</label><input id="workshopOrg"></div>
               </div>
               <div class="form-row-3">
-                <div class="field"><label>Date</label><input id="workshopDate" type="date"></div>
+                <div class="field"><label>Workshop Date</label><input id="workshopDate" type="date"></div>
                 <div class="field"><label>Type</label><select id="workshopType"><option>Corporate</option><option>Nonprofit</option><option>Government</option><option>Church</option><option>Individual Debrief</option></select></div>
-                <div class="field"><label>Status</label><select id="workshopStatus"><option>Prospect</option><option>Estimated</option><option>Scheduled</option><option>Completed</option><option>Cancelled</option></select></div>
+                <div class="field"><label>Status</label><select id="workshopStatus"><option>Inquiry</option><option>Proposed</option><option>Scheduled</option><option>Completed</option><option>Canceled</option><option>Follow-up Needed</option></select></div>
               </div>
               <div class="form-row-3">
                 <div class="field"><label>Participants</label><input id="workshopParticipants" type="number" value="12"></div>
-                <div class="field"><label>Hours</label><input id="workshopHours" type="number" value="3" step=".5"></div>
+                <div class="field"><label>Start Time</label><input id="workshopStartTime" type="time"></div>
+                <div class="field"><label>End Time</label><input id="workshopEndTime" type="time"></div>
+              </div>
+              <div class="form-row-3">
+                <div class="field"><label>Delivery Format</label><select id="workshopDeliveryFormat"><option>In Person</option><option>Virtual</option><option>Hybrid</option></select></div>
                 <div class="field"><label>Location</label><input id="workshopLocation"></div>
+                <div class="field"><label>Follow-up Date</label><input id="workshopFollowUpDate" type="date"></div>
+              </div>
+              <div class="form-row">
+                <div class="field"><label>Primary Contact</label><input id="workshopPrimaryContact"></div>
+                <div class="field"><label>Contact Email</label><input id="workshopContactEmail" type="email"></div>
               </div>
               <div class="form-row">
                 <div class="field"><label>Estimate ID</label><input id="workshopEstimateId" list="estimatesDatalist" placeholder="Search estimates..."></div>
@@ -464,7 +494,12 @@
               </div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>Workshop List</h2><input id="workshopSearch" placeholder="Search..." oninput="renderWorkshops()"></div>
+              <div class="section-title"><h2>Workshop List</h2><span id="workshopMatchCount" class="tiny muted"></span></div>
+              <div class="workshop-filters">
+                <input id="workshopSearch" placeholder="Search workshops..." oninput="renderWorkshops()">
+                <select id="workshopFilter" onchange="renderWorkshops()"><option value="all">All workshops</option><option value="upcoming">Upcoming</option><option value="completed">Completed</option><option value="canceled">Canceled</option><option value="unpaid">Unpaid</option><option value="followup">Follow-up Needed</option></select>
+                <button class="button ghost small-btn" onclick="clearWorkshopFilters()">Clear Filters</button>
+              </div>
               <div id="workshopsList" class="list-grid"></div>
               <p id="noWorkshopsMsg" class="muted small">No workshops yet.</p>
             </div>
@@ -696,7 +731,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.10.3";
+    const APP_VERSION = "2026.07.11.1";
 
     const K = {
       clients: "jjc_clients",
@@ -708,6 +743,7 @@ Sanger, CA 93657"></textarea>
 
     let clients = [];
     let workshops = [];
+    let pendingWorkshopEstimateId = "";
     let estimates = [];
     let invoices = [];
     let settings = {};
@@ -870,6 +906,8 @@ Sanger, CA 93657"></textarea>
       }
       document.getElementById("workshopClientId").value = selected.ClientID || "";
       document.getElementById("workshopOrg").value = selected.Organization || "";
+      document.getElementById("workshopPrimaryContact").value = selected.Contact || "";
+      document.getElementById("workshopContactEmail").value = selected.Email || "";
     }
 
     function selectInvoiceClient(requireExact = true) {
@@ -953,12 +991,13 @@ Sanger, CA 93657"></textarea>
 
     function resetWorkshopForm() {
       document.getElementById("workshopId").value = nextId(workshops, "WRK", "WorkshopID");
-      ["workshopClientName", "workshopClientId", "workshopOrg", "workshopEstimateId", "workshopInvoiceId", "workshopLocation", "workshopNotes"].forEach(id => document.getElementById(id).value = "");
+      ["workshopClientName", "workshopClientId", "workshopOrg", "workshopEstimateId", "workshopInvoiceId", "workshopLocation", "workshopNotes", "workshopStartTime", "workshopEndTime", "workshopPrimaryContact", "workshopContactEmail"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("workshopDate").value = "";
+      document.getElementById("workshopFollowUpDate").value = "";
       document.getElementById("workshopParticipants").value = 12;
-      document.getElementById("workshopHours").value = 3;
       document.getElementById("workshopType").value = "Corporate";
-      document.getElementById("workshopStatus").value = "Prospect";
+      document.getElementById("workshopDeliveryFormat").value = "In Person";
+      document.getElementById("workshopStatus").value = "Inquiry";
     }
 
     async function saveWorkshop() {
@@ -971,14 +1010,19 @@ Sanger, CA 93657"></textarea>
         Type: document.getElementById("workshopType").value,
         Status: document.getElementById("workshopStatus").value,
         Participants: document.getElementById("workshopParticipants").value,
-        Hours: document.getElementById("workshopHours").value,
+        StartTime: document.getElementById("workshopStartTime").value,
+        EndTime: document.getElementById("workshopEndTime").value,
+        DeliveryFormat: document.getElementById("workshopDeliveryFormat").value,
+        PrimaryContact: document.getElementById("workshopPrimaryContact").value.trim(),
+        ContactEmail: document.getElementById("workshopContactEmail").value.trim(),
+        FollowUpDate: document.getElementById("workshopFollowUpDate").value,
         EstimateID: document.getElementById("workshopEstimateId").value.trim(),
         InvoiceID: document.getElementById("workshopInvoiceId").value.trim(),
         Location: document.getElementById("workshopLocation").value.trim(),
         Notes: document.getElementById("workshopNotes").value.trim()
       };
       if (!w.WorkshopID || !w.Organization) return alert("Workshop ID and Organization are required.");
-      workshops = [w, ...workshops.filter(x => x.WorkshopID !== w.WorkshopID)];
+      workshops = upsertPreservingOrder(workshops, w, "WorkshopID");
       saveLocal(K.workshops, workshops);
       await Database.saveWorkshop(w);
       resetWorkshopForm();
@@ -988,16 +1032,63 @@ Sanger, CA 93657"></textarea>
 
     function renderWorkshops() {
       const q = (document.getElementById("workshopSearch")?.value || "").toLowerCase();
+      const filter = document.getElementById("workshopFilter")?.value || "all";
       const wrap = document.getElementById("workshopsList");
-      const filtered = workshops.filter(w => Object.values(w).join(" ").toLowerCase().includes(q));
+      const today = new Date().toISOString().slice(0, 10);
+      const filtered = workshops
+        .filter(w => Object.values(w).join(" ").toLowerCase().includes(q))
+        .filter(w => {
+          const status = normalizeWorkshopStatus(w.Status);
+          const financial = workshopFinancialStatus(w);
+          if (filter === "upcoming") return normalizeDateInput(w.WorkshopDate) >= today && !["Completed", "Canceled"].includes(status);
+          if (filter === "completed") return status === "Completed";
+          if (filter === "canceled") return status === "Canceled";
+          if (filter === "unpaid") return financial === "Invoiced";
+          if (filter === "followup") return status === "Follow-up Needed";
+          return true;
+        })
+        .sort((a, b) => {
+          const aDate = normalizeDateInput(a.WorkshopDate) || "9999-12-31";
+          const bDate = normalizeDateInput(b.WorkshopDate) || "9999-12-31";
+          return aDate.localeCompare(bDate);
+        });
       wrap.innerHTML = "";
+      document.getElementById("workshopMatchCount").textContent = `${filtered.length} matching`;
       document.getElementById("noWorkshopsMsg").classList.toggle("hidden", filtered.length > 0);
       filtered.forEach(w => {
+        const status = normalizeWorkshopStatus(w.Status);
+        const financial = workshopFinancialStatus(w);
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(w.WorkshopDate || "No date")} • ${esc(w.Status)}</div><div class="tiny muted">${esc(w.Type)} • ${esc(w.Participants)} participants • ${esc(w.Hours)} hours</div><div class="actions"><button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button danger small-btn" onclick="deleteWorkshop('${jsEsc(w.WorkshopID)}')">Delete</button></div>`;
+        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${formatDate(w.WorkshopDate)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span><div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions"><button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button danger small-btn" onclick="deleteWorkshop('${jsEsc(w.WorkshopID)}')">Delete</button></div>`;
         wrap.appendChild(el);
       });
+    }
+
+    function clearWorkshopFilters() {
+      document.getElementById("workshopSearch").value = "";
+      document.getElementById("workshopFilter").value = "all";
+      renderWorkshops();
+    }
+
+    function normalizeWorkshopStatus(status) {
+      const legacy = { Prospect: "Inquiry", Estimated: "Proposed", Cancelled: "Canceled" };
+      return legacy[status] || status || "Inquiry";
+    }
+
+    function workshopFinancialStatus(w) {
+      const invoice = invoices.find(inv => inv.invoiceNo === w.InvoiceID);
+      if (invoice && String(invoice.status || "").toLowerCase() === "paid") return "Paid";
+      if (w.InvoiceID) return "Invoiced";
+      if (w.EstimateID) return "Quoted";
+      return "Not Quoted";
+    }
+
+    function formatTime(value) {
+      if (!value) return "";
+      const parts = String(value).split(":");
+      const hour = Number(parts[0]);
+      return `${hour % 12 || 12}:${parts[1] || "00"} ${hour >= 12 ? "PM" : "AM"}`;
     }
 
     function editWorkshop(id) {
@@ -1010,14 +1101,53 @@ Sanger, CA 93657"></textarea>
       document.getElementById("workshopOrg").value = w.Organization || client?.Organization || "";
       document.getElementById("workshopDate").value = normalizeDateInput(w.WorkshopDate);
       document.getElementById("workshopType").value = w.Type || "Corporate";
-      document.getElementById("workshopStatus").value = w.Status || "Prospect";
+      document.getElementById("workshopStatus").value = normalizeWorkshopStatus(w.Status);
       document.getElementById("workshopParticipants").value = w.Participants || 12;
-      document.getElementById("workshopHours").value = w.Hours || 3;
+      document.getElementById("workshopStartTime").value = w.StartTime || "";
+      document.getElementById("workshopEndTime").value = w.EndTime || "";
+      document.getElementById("workshopDeliveryFormat").value = w.DeliveryFormat || "In Person";
+      document.getElementById("workshopPrimaryContact").value = w.PrimaryContact || "";
+      document.getElementById("workshopContactEmail").value = w.ContactEmail || "";
+      document.getElementById("workshopFollowUpDate").value = normalizeDateInput(w.FollowUpDate);
       document.getElementById("workshopEstimateId").value = w.EstimateID || "";
       document.getElementById("workshopInvoiceId").value = w.InvoiceID || "";
       document.getElementById("workshopLocation").value = w.Location || "";
       document.getElementById("workshopNotes").value = w.Notes || "";
       showView("workshops");
+    }
+
+    function openLinkedEstimate(id) {
+      if (!estimates.some(e => e.id === id)) return toast("Linked estimate was not found.");
+      editEstimate(id);
+    }
+
+    function openLinkedInvoice(invoiceNo) {
+      if (!invoices.some(inv => inv.invoiceNo === invoiceNo)) return toast("Linked invoice was not found.");
+      editInvoice(invoiceNo);
+    }
+
+    function createEstimateFromWorkshop(id) {
+      const w = workshops.find(item => item.WorkshopID === id);
+      if (!w) return toast("Workshop not found.");
+      resetEstimateForm();
+      pendingWorkshopEstimateId = id;
+      const orgType = w.Type === "Individual Debrief" ? "individual_debrief" : (["Nonprofit", "Government", "Church"].includes(w.Type) ? "non_profit" : "for_profit");
+      document.querySelector(`input[name="orgType"][value="${orgType}"]`).checked = true;
+      document.getElementById("participants").value = w.Participants || 12;
+      const startMinutes = timeToMinutes(w.StartTime);
+      const endMinutes = timeToMinutes(w.EndTime);
+      const duration = startMinutes !== null && endMinutes !== null && endMinutes > startMinutes ? (endMinutes - startMinutes) / 60 : 3;
+      document.getElementById("hours").value = [2, 3, 4].reduce((closest, option) => Math.abs(option - duration) < Math.abs(closest - duration) ? option : closest, 3);
+      document.getElementById("estimateName").value = `${w.Organization} - ${formatDate(w.WorkshopDate)}`;
+      recalc();
+      showView("estimates");
+      toast("Workshop details loaded. Review and save the estimate to link it.");
+    }
+
+    function timeToMinutes(value) {
+      if (!value || !/^\d{1,2}:\d{2}/.test(String(value))) return null;
+      const [hours, minutes] = String(value).split(":").map(Number);
+      return (hours * 60) + minutes;
     }
 
     async function deleteWorkshop(id) {
@@ -1085,6 +1215,18 @@ Sanger, CA 93657"></textarea>
       });
       estimates = mergePreservingOrder(estimates, [mergedEstimate, ...freshEstimates.filter(e => e.id !== estimate.id)], "id");
       localStorage.setItem(K.estimates, JSON.stringify(estimates));
+      if (pendingWorkshopEstimateId) {
+        const workshop = workshops.find(w => w.WorkshopID === pendingWorkshopEstimateId);
+        if (workshop) {
+          workshop.EstimateID = estimate.id;
+          workshop.Status = workshop.Status === "Inquiry" ? "Proposed" : normalizeWorkshopStatus(workshop.Status);
+          workshops = upsertPreservingOrder(workshops, workshop, "WorkshopID");
+          localStorage.setItem(K.workshops, JSON.stringify(workshops));
+          await Database.saveWorkshop(workshop);
+          renderWorkshops();
+        }
+        pendingWorkshopEstimateId = "";
+      }
       editingEstimateId = "";
       resetEstimateForm();
       renderEstimates();
@@ -1114,6 +1256,7 @@ Sanger, CA 93657"></textarea>
 
     function resetEstimateForm() {
       editingEstimateId = "";
+      pendingWorkshopEstimateId = "";
       document.getElementById("estimateFormTitle").textContent = "Estimate Calculator";
       document.querySelector('input[name="orgType"][value="for_profit"]').checked = true;
       document.getElementById("participants").value = 12;
