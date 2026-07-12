@@ -336,6 +336,9 @@
     .practice-card h3 { margin-top:0; }
     .mobile-action-overflow, .mobile-action-panel { display:contents; }
     .mobile-action-toggle { display:none; }
+    .list-filter-toggle { display:none; }
+    .list-filter-controls { margin-bottom:14px; }
+    .simple-list-filters { display:grid; grid-template-columns:minmax(180px,1fr) auto auto; gap:10px; align-items:center; }
 
     .status-badge {
       display: inline-flex;
@@ -521,6 +524,11 @@
       .send-dialog { width:100%; max-height:calc(100dvh - 24px); overflow:auto; }
       .workspace .card > .actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
       .workspace .card > .actions .button { width:100%; }
+      .list-filter-toggle { display:flex; width:100%; justify-content:space-between; margin-bottom:10px; }
+      .list-filter-toggle::after { content:"▾"; }
+      .list-filter-panel.open .list-filter-toggle::after { content:"▴"; }
+      .list-filter-panel:not(.open) .list-filter-controls { display:none; }
+      .simple-list-filters { grid-template-columns:1fr; }
 
       .table-wrap {
         border: 1px solid rgba(148,163,184,.13);
@@ -654,8 +662,8 @@
               </div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>Client List</h2><label class="archive-toggle"><input id="includeArchivedClients" type="checkbox" onchange="renderClients()"> Include Archived</label></div>
-              <input id="clientSearch" placeholder="Search..." oninput="renderClients()" style="margin-bottom:12px;">
+              <div class="section-title"><h2>Client List</h2><span id="clientMatchCount" class="tiny muted"></span></div>
+              <div class="list-filter-panel"><button class="button secondary small-btn list-filter-toggle" onclick="toggleListFilters(this)">Search & Filters</button><div class="list-filter-controls simple-list-filters"><input id="clientSearch" placeholder="Search clients..." oninput="renderClients()"><label class="archive-toggle"><input id="includeArchivedClients" type="checkbox" onchange="renderClients()"> Include Archived</label><button class="button ghost small-btn" onclick="clearClientFilters()">Clear Filters</button></div></div>
               <div id="clientsList" class="list-grid"></div>
               <p id="noClientsMsg" class="muted small">No clients yet.</p>
             </div>
@@ -743,12 +751,12 @@
             </div>
             <div class="card">
               <div class="section-title"><h2>Workshop List</h2><span id="workshopMatchCount" class="tiny muted"></span></div>
-              <div class="workshop-filters">
+              <div class="list-filter-panel"><button class="button secondary small-btn list-filter-toggle" onclick="toggleListFilters(this)">Search & Filters</button><div class="list-filter-controls workshop-filters">
                 <input id="workshopSearch" placeholder="Search workshops..." oninput="renderWorkshops()">
                 <select id="workshopFilter" onchange="renderWorkshops()"><option value="all">All workshops</option><option value="upcoming">Upcoming</option><option value="completed">Completed</option><option value="canceled">Canceled</option><option value="unpaid">Unpaid</option><option value="followup">Follow-up Needed</option></select>
                 <label class="archive-toggle"><input id="includeArchivedWorkshops" type="checkbox" onchange="renderWorkshops()"> Include Archived</label>
                 <button class="button ghost small-btn" onclick="clearWorkshopFilters()">Clear Filters</button>
-              </div>
+              </div></div>
               <div id="workshopsList" class="list-grid"></div>
               <p id="noWorkshopsMsg" class="muted small">No workshops yet.</p>
             </div>
@@ -796,7 +804,8 @@
             </div>
 
             <div class="card">
-              <div class="section-title"><h2>Saved Estimates</h2><label class="archive-toggle"><input id="includeArchivedEstimates" type="checkbox" onchange="renderEstimates()"> Include Archived</label></div>
+              <div class="section-title"><h2>Saved Estimates</h2><span id="estimateMatchCount" class="tiny muted"></span></div>
+              <div class="list-filter-panel"><button class="button secondary small-btn list-filter-toggle" onclick="toggleListFilters(this)">Search & Filters</button><div class="list-filter-controls simple-list-filters"><input id="estimateSearch" placeholder="Search estimates..." oninput="renderEstimates()"><label class="archive-toggle"><input id="includeArchivedEstimates" type="checkbox" onchange="renderEstimates()"> Include Archived</label><button class="button ghost small-btn" onclick="clearEstimateFilters()">Clear Filters</button></div></div>
               <div id="estimatesList" class="list-grid"></div>
               <p id="noEstimatesMsg" class="muted small">No estimates yet.</p>
             </div>
@@ -842,7 +851,8 @@
               </div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>Invoices</h2><label class="archive-toggle"><input id="includeArchivedInvoices" type="checkbox" onchange="renderInvoices()"> Include Archived</label></div>
+              <div class="section-title"><h2>Invoices</h2><span id="invoiceMatchCount" class="tiny muted"></span></div>
+              <div class="list-filter-panel"><button class="button secondary small-btn list-filter-toggle" onclick="toggleListFilters(this)">Search & Filters</button><div class="list-filter-controls simple-list-filters"><input id="invoiceSearch" placeholder="Search invoices..." oninput="renderInvoices()"><label class="archive-toggle"><input id="includeArchivedInvoices" type="checkbox" onchange="renderInvoices()"> Include Archived</label><button class="button ghost small-btn" onclick="clearInvoiceFilters()">Clear Filters</button></div></div>
               <div id="invoicesList" class="list-grid"></div>
               <p id="noInvoicesMsg" class="muted small">No invoices yet.</p>
             </div>
@@ -1051,7 +1061,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.19";
+    const APP_VERSION = "2026.07.12.20";
 
     const K = {
       clients: "jjc_clients",
@@ -1226,6 +1236,13 @@ Sanger, CA 93657"></textarea>
       document.querySelectorAll(".mobile-action-overflow.open").forEach(item => { if (item !== menu) item.classList.remove("open"); });
       menu.classList.toggle("open");
       button.setAttribute("aria-expanded", menu.classList.contains("open") ? "true" : "false");
+    }
+
+    function toggleListFilters(button) {
+      const panel = button.closest(".list-filter-panel");
+      if (!panel) return;
+      panel.classList.toggle("open");
+      button.setAttribute("aria-expanded", panel.classList.contains("open") ? "true" : "false");
     }
 
     function prepareMobileActionMenus(container) {
@@ -1450,6 +1467,8 @@ Sanger, CA 93657"></textarea>
       const wrap = document.getElementById("clientsList");
       const filtered = clients.filter(c => (includeArchived || !isArchived(c)) && Object.values(c).join(" ").toLowerCase().includes(q));
       wrap.innerHTML = "";
+      document.getElementById("clientMatchCount").textContent = `${filtered.length} matching`;
+      document.getElementById("noClientsMsg").textContent = q || includeArchived ? "No clients match these filters." : "No clients yet.";
       document.getElementById("noClientsMsg").classList.toggle("hidden", filtered.length > 0);
       filtered.forEach(c => {
         const el = document.createElement("div");
@@ -1458,6 +1477,12 @@ Sanger, CA 93657"></textarea>
         wrap.appendChild(el);
       });
       prepareMobileActionMenus(wrap);
+    }
+
+    function clearClientFilters() {
+      document.getElementById("clientSearch").value = "";
+      document.getElementById("includeArchivedClients").checked = false;
+      renderClients();
     }
 
     function showClientDetail(id) {
@@ -1726,6 +1751,7 @@ Sanger, CA 93657"></textarea>
         });
       wrap.innerHTML = "";
       document.getElementById("workshopMatchCount").textContent = `${filtered.length} matching`;
+      document.getElementById("noWorkshopsMsg").textContent = q || filter !== "all" || includeArchived ? "No workshops match these filters." : "No workshops yet.";
       document.getElementById("noWorkshopsMsg").classList.toggle("hidden", filtered.length > 0);
       filtered.forEach(w => {
         const status = normalizeWorkshopStatus(w.Status);
@@ -2331,8 +2357,11 @@ Sanger, CA 93657"></textarea>
     function renderEstimates() {
       const wrap = document.getElementById("estimatesList");
       const includeArchived = document.getElementById("includeArchivedEstimates")?.checked;
-      const visibleEstimates = estimates.filter(e => includeArchived || !isArchived(e));
+      const query = String(document.getElementById("estimateSearch")?.value || "").trim().toLowerCase();
+      const visibleEstimates = estimates.filter(e => (includeArchived || !isArchived(e)) && (!query || Object.values(e).join(" ").toLowerCase().includes(query)));
       wrap.innerHTML = "";
+      document.getElementById("estimateMatchCount").textContent = `${visibleEstimates.length} matching`;
+      document.getElementById("noEstimatesMsg").textContent = query || includeArchived ? "No estimates match these filters." : "No estimates yet.";
       document.getElementById("noEstimatesMsg").classList.toggle("hidden", visibleEstimates.length > 0);
       visibleEstimates.forEach(e => {
         const el = document.createElement("div");
@@ -2354,6 +2383,12 @@ Sanger, CA 93657"></textarea>
         wrap.appendChild(el);
       });
       prepareMobileActionMenus(wrap);
+    }
+
+    function clearEstimateFilters() {
+      document.getElementById("estimateSearch").value = "";
+      document.getElementById("includeArchivedEstimates").checked = false;
+      renderEstimates();
     }
 
     function previewSavedEstimate(id) {
@@ -2642,8 +2677,11 @@ Sanger, CA 93657"></textarea>
     function renderInvoices() {
       const wrap = document.getElementById("invoicesList");
       const includeArchived = document.getElementById("includeArchivedInvoices")?.checked;
-      const visibleInvoices = invoices.filter(inv => includeArchived || !isArchived(inv));
+      const query = String(document.getElementById("invoiceSearch")?.value || "").trim().toLowerCase();
+      const visibleInvoices = invoices.filter(inv => (includeArchived || !isArchived(inv)) && (!query || Object.values(inv).join(" ").toLowerCase().includes(query)));
       wrap.innerHTML = "";
+      document.getElementById("invoiceMatchCount").textContent = `${visibleInvoices.length} matching`;
+      document.getElementById("noInvoicesMsg").textContent = query || includeArchived ? "No invoices match these filters." : "No invoices yet.";
       document.getElementById("noInvoicesMsg").classList.toggle("hidden", visibleInvoices.length > 0);
       visibleInvoices.forEach(inv => {
         const el = document.createElement("div");
@@ -2652,6 +2690,12 @@ Sanger, CA 93657"></textarea>
         wrap.appendChild(el);
       });
       prepareMobileActionMenus(wrap);
+    }
+
+    function clearInvoiceFilters() {
+      document.getElementById("invoiceSearch").value = "";
+      document.getElementById("includeArchivedInvoices").checked = false;
+      renderInvoices();
     }
 
     function showSavedInvoice(invoiceNo) {
