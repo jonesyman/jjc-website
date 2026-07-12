@@ -195,6 +195,16 @@ saveSettings(data) {
         throw new Error("Google Sheets did not confirm the selected leader.");
     },
 
+    async deactivateWorkshopAssessment(workshopId) {
+        await this.postNoCors("deactivateWorkshopAssessment", { workshopId });
+        for (let attempt = 1; attempt <= 5; attempt++) {
+            await this.wait(attempt * 450);
+            const assessment = await this.getWorkshopAssessment(workshopId);
+            if (!assessment?.import) return assessment;
+        }
+        throw new Error("Google Sheets did not confirm removal of the assessment data.");
+    },
+
     //----------------------------------------------------
     // Estimates
     //----------------------------------------------------

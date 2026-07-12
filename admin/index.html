@@ -311,6 +311,7 @@
       gap: 10px;
       margin-bottom: 14px;
     }
+    .assessment-filters { display:grid; grid-template-columns:minmax(180px,1fr) repeat(3,minmax(130px,.55fr)) auto; gap:10px; margin-bottom:14px; }
 
     .status-badge {
       display: inline-flex;
@@ -354,8 +355,7 @@
     .team-map-logo { width:62px; height:62px; object-fit:contain; }
     .team-map-title { color:#243f72; margin:0; font-size:27px; }
     .team-map-meta { color:#526077; font-size:11px; text-align:right; line-height:1.5; }
-    .team-map-grid { display:grid; grid-template-rows:repeat(3,minmax(2.25in,auto)); gap:10px; flex:1; }
-    .team-map-row { display:grid; grid-template-columns:minmax(0,1fr) 76px minmax(0,1fr); gap:0; align-items:stretch; }
+    .team-map-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(2.25in,auto)); gap:10px; flex:1; }
     .team-map-panel { border:1px solid #cbd5e1; border-radius:12px; overflow:hidden; background:#f8fafc; display:flex; flex-direction:column; min-height:0; }
     .team-map-dense .team-map-names { font-size:9px; gap:2px; }
     .team-map-very-dense .team-map-names { font-size:7.5px; gap:1px; }
@@ -372,14 +372,9 @@
     .team-map-names { list-style:none; padding:0; margin:0; display:grid; gap:3px; font-size:10.5px; line-height:1.2; }
     .team-map-name { overflow-wrap:anywhere; }
     .team-map-leader { font-weight:400; }
-    .team-map-gears { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:2; }
-    .team-map-gear { width:54px; height:54px; display:grid; place-items:center; background:#243f72; clip-path:polygon(50% 0%,60% 12%,74% 7%,80% 20%,94% 25%,88% 39%,100% 50%,88% 61%,94% 75%,80% 80%,74% 93%,60% 88%,50% 100%,40% 88%,26% 93%,20% 80%,6% 75%,12% 61%,0 50%,12% 39%,6% 25%,20% 20%,26% 7%,40% 12%); }
-    .team-map-gear span { display:grid; place-items:center; width:31px; height:31px; border-radius:50%; background:#fff; color:#5277b5; font-weight:900; font-size:21px; }
-    .team-map-gear-left { transform:translate(-9px,5px); }
-    .team-map-gear-right { transform:translate(9px,-5px); margin-top:-9px; }
     .team-map-footer { border-top:1px solid #cbd5e1; margin-top:10px; padding-top:7px; display:flex; justify-content:space-between; gap:14px; color:#64748b; font-size:8.5px; line-height:1.35; }
     @page { size:Letter portrait; margin:0; }
-    @media print { .team-map-sheet { width:8.5in; min-height:11in; box-shadow:none; padding:.42in .48in .34in; } .team-map-panel,.team-map-row { break-inside:avoid; } }
+    @media print { .team-map-sheet { width:8.5in; min-height:11in; box-shadow:none; padding:.42in .48in .34in; } .team-map-panel { break-inside:avoid; } }
 
 
     @media (max-width: 980px) {
@@ -412,7 +407,7 @@
       .team-view-grid,
       .form-row,
       .form-row-3,
-      .workshop-filters {
+      .workshop-filters, .assessment-filters {
         grid-template-columns: 1fr;
       }
 
@@ -817,8 +812,8 @@ Sanger, CA 93657"></textarea>
         <div id="assessmentSavedSummary" class="metric-note"></div>
         <div class="form-row" style="margin-top:14px;"><div class="field"><label for="assessmentLeader">Team Leader</label><select id="assessmentLeader" onchange="document.getElementById('previewTeamMapButton').disabled=true; document.getElementById('assessmentLeaderMessage').textContent='Save the leader selection before previewing the Team Map.'"></select></div><div class="field" style="justify-content:end;"><label>&nbsp;</label><button id="saveAssessmentLeaderButton" class="button" onclick="saveAssessmentLeader()">Save Leader</button></div></div>
         <p id="assessmentLeaderMessage" class="muted small">Select the team leader before future PDF preview or generation.</p>
-        <div class="actions"><button class="button secondary small-btn" onclick="showAssessmentView('raw')">Individual Results</button><button class="button secondary small-btn" onclick="showAssessmentView('team')">Team View</button><button id="previewTeamMapButton" class="button small-btn" onclick="openTeamMapPreview()">Preview Team Map</button><button class="button secondary small-btn" onclick="startUpdatedAssessmentImport()">Upload Updated Results</button><button class="button secondary small-btn" onclick="loadAssessmentHistory()">View Import History</button></div>
-        <div id="assessmentRawView"><div class="section-title"><h3>Individual Results</h3><span id="assessmentResultCount" class="tiny muted"></span></div><div id="assessmentRawResults" class="assessment-results-grid"></div></div>
+        <div class="actions"><button class="button secondary small-btn" onclick="showAssessmentView('raw')">Individual Results</button><button class="button secondary small-btn" onclick="showAssessmentView('team')">Team View</button><button id="previewTeamMapButton" class="button small-btn" onclick="openTeamMapPreview()">Preview Team Map</button><button class="button secondary small-btn" onclick="startUpdatedAssessmentImport()">Upload Updated Results</button><button class="button secondary small-btn" onclick="loadAssessmentHistory()">View Import History</button><button class="button danger small-btn" onclick="removeAssessmentData()">Remove Assessment Data</button></div>
+        <div id="assessmentRawView"><div class="section-title"><h3>Individual Results</h3><span id="assessmentResultCount" class="tiny muted"></span></div><div class="assessment-filters"><input id="assessmentSearch" placeholder="Search participant..." oninput="renderFilteredAssessmentResults()"><select id="assessmentRoleFilter" onchange="renderFilteredAssessmentResults()"><option value="">All result types</option><option value="genius">Genius</option><option value="competency">Competency</option><option value="frustration">Frustration</option></select><select id="assessmentTypeFilter" onchange="renderFilteredAssessmentResults()"><option value="">All six types</option><option>Wonder</option><option>Invention</option><option>Discernment</option><option>Galvanizing</option><option>Enablement</option><option>Tenacity</option></select><select id="assessmentSort" onchange="renderFilteredAssessmentResults()"><option value="last">Sort by last name</option><option value="first">Sort by first name</option></select><button class="button ghost small-btn" onclick="clearAssessmentFilters()">Clear Filters</button></div><div id="assessmentRawResults" class="assessment-results-grid"></div></div>
         <div id="assessmentTeamView" class="hidden"><div id="assessmentTeamSummary" class="client-detail-summary"></div><div id="assessmentTeamCards" class="team-view-grid"></div><p class="muted small">The selected leader is represented twice in Genius and Frustration areas to reflect the leader’s influence on the team environment. The underlying participant record is not duplicated.</p></div>
         <div id="assessmentHistoryView" class="hidden"><div class="section-title"><h3>Import History</h3></div><div id="assessmentHistoryList" class="dashboard-list"></div></div>
       </div>
@@ -914,7 +909,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.12";
+    const APP_VERSION = "2026.07.12.13";
 
     const K = {
       clients: "jjc_clients",
@@ -1685,16 +1680,51 @@ Sanger, CA 93657"></textarea>
       leaderSelect.value = info.LeaderAssessmentResultID || "";
       document.getElementById("previewTeamMapButton").disabled = !info.LeaderAssessmentResultID;
       document.getElementById("assessmentLeaderMessage").textContent = info.LeaderAssessmentResultID ? `Selected leader: ${info.LeaderFirstName} ${info.LeaderLastName}` : "Select the team leader before future PDF preview or generation.";
-      renderAssessmentParticipants("assessmentRawResults", assessment.results.map(row => ({
-        id: row.AssessmentResultID, firstName: row.FirstName, lastName: row.LastName, groupName: row.GroupName, genius1: row.Genius1, genius2: row.Genius2,
-        competency1: row.Competency1, competency2: row.Competency2, frustration1: row.Frustration1, frustration2: row.Frustration2
-      })), info.LeaderAssessmentResultID);
+      renderFilteredAssessmentResults();
       renderAssessmentTeamView();
       showAssessmentView("raw");
     }
 
     function renderAssessmentParticipants(id, participants, leaderId = "") {
       document.getElementById(id).innerHTML = participants.map(row => `<article class="assessment-result-card"><div class="record-title">${esc(row.firstName)} ${esc(row.lastName)}${String(row.id || "") === String(leaderId) ? ' <span class="status-badge">Leader</span>' : ''}</div><div class="tiny muted">${esc(row.groupName || "No group")}</div><div class="small"><strong>Genius:</strong> ${esc(row.genius1)}, ${esc(row.genius2)}</div><div class="small"><strong>Competency:</strong> ${esc(row.competency1)}, ${esc(row.competency2)}</div><div class="small"><strong>Frustration:</strong> ${esc(row.frustration1)}, ${esc(row.frustration2)}</div></article>`).join("");
+    }
+
+    function renderFilteredAssessmentResults() {
+      if (!currentAssessmentData?.import) return;
+      const query = String(document.getElementById("assessmentSearch")?.value || "").trim().toLowerCase();
+      const role = document.getElementById("assessmentRoleFilter")?.value || "";
+      const type = document.getElementById("assessmentTypeFilter")?.value || "";
+      const sort = document.getElementById("assessmentSort")?.value || "last";
+      let rows = currentAssessmentData.results.map(row => ({ id: row.AssessmentResultID, firstName: row.FirstName, lastName: row.LastName, groupName: row.GroupName, genius1: row.Genius1, genius2: row.Genius2, competency1: row.Competency1, competency2: row.Competency2, frustration1: row.Frustration1, frustration2: row.Frustration2 }));
+      rows = rows.filter(row => !query || `${row.firstName} ${row.lastName} ${row.groupName} ${row.genius1} ${row.genius2} ${row.competency1} ${row.competency2} ${row.frustration1} ${row.frustration2}`.toLowerCase().includes(query));
+      if (type) rows = rows.filter(row => role ? [row[role + "1"], row[role + "2"]].includes(type) : [row.genius1,row.genius2,row.competency1,row.competency2,row.frustration1,row.frustration2].includes(type));
+      rows.sort((a,b) => sort === "first" ? `${a.firstName}|${a.lastName}`.localeCompare(`${b.firstName}|${b.lastName}`) : `${a.lastName}|${a.firstName}`.localeCompare(`${b.lastName}|${b.firstName}`));
+      document.getElementById("assessmentResultCount").textContent = `${rows.length} of ${currentAssessmentData.results.length} participants`;
+      renderAssessmentParticipants("assessmentRawResults", rows, currentAssessmentData.import.LeaderAssessmentResultID || "");
+    }
+
+    function clearAssessmentFilters() {
+      document.getElementById("assessmentSearch").value = "";
+      document.getElementById("assessmentRoleFilter").value = "";
+      document.getElementById("assessmentTypeFilter").value = "";
+      document.getElementById("assessmentSort").value = "last";
+      renderFilteredAssessmentResults();
+    }
+
+    async function removeAssessmentData() {
+      if (!currentAssessmentData?.import) return toast("No assessment data is available to remove.");
+      const workshop = workshops.find(item => String(item.WorkshopID) === String(assessmentWorkshopId)) || {};
+      const label = workshop.Organization || workshop.ClientName || assessmentWorkshopId;
+      if (!confirm(`Remove all active assessment results from ${label}?\n\nThe workshop, estimate, and invoice will remain. The assessment import will be retained as inactive history.`)) return;
+      try {
+        await Database.deactivateWorkshopAssessment(assessmentWorkshopId);
+        assessmentPreviewData = null;
+        assessmentComparisonData = null;
+        renderSavedAssessment({ workshopId: assessmentWorkshopId, import: null, results: [] });
+        toast("Assessment data removed. The workshop was not changed.");
+      } catch (err) {
+        toast(err.message || "Unable to remove assessment data.");
+      }
     }
 
     async function saveAssessmentLeader() {
@@ -1787,7 +1817,7 @@ Sanger, CA 93657"></textarea>
       const longestList = Math.max(...team.cards.flatMap(card => [card.geniusWeighted.length, card.frustrationWeighted.length]));
       const densityClass = longestList > 20 ? "team-map-very-dense" : longestList > 12 ? "team-map-dense" : "";
       const generated = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-      const mapRows = [0, 2, 4].map(index => `<div class="team-map-row">${teamMapPanel(team.cards[index], team.leader, mode)}<div class="team-map-gears" aria-label="${esc(team.cards[index].type)} hands off to ${esc(team.cards[index + 1].type)}"><div class="team-map-gear team-map-gear-left"><span>${esc(team.cards[index].abbreviation)}</span></div><div class="team-map-gear team-map-gear-right"><span>${esc(team.cards[index + 1].abbreviation)}</span></div></div>${teamMapPanel(team.cards[index + 1], team.leader, mode)}</div>`).join("");
+      const mapRows = team.cards.map(card => teamMapPanel(card, team.leader, mode)).join("");
       document.getElementById("teamMapSheet").className = `team-map-sheet ${densityClass}`;
       document.getElementById("teamMapSheet").innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Working Genius Team Map</h1><div style="font-weight:900;">${esc(workshop.Organization || currentAssessmentData.import.GroupName || "Team")}</div></div></div><div class="team-map-meta">${esc(assessmentWorkshopId)}<br>${workshop.WorkshopDate ? formatDate(workshop.WorkshopDate) : ""}<br>${esc(currentAssessmentData.import.GroupName || "")}</div></div><div class="team-map-grid">${mapRows}</div><div class="team-map-footer"><div><strong>Jeff Jones Consulting</strong><br>Generated ${generated}</div><div>The selected team leader is represented twice in Genius and Frustration areas to reflect the leader's influence on the team environment.</div></div>`;
     }

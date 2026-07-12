@@ -145,6 +145,10 @@ function doPost(e) {
       return jsonResponse(updateAssessmentLeader(body.data || {}));
     }
 
+    if (action === "deactivateWorkshopAssessment") {
+      return jsonResponse(deactivateWorkshopAssessment(body.data || {}));
+    }
+
     if (action === "deleteWorkshop") {
       deleteRowById(SHEET_NAMES.workshops, "WorkshopID", (body.data || {}).id);
       return jsonResponse({ success: true });
@@ -305,6 +309,39 @@ function updateAssessmentLeader(data) {
     TeamPdfFileId: "", TeamPdfUrl: "", TeamPdfGeneratedDate: ""
   });
   return getWorkshopAssessment(workshopId);
+}
+
+function deactivateWorkshopAssessment(data) {
+  const workshopId = String(data.workshopId || "").trim();
+  if (!workshopId) throw new Error("Workshop ID is required.");
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const assessment = getWorkshopAssessment(workshopId);
+    if (!assessment.import) return { success: true, workshopId: workshopId };
+    const importInfo = getRowById("AssessmentImports", "AssessmentImportID", assessment.import.AssessmentImportID);
+    if (!importInfo) throw new Error("Assessment import not found.");
+    const now = new Date().toISOString();
+    updateRowFields("AssessmentImports", importInfo.rowNumber, {
+      Active: false, ImportStatus: "Removed", UpdatedDate: now,
+      TeamPdfFileId: "", TeamPdfUrl: "", TeamPdfGeneratedDate: ""
+    });
+    assessment.results.forEach(row => {
+      const resultInfo = getRowById("AssessmentResults", "AssessmentResultID", row.AssessmentResultID);
+      if (resultInfo) updateRowFields("AssessmentResults", resultInfo.rowNumber, { Active: false, UpdatedDate: now });
+    });
+    ensureSheetWithHeaders("AssessmentImportHistory", ASSESSMENT_HISTORY_HEADERS);
+    appendAssessmentHistory({
+      importId: assessment.import.AssessmentImportID, workshopId: workshopId, mode: "Removed",
+      fileName: assessment.import.OriginalFileName, uploaded: 0, added: 0, updated: 0,
+      unchanged: 0, previous: assessment.results.length, finalTotal: 0,
+      groupBefore: assessment.import.GroupName, groupAfter: "",
+      leaderBefore: assessment.import.LeaderFirstName + " " + assessment.import.LeaderLastName, leaderAfter: ""
+    });
+    return { success: true, workshopId: workshopId };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function getRates() {
