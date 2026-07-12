@@ -767,6 +767,7 @@ Sanger, CA 93657"></textarea>
   <div id="assessmentDialogBackdrop" class="dialog-backdrop no-print">
     <div class="send-dialog" role="dialog" aria-modal="true" aria-labelledby="assessmentDialogTitle">
       <div class="section-title"><div><h2 id="assessmentDialogTitle">Workshop Assessment Results</h2><p id="assessmentDialogMeta" class="tiny muted"></p></div><button class="button ghost small-btn" onclick="closeAssessmentDialog()">Close</button></div>
+      <div id="assessmentLoading" class="metric"><div class="metric-label">Loading Assessment</div><div class="metric-note">Checking this workshop for saved individual results…</div></div>
       <div id="assessmentUploadArea">
         <div class="field"><label for="assessmentFile">Official Individual Results workbook (.xlsx)</label><input id="assessmentFile" type="file" accept=".xlsx" onchange="previewAssessmentFile(this.files[0])"></div>
         <div id="assessmentPreview" class="hidden"><p id="assessmentPreviewSummary" class="muted small"></p><div id="assessmentMessages" class="assessment-messages"></div><div id="assessmentPreviewRows" class="assessment-results-grid"></div><div class="send-dialog-actions"><button id="assessmentImportButton" class="button" onclick="importAssessmentResults()">Import Results</button><button class="button secondary" onclick="clearAssessmentPreview()">Choose Different File</button></div></div>
@@ -859,7 +860,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.6";
+    const APP_VERSION = "2026.07.12.7";
 
     const K = {
       clients: "jjc_clients",
@@ -1545,13 +1546,15 @@ Sanger, CA 93657"></textarea>
       assessmentWorkshopId = workshopId;
       assessmentPreviewData = null;
       document.getElementById("assessmentDialogMeta").textContent = `${workshopId} • ${workshop.Organization}`;
+      resetAssessmentDialogForLoading();
       document.getElementById("assessmentDialogBackdrop").classList.add("open");
-      clearAssessmentPreview();
       try {
         const assessment = await Database.getWorkshopAssessment(workshopId);
         renderSavedAssessment(assessment);
       } catch (err) {
         console.warn("Unable to load workshop assessment.", err);
+        document.getElementById("assessmentLoading").classList.add("hidden");
+        document.getElementById("assessmentUploadArea").classList.remove("hidden");
         toast(err.message || "Unable to load assessment results.");
       }
     }
@@ -1606,6 +1609,7 @@ Sanger, CA 93657"></textarea>
 
     function renderSavedAssessment(assessment) {
       const hasAssessment = Boolean(assessment?.import);
+      document.getElementById("assessmentLoading").classList.add("hidden");
       document.getElementById("assessmentUploadArea").classList.toggle("hidden", hasAssessment);
       document.getElementById("assessmentSavedArea").classList.toggle("hidden", !hasAssessment);
       if (!hasAssessment) return;
@@ -1630,6 +1634,17 @@ Sanger, CA 93657"></textarea>
       document.getElementById("assessmentPreviewRows").innerHTML = "";
       document.getElementById("assessmentUploadArea").classList.remove("hidden");
       document.getElementById("assessmentSavedArea").classList.add("hidden");
+    }
+
+    function resetAssessmentDialogForLoading() {
+      assessmentPreviewData = null;
+      document.getElementById("assessmentFile").value = "";
+      document.getElementById("assessmentPreview").classList.add("hidden");
+      document.getElementById("assessmentMessages").innerHTML = "";
+      document.getElementById("assessmentPreviewRows").innerHTML = "";
+      document.getElementById("assessmentUploadArea").classList.add("hidden");
+      document.getElementById("assessmentSavedArea").classList.add("hidden");
+      document.getElementById("assessmentLoading").classList.remove("hidden");
     }
 
     function currentCalc() {

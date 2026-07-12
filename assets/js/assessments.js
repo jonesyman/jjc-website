@@ -47,6 +47,7 @@ window.Assessments = (() => {
         competency1: normalizeType(row[5]), competency2: normalizeType(row[6]),
         frustration1: normalizeType(row[7]), frustration2: normalizeType(row[8]), sortOrder: participants.length + 1
       };
+      if ([row[0], row[1], row[2]].some(value => String(value || "") !== String(value || "").trim() || /\s{2,}/.test(String(value || "")))) warnings.push(`Row ${line}: unexpected whitespace was normalized.`);
       if (!participant.firstName || !participant.lastName) errors.push(`Row ${line}: first and last name are required.`);
       if (!participant.groupName) warnings.push(`Row ${line}: group name is blank.`);
       const rawResults = row.slice(3, 9).map(value => String(value || "").trim());

@@ -169,11 +169,13 @@ saveSettings(data) {
     },
 
     async saveWorkshopAssessment(data) {
+        const startedAt = Date.now();
         await this.postNoCors("saveWorkshopAssessment", data);
         for (let attempt = 1; attempt <= 5; attempt++) {
             await this.wait(attempt * 500);
             const assessment = await this.getWorkshopAssessment(data.workshopId);
-            if (assessment && assessment.import && Number(assessment.import.ParticipantCount) === data.participants.length) return assessment;
+            const importedAt = assessment?.import?.ImportedDate ? new Date(assessment.import.ImportedDate).getTime() : 0;
+            if (assessment && assessment.import && Number(assessment.import.ParticipantCount) === data.participants.length && importedAt >= startedAt - 2000) return assessment;
         }
         throw new Error("Google Sheets did not confirm the assessment import.");
     },
