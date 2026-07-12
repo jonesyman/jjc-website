@@ -155,6 +155,44 @@
       color: #dbeafe;
     }
 
+    .metric-note {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+      margin-top: 6px;
+    }
+
+    .dashboard-sections {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .dashboard-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .dashboard-item {
+      border: 1px solid rgba(148,163,184,.13);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(15,23,42,.48);
+    }
+
+    .dashboard-item-title {
+      color: #f8fafc;
+      font-weight: 850;
+      margin-bottom: 4px;
+    }
+
+    .dashboard-empty {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 10px 0;
+    }
+
     .form-row {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -290,6 +328,7 @@
       }
 
       .dashboard-grid,
+      .dashboard-sections,
       .form-row,
       .form-row-3,
       .workshop-filters {
@@ -405,10 +444,14 @@
         <!-- DASHBOARD -->
         <section id="view-dashboard" class="view active">
           <div class="dashboard-grid">
-            <div class="metric"><div class="metric-label">Clients</div><div id="metricClients" class="metric-value">0</div></div>
-            <div class="metric"><div class="metric-label">Workshops</div><div id="metricWorkshops" class="metric-value">0</div></div>
-            <div class="metric"><div class="metric-label">Estimates</div><div id="metricEstimates" class="metric-value">0</div></div>
-            <div class="metric"><div class="metric-label">Invoices</div><div id="metricInvoices" class="metric-value">0</div></div>
+            <div class="metric"><div class="metric-label">Upcoming Workshops</div><div id="metricUpcomingWorkshops" class="metric-value">0</div><div class="metric-note">Scheduled work ahead</div></div>
+            <div class="metric"><div class="metric-label">Draft Estimates</div><div id="metricDraftEstimates" class="metric-value">0</div><div class="metric-note"><span id="metricSentEstimates">0</span> sent awaiting response</div></div>
+            <div class="metric"><div class="metric-label">Unpaid Invoices</div><div id="metricUnpaidInvoices" class="metric-value">0</div><div class="metric-note"><span id="metricOverdueInvoices">0</span> overdue</div></div>
+            <div class="metric"><div class="metric-label">Outstanding Balance</div><div id="metricOutstanding" class="metric-value">$0</div><div class="metric-note">Billed, not marked paid</div></div>
+            <div class="metric"><div class="metric-label">Paid This Month</div><div id="metricRevenueMonth" class="metric-value">$0</div><div class="metric-note">Invoices marked Paid</div></div>
+            <div class="metric"><div class="metric-label">Paid This Year</div><div id="metricRevenueYear" class="metric-value">$0</div><div class="metric-note">Invoices marked Paid</div></div>
+            <div class="metric"><div class="metric-label">Clients</div><div id="metricClients" class="metric-value">0</div><div class="metric-note">Saved client records</div></div>
+            <div class="metric"><div class="metric-label">Total Invoices</div><div id="metricInvoices" class="metric-value">0</div><div class="metric-note"><span id="metricWorkshops">0</span> workshops • <span id="metricEstimates">0</span> estimates</div></div>
           </div>
 
           <div class="card">
@@ -417,11 +460,18 @@
               <span class="tiny muted">Start common tasks</span>
             </div>
             <div class="actions">
-              <button class="button" onclick="showView('clients')">Add Client</button>
-              <button class="button" onclick="showView('workshops')">Add Workshop</button>
-              <button class="button" onclick="showView('estimates')">Create Estimate</button>
-              <button class="button" onclick="showView('invoices')">Create Invoice</button>
+              <button class="button" onclick="startNewRecord('clients')">New Client</button>
+              <button class="button" onclick="startNewRecord('workshops')">New Workshop</button>
+              <button class="button" onclick="startNewRecord('estimates')">New Estimate</button>
+              <button class="button" onclick="startNewRecord('invoices')">New Invoice</button>
             </div>
+          </div>
+
+          <div class="dashboard-sections">
+            <div class="card"><div class="section-title"><h2>Upcoming Workshops</h2><button class="button ghost small-btn" onclick="showView('workshops')">View All</button></div><div id="dashboardUpcoming" class="dashboard-list"></div></div>
+            <div class="card"><div class="section-title"><h2>Invoices Needing Attention</h2><button class="button ghost small-btn" onclick="showView('invoices')">View All</button></div><div id="dashboardInvoices" class="dashboard-list"></div></div>
+            <div class="card"><div class="section-title"><h2>Estimate Pipeline</h2><button class="button ghost small-btn" onclick="showView('estimates')">View All</button></div><div id="dashboardEstimates" class="dashboard-list"></div></div>
+            <div class="card"><div class="section-title"><h2>Recent Activity</h2><span class="tiny muted">Latest saved records</span></div><div id="dashboardActivity" class="dashboard-list"></div></div>
           </div>
         </section>
 
@@ -731,7 +781,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.11.1";
+    const APP_VERSION = "2026.07.12.1";
 
     const K = {
       clients: "jjc_clients",
@@ -871,6 +921,78 @@ Sanger, CA 93657"></textarea>
       document.getElementById("metricWorkshops").textContent = workshops.length;
       document.getElementById("metricEstimates").textContent = estimates.length;
       document.getElementById("metricInvoices").textContent = invoices.length;
+      updateDashboard();
+    }
+
+    function updateDashboard() {
+      const today = new Date().toISOString().slice(0, 10);
+      const monthKey = today.slice(0, 7);
+      const yearKey = today.slice(0, 4);
+      const activeInvoice = inv => !["paid", "canceled", "cancelled", "void"].includes(String(inv.status || inv.Status || "Draft").toLowerCase());
+      const invoiceDate = inv => normalizeDateInput(inv.paidDate || inv.PaidDate || inv.issueDate);
+      const invoiceBalance = inv => inv.balanceDue !== undefined && inv.balanceDue !== "" ? Number(inv.balanceDue) : Math.max(0, Number(inv.total || 0) - Number(inv.amountPaid || 0));
+      const paidInvoices = invoices.filter(inv => String(inv.status || inv.Status || "").toLowerCase() === "paid");
+      const unpaidInvoices = invoices.filter(activeInvoice);
+      const overdueInvoices = unpaidInvoices.filter(inv => normalizeDateInput(inv.dueDate) && normalizeDateInput(inv.dueDate) < today);
+      const upcoming = workshops.filter(w => {
+        const date = normalizeDateInput(w.WorkshopDate);
+        return date >= today && !["Completed", "Canceled"].includes(normalizeWorkshopStatus(w.Status));
+      }).sort((a, b) => normalizeDateInput(a.WorkshopDate).localeCompare(normalizeDateInput(b.WorkshopDate)));
+      const drafts = estimates.filter(e => String(e.status || "Draft").toLowerCase() === "draft");
+      const sent = estimates.filter(e => String(e.status || "").toLowerCase() === "sent");
+      const outstanding = unpaidInvoices.reduce((sum, inv) => sum + invoiceBalance(inv), 0);
+      const revenueMonth = paidInvoices.filter(inv => invoiceDate(inv).startsWith(monthKey)).reduce((sum, inv) => sum + Number(inv.amountPaid || inv.total || 0), 0);
+      const revenueYear = paidInvoices.filter(inv => invoiceDate(inv).startsWith(yearKey)).reduce((sum, inv) => sum + Number(inv.amountPaid || inv.total || 0), 0);
+
+      document.getElementById("metricUpcomingWorkshops").textContent = upcoming.length;
+      document.getElementById("metricDraftEstimates").textContent = drafts.length;
+      document.getElementById("metricSentEstimates").textContent = sent.length;
+      document.getElementById("metricUnpaidInvoices").textContent = unpaidInvoices.length;
+      document.getElementById("metricOverdueInvoices").textContent = overdueInvoices.length;
+      document.getElementById("metricOutstanding").textContent = JJC_money(outstanding);
+      document.getElementById("metricRevenueMonth").textContent = JJC_money(revenueMonth);
+      document.getElementById("metricRevenueYear").textContent = JJC_money(revenueYear);
+
+      renderDashboardList("dashboardUpcoming", upcoming.slice(0, 5).map(w => ({
+        title: w.Organization || "Workshop",
+        meta: `${formatDate(w.WorkshopDate)}${w.StartTime ? " • " + formatTime(w.StartTime) : ""} • ${normalizeWorkshopStatus(w.Status)}`,
+        action: `editWorkshop('${jsEsc(w.WorkshopID)}')`,
+        label: "Open"
+      })), "No upcoming workshops.");
+
+      renderDashboardList("dashboardInvoices", [...overdueInvoices, ...unpaidInvoices.filter(inv => !overdueInvoices.includes(inv))].slice(0, 5).map(inv => ({
+        title: `${inv.invoiceNo} • ${inv.clientName || "Invoice"}`,
+        meta: `${normalizeDateInput(inv.dueDate) < today ? "Overdue" : "Due " + formatDate(inv.dueDate)} • ${JJC_money(invoiceBalance(inv))} outstanding`,
+        action: `editInvoice('${jsEsc(inv.invoiceNo)}')`,
+        label: "Open"
+      })), "No unpaid invoices.");
+
+      renderDashboardList("dashboardEstimates", [...drafts, ...sent].slice(0, 5).map(e => ({
+        title: `${e.id} • ${e.name || "Estimate"}`,
+        meta: `${e.status || "Draft"} • ${JJC_money(e.total)}`,
+        action: `editEstimate('${jsEsc(e.id)}')`,
+        label: "Open"
+      })), "No draft or sent estimates.");
+
+      const activity = [
+        ...workshops.map(w => ({ title: `Workshop • ${w.Organization || w.WorkshopID}`, date: normalizeDateInput(w.WorkshopDate), action: `editWorkshop('${jsEsc(w.WorkshopID)}')` })),
+        ...estimates.map(e => ({ title: `Estimate • ${e.id} • ${e.name || ""}`, date: normalizeDateInput(e.lastSentDate || e.createdAt), action: `editEstimate('${jsEsc(e.id)}')` })),
+        ...invoices.map(inv => ({ title: `Invoice • ${inv.invoiceNo} • ${inv.clientName || ""}`, date: normalizeDateInput(inv.lastSentDate || inv.issueDate), action: `editInvoice('${jsEsc(inv.invoiceNo)}')` }))
+      ].filter(item => item.date).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6).map(item => ({ ...item, meta: formatDate(item.date), label: "Open" }));
+      renderDashboardList("dashboardActivity", activity, "No recent activity.");
+    }
+
+    function renderDashboardList(id, items, emptyMessage) {
+      const wrap = document.getElementById(id);
+      wrap.innerHTML = items.length ? items.map(item => `<div class="dashboard-item"><div class="dashboard-item-title">${esc(item.title)}</div><div class="tiny muted">${esc(item.meta)}</div><div class="actions"><button class="button secondary small-btn" onclick="${item.action}">${esc(item.label)}</button></div></div>`).join("") : `<div class="dashboard-empty">${esc(emptyMessage)}</div>`;
+    }
+
+    function startNewRecord(view) {
+      if (view === "clients") resetClientForm();
+      if (view === "workshops") resetWorkshopForm();
+      if (view === "estimates") resetEstimateForm();
+      if (view === "invoices") resetInvoiceForm();
+      showView(view);
     }
 
     function updateLookupLists() {
