@@ -126,6 +126,12 @@ saveSettings(data) {
         return this.get("rates");
     },
 
+    async reserveNumber(type) {
+        const result = await this.get("reserveNumber", { type });
+        if (!result || !result.value) throw new Error("Apps Script did not return a reserved number.");
+        return result.value;
+    },
+
     //----------------------------------------------------
     // Clients
     //----------------------------------------------------

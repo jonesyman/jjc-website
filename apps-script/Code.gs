@@ -34,6 +34,7 @@ function doGet(e) {
     if (action === "estimates") return jsonResponse(getRows(SHEET_NAMES.estimates));
     if (action === "invoices") return jsonResponse(getRows(SHEET_NAMES.invoices));
     if (action === "workshops") return jsonResponse(getRows(SHEET_NAMES.workshops));
+    if (action === "reserveNumber") return jsonResponse(reserveRecordNumber(e.parameter.type));
     if (action === "generateEstimatePdf") return jsonResponse(generatePdfForRecord("estimate", e.parameter.id));
     if (action === "generateInvoicePdf") return jsonResponse(generatePdfForRecord("invoice", e.parameter.invoiceNo));
     if (action === "sendEstimateEmail") return jsonResponse(sendEmailForRecord("estimate", e.parameter));
@@ -42,6 +43,36 @@ function doGet(e) {
     return jsonResponse({ error: "Unknown action: " + action });
   } catch (err) {
     return jsonResponse({ error: String(err && err.message ? err.message : err) });
+  }
+}
+
+function reserveRecordNumber(type) {
+  const configs = {
+    client: { sheet: SHEET_NAMES.clients, header: "ClientID", prefix: "CLI", digits: 4 },
+    workshop: { sheet: SHEET_NAMES.workshops, header: "WorkshopID", prefix: "WRK", digits: 4 },
+    estimate: { sheet: SHEET_NAMES.estimates, header: "id", prefix: "EST", digits: 4 },
+    invoice: { sheet: SHEET_NAMES.invoices, header: "invoiceNo", prefix: "INV", digits: 4 }
+  };
+  const config = configs[String(type || "").toLowerCase()];
+  if (!config) throw new Error("Unknown number type: " + type);
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const rows = getRows(config.sheet);
+    const pattern = new RegExp("^" + config.prefix + "-(\\d+)$", "i");
+    const highestSaved = rows.reduce((highest, row) => {
+      const match = String(row[config.header] || "").match(pattern);
+      return match ? Math.max(highest, Number(match[1])) : highest;
+    }, 0);
+    const properties = PropertiesService.getScriptProperties();
+    const propertyKey = "NEXT_NUMBER_" + String(type).toUpperCase();
+    const lastReserved = Number(properties.getProperty(propertyKey) || 0);
+    const next = Math.max(highestSaved, lastReserved) + 1;
+    properties.setProperty(propertyKey, String(next));
+    return { value: config.prefix + "-" + String(next).padStart(config.digits, "0") };
+  } finally {
+    lock.releaseLock();
   }
 }
 
