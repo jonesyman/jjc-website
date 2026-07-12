@@ -349,6 +349,29 @@
     .team-frustration-label { color:#fca5a5; font-weight:850; }
     .team-genius-list { color:#bbf7d0; }
     .team-frustration-list { color:#fecaca; }
+    .team-map-sheet { width:min(8.5in,100%); min-height:11in; margin:0 auto; background:#fff; color:#172033; padding:.42in .48in .34in; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-header { display:flex; justify-content:space-between; align-items:center; gap:20px; border-bottom:4px solid #243f72; padding-bottom:12px; margin-bottom:14px; }
+    .team-map-logo { width:62px; height:62px; object-fit:contain; }
+    .team-map-title { color:#243f72; margin:0; font-size:27px; }
+    .team-map-meta { color:#526077; font-size:11px; text-align:right; line-height:1.5; }
+    .team-map-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(2.25in,auto)); gap:10px; flex:1; }
+    .team-map-panel { border:1px solid #cbd5e1; border-radius:12px; overflow:hidden; background:#f8fafc; display:flex; flex-direction:column; min-height:0; }
+    .team-map-dense .team-map-names { font-size:9px; gap:2px; }
+    .team-map-very-dense .team-map-names { font-size:7.5px; gap:1px; }
+    .team-map-panel-title { display:flex; align-items:center; justify-content:center; gap:8px; background:#243f72; color:white; padding:7px 10px; font-size:16px; font-weight:900; }
+    .team-map-panel-abbr { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; background:white; color:#243f72; }
+    .team-map-columns { display:grid; grid-template-columns:1fr 1fr; flex:1; }
+    .team-map-column { padding:8px 10px; min-width:0; }
+    .team-map-column + .team-map-column { border-left:1px solid #cbd5e1; }
+    .team-map-column h4 { margin:0 0 6px; font-size:12px; text-align:center; }
+    .team-map-genius h4 { color:#15803d; }
+    .team-map-frustration h4 { color:#b91c1c; }
+    .team-map-names { list-style:none; padding:0; margin:0; display:grid; gap:3px; font-size:10.5px; line-height:1.2; }
+    .team-map-name { overflow-wrap:anywhere; }
+    .team-map-leader { font-weight:900; }
+    .team-map-footer { border-top:1px solid #cbd5e1; margin-top:10px; padding-top:7px; display:flex; justify-content:space-between; gap:14px; color:#64748b; font-size:8.5px; line-height:1.35; }
+    @page { size:Letter portrait; margin:0; }
+    @media print { .team-map-sheet { width:8.5in; min-height:11in; box-shadow:none; padding:.42in .48in .34in; } .team-map-panel { break-inside:avoid; } }
 
 
     @media (max-width: 980px) {
@@ -784,9 +807,9 @@ Sanger, CA 93657"></textarea>
       </div>
       <div id="assessmentSavedArea" class="hidden">
         <div id="assessmentSavedSummary" class="metric-note"></div>
-        <div class="form-row" style="margin-top:14px;"><div class="field"><label for="assessmentLeader">Team Leader</label><select id="assessmentLeader"></select></div><div class="field" style="justify-content:end;"><label>&nbsp;</label><button id="saveAssessmentLeaderButton" class="button" onclick="saveAssessmentLeader()">Save Leader</button></div></div>
+        <div class="form-row" style="margin-top:14px;"><div class="field"><label for="assessmentLeader">Team Leader</label><select id="assessmentLeader" onchange="document.getElementById('previewTeamMapButton').disabled=true; document.getElementById('assessmentLeaderMessage').textContent='Save the leader selection before previewing the Team Map.'"></select></div><div class="field" style="justify-content:end;"><label>&nbsp;</label><button id="saveAssessmentLeaderButton" class="button" onclick="saveAssessmentLeader()">Save Leader</button></div></div>
         <p id="assessmentLeaderMessage" class="muted small">Select the team leader before future PDF preview or generation.</p>
-        <div class="actions"><button class="button secondary small-btn" onclick="showAssessmentView('raw')">Individual Results</button><button class="button secondary small-btn" onclick="showAssessmentView('team')">Team View</button><button class="button secondary small-btn" onclick="startUpdatedAssessmentImport()">Upload Updated Results</button><button class="button secondary small-btn" onclick="loadAssessmentHistory()">View Import History</button></div>
+        <div class="actions"><button class="button secondary small-btn" onclick="showAssessmentView('raw')">Individual Results</button><button class="button secondary small-btn" onclick="showAssessmentView('team')">Team View</button><button id="previewTeamMapButton" class="button small-btn" onclick="openTeamMapPreview()">Preview Team Map</button><button class="button secondary small-btn" onclick="startUpdatedAssessmentImport()">Upload Updated Results</button><button class="button secondary small-btn" onclick="loadAssessmentHistory()">View Import History</button></div>
         <div id="assessmentRawView"><div class="section-title"><h3>Individual Results</h3><span id="assessmentResultCount" class="tiny muted"></span></div><div id="assessmentRawResults" class="assessment-results-grid"></div></div>
         <div id="assessmentTeamView" class="hidden"><div id="assessmentTeamSummary" class="client-detail-summary"></div><div id="assessmentTeamCards" class="team-view-grid"></div><p class="muted small">The selected leader is represented twice in Genius and Frustration areas to reflect the leader’s influence on the team environment. The underlying participant record is not duplicated.</p></div>
         <div id="assessmentHistoryView" class="hidden"><div class="section-title"><h3>Import History</h3></div><div id="assessmentHistoryList" class="dashboard-list"></div></div>
@@ -815,6 +838,11 @@ Sanger, CA 93657"></textarea>
   </div>
 
   <!-- PRINT VIEW -->
+  <div id="teamMapPreview" class="print-view hidden">
+    <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="closeTeamMapPreview(); document.getElementById('assessmentLeader').focus()">Change Leader</button><button class="button small-btn" onclick="window.print()">Print / Save as PDF</button></div></div>
+    <div id="teamMapSheet" class="team-map-sheet"></div>
+  </div>
+
   <div id="printView" class="print-view hidden">
     <div class="print-toolbar no-print">
       <strong id="printPreviewLabel">Printable invoice preview</strong>
@@ -878,7 +906,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.10";
+    const APP_VERSION = "2026.07.12.11";
 
     const K = {
       clients: "jjc_clients",
@@ -1647,6 +1675,7 @@ Sanger, CA 93657"></textarea>
       const leaderSelect = document.getElementById("assessmentLeader");
       leaderSelect.innerHTML = '<option value="">Select team leader...</option>' + assessment.results.map(row => `<option value="${esc(row.AssessmentResultID)}">${esc(row.FirstName)} ${esc(row.LastName)}</option>`).join("");
       leaderSelect.value = info.LeaderAssessmentResultID || "";
+      document.getElementById("previewTeamMapButton").disabled = !info.LeaderAssessmentResultID;
       document.getElementById("assessmentLeaderMessage").textContent = info.LeaderAssessmentResultID ? `Selected leader: ${info.LeaderFirstName} ${info.LeaderLastName}` : "Select the team leader before future PDF preview or generation.";
       renderAssessmentParticipants("assessmentRawResults", assessment.results.map(row => ({
         id: row.AssessmentResultID, firstName: row.FirstName, lastName: row.LastName, groupName: row.GroupName, genius1: row.Genius1, genius2: row.Genius2,
@@ -1724,6 +1753,39 @@ Sanger, CA 93657"></textarea>
     function teamPeopleList(people, leader, className = "") {
       if (!people.length) return '<p class="muted small">No participants</p>';
       return `<ul class="team-view-list ${className}">${people.map(person => `<li>${esc(person.firstName)} ${esc(person.lastName)}${leader && person.id === leader.id ? ' <span class="status-badge">Leader</span>' : ''}</li>`).join("")}</ul>`;
+    }
+
+    function openTeamMapPreview() {
+      if (!currentAssessmentData?.import?.LeaderAssessmentResultID) return toast("Select and save the team leader before previewing the Team Map.");
+      renderTeamMapPreview();
+      document.getElementById("teamMapPreview").classList.remove("hidden");
+    }
+
+    function closeTeamMapPreview() {
+      document.getElementById("teamMapPreview").classList.add("hidden");
+    }
+
+    function teamMapDisplayName(person, mode) {
+      if (mode === "full") return `${person.firstName} ${person.lastName}`.trim();
+      const initial = String(person.lastName || "").trim().charAt(0);
+      return `${person.firstName}${initial ? " " + initial + "." : ""}`;
+    }
+
+    function renderTeamMapPreview() {
+      if (!currentAssessmentData?.import) return;
+      const team = Assessments.deriveTeamView(currentAssessmentData.results, currentAssessmentData.import.LeaderAssessmentResultID);
+      const mode = document.getElementById("teamMapNameMode").value;
+      const workshop = workshops.find(w => w.WorkshopID === assessmentWorkshopId) || {};
+      const longestList = Math.max(...team.cards.flatMap(card => [card.geniusWeighted.length, card.frustrationWeighted.length]));
+      const densityClass = longestList > 20 ? "team-map-very-dense" : longestList > 12 ? "team-map-dense" : "";
+      const generated = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+      document.getElementById("teamMapSheet").className = `team-map-sheet ${densityClass}`;
+      document.getElementById("teamMapSheet").innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Working Genius Team Map</h1><div style="font-weight:900;">${esc(workshop.Organization || currentAssessmentData.import.GroupName || "Team")}</div></div></div><div class="team-map-meta">${esc(assessmentWorkshopId)}<br>${workshop.WorkshopDate ? formatDate(workshop.WorkshopDate) : ""}<br>${esc(currentAssessmentData.import.GroupName || "")}</div></div><div class="team-map-grid">${team.cards.map(card => `<section class="team-map-panel"><div class="team-map-panel-title"><span class="team-map-panel-abbr">${esc(card.abbreviation)}</span>${esc(card.type)}</div><div class="team-map-columns"><div class="team-map-column team-map-genius"><h4>Genius</h4>${teamMapNameList(card.geniusWeighted, team.leader, mode)}</div><div class="team-map-column team-map-frustration"><h4>Frustration</h4>${teamMapNameList(card.frustrationWeighted, team.leader, mode)}</div></div></section>`).join("")}</div><div class="team-map-footer"><div><strong>Jeff Jones Consulting</strong><br>Generated ${generated}</div><div>The selected team leader is represented twice in Genius and Frustration areas to reflect the leader's influence on the team environment.</div></div>`;
+    }
+
+    function teamMapNameList(people, leader, mode) {
+      if (!people.length) return '<div class="team-map-names"><span>No participants</span></div>';
+      return `<ul class="team-map-names">${people.map(person => `<li class="team-map-name${leader && person.id === leader.id ? " team-map-leader" : ""}">${esc(teamMapDisplayName(person, mode))}${leader && person.id === leader.id ? " ★" : ""}</li>`).join("")}</ul>`;
     }
 
     function clearAssessmentPreview() {
