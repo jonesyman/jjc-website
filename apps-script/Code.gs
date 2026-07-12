@@ -139,6 +139,10 @@ function doPost(e) {
       return jsonResponse(saveWorkshopAssessment(body.data || {}));
     }
 
+    if (action === "updateAssessmentLeader") {
+      return jsonResponse(updateAssessmentLeader(body.data || {}));
+    }
+
     if (action === "deleteWorkshop") {
       deleteRowById(SHEET_NAMES.workshops, "WorkshopID", (body.data || {}).id);
       return jsonResponse({ success: true });
@@ -227,6 +231,25 @@ function saveWorkshopAssessment(data) {
   } finally {
     lock.releaseLock();
   }
+}
+
+function updateAssessmentLeader(data) {
+  const workshopId = String(data.workshopId || "").trim();
+  const resultId = String(data.assessmentResultId || "").trim();
+  if (!workshopId || !resultId) throw new Error("Workshop and leader are required.");
+  const assessment = getWorkshopAssessment(workshopId);
+  if (!assessment.import) throw new Error("No active assessment import exists for this workshop.");
+  const leader = assessment.results.find(row => String(row.AssessmentResultID) === resultId);
+  if (!leader) throw new Error("The selected leader does not belong to the active assessment import.");
+  const importInfo = getRowById("AssessmentImports", "AssessmentImportID", assessment.import.AssessmentImportID);
+  if (!importInfo) throw new Error("Assessment import not found.");
+  const now = new Date().toISOString();
+  updateRowFields("AssessmentImports", importInfo.rowNumber, {
+    LeaderAssessmentResultID: resultId, LeaderFirstName: leader.FirstName, LeaderLastName: leader.LastName,
+    LeaderSelectedDate: assessment.import.LeaderSelectedDate || now, LeaderUpdatedDate: now,
+    TeamPdfFileId: "", TeamPdfUrl: "", TeamPdfGeneratedDate: ""
+  });
+  return getWorkshopAssessment(workshopId);
 }
 
 function getRates() {

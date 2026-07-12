@@ -180,6 +180,16 @@ saveSettings(data) {
         throw new Error("Google Sheets did not confirm the assessment import.");
     },
 
+    async updateAssessmentLeader(data) {
+        await this.postNoCors("updateAssessmentLeader", data);
+        for (let attempt = 1; attempt <= 5; attempt++) {
+            await this.wait(attempt * 450);
+            const assessment = await this.getWorkshopAssessment(data.workshopId);
+            if (String(assessment?.import?.LeaderAssessmentResultID || "") === String(data.assessmentResultId)) return assessment;
+        }
+        throw new Error("Google Sheets did not confirm the selected leader.");
+    },
+
     //----------------------------------------------------
     // Estimates
     //----------------------------------------------------

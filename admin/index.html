@@ -340,6 +340,11 @@
     .assessment-messages { margin:12px 0; display:grid; gap:6px; }
     .assessment-error { color:#fecaca; }
     .assessment-warning { color:#fde68a; }
+    .team-view-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+    .team-view-card { border:1px solid rgba(96,165,250,.25); border-radius:16px; padding:14px; background:linear-gradient(180deg,rgba(30,41,59,.9),rgba(15,23,42,.8)); }
+    .team-view-type { display:flex; align-items:center; gap:9px; margin-bottom:10px; }
+    .team-view-abbr { display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:#1d4ed8; color:white; font-weight:900; }
+    .team-view-list { margin:7px 0 12px; padding-left:18px; }
 
 
     @media (max-width: 980px) {
@@ -369,6 +374,7 @@
       .client-detail-summary,
       .client-detail-records,
       .assessment-results-grid,
+      .team-view-grid,
       .form-row,
       .form-row-3,
       .workshop-filters {
@@ -772,7 +778,14 @@ Sanger, CA 93657"></textarea>
         <div class="field"><label for="assessmentFile">Official Individual Results workbook (.xlsx)</label><input id="assessmentFile" type="file" accept=".xlsx" onchange="previewAssessmentFile(this.files[0])"></div>
         <div id="assessmentPreview" class="hidden"><p id="assessmentPreviewSummary" class="muted small"></p><div id="assessmentMessages" class="assessment-messages"></div><div id="assessmentPreviewRows" class="assessment-results-grid"></div><div class="send-dialog-actions"><button id="assessmentImportButton" class="button" onclick="importAssessmentResults()">Import Results</button><button class="button secondary" onclick="clearAssessmentPreview()">Choose Different File</button></div></div>
       </div>
-      <div id="assessmentSavedArea" class="hidden"><div id="assessmentSavedSummary" class="metric-note"></div><div class="section-title"><h3>Individual Results</h3><span id="assessmentResultCount" class="tiny muted"></span></div><div id="assessmentRawResults" class="assessment-results-grid"></div></div>
+      <div id="assessmentSavedArea" class="hidden">
+        <div id="assessmentSavedSummary" class="metric-note"></div>
+        <div class="form-row" style="margin-top:14px;"><div class="field"><label for="assessmentLeader">Team Leader</label><select id="assessmentLeader"></select></div><div class="field" style="justify-content:end;"><label>&nbsp;</label><button id="saveAssessmentLeaderButton" class="button" onclick="saveAssessmentLeader()">Save Leader</button></div></div>
+        <p id="assessmentLeaderMessage" class="muted small">Select the team leader before future PDF preview or generation.</p>
+        <div class="actions"><button class="button secondary small-btn" onclick="showAssessmentView('raw')">Individual Results</button><button class="button secondary small-btn" onclick="showAssessmentView('team')">Team View</button></div>
+        <div id="assessmentRawView"><div class="section-title"><h3>Individual Results</h3><span id="assessmentResultCount" class="tiny muted"></span></div><div id="assessmentRawResults" class="assessment-results-grid"></div></div>
+        <div id="assessmentTeamView" class="hidden"><div id="assessmentTeamSummary" class="client-detail-summary"></div><div id="assessmentTeamCards" class="team-view-grid"></div><p class="muted small">The selected leader is represented twice in Genius and Frustration areas to reflect the leader’s influence on the team environment. The underlying participant record is not duplicated.</p></div>
+      </div>
     </div>
   </div>
 
@@ -860,7 +873,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.7";
+    const APP_VERSION = "2026.07.12.8";
 
     const K = {
       clients: "jjc_clients",
@@ -876,6 +889,7 @@ Sanger, CA 93657"></textarea>
     let reservedEstimateId = "";
     let assessmentWorkshopId = "";
     let assessmentPreviewData = null;
+    let currentAssessmentData = null;
     let estimates = [];
     let invoices = [];
     let settings = {};
@@ -1563,6 +1577,7 @@ Sanger, CA 93657"></textarea>
       document.getElementById("assessmentDialogBackdrop").classList.remove("open");
       assessmentWorkshopId = "";
       assessmentPreviewData = null;
+      currentAssessmentData = null;
     }
 
     async function previewAssessmentFile(file) {
@@ -1613,17 +1628,60 @@ Sanger, CA 93657"></textarea>
       document.getElementById("assessmentUploadArea").classList.toggle("hidden", hasAssessment);
       document.getElementById("assessmentSavedArea").classList.toggle("hidden", !hasAssessment);
       if (!hasAssessment) return;
+      currentAssessmentData = assessment;
       const info = assessment.import;
       document.getElementById("assessmentSavedSummary").textContent = `${info.OriginalFileName || "Assessment export"} • ${info.GroupName || "No group"} • Imported ${formatDate(info.ImportedDate)} • Active`;
       document.getElementById("assessmentResultCount").textContent = `${assessment.results.length} participants`;
+      const leaderSelect = document.getElementById("assessmentLeader");
+      leaderSelect.innerHTML = '<option value="">Select team leader...</option>' + assessment.results.map(row => `<option value="${esc(row.AssessmentResultID)}">${esc(row.FirstName)} ${esc(row.LastName)}</option>`).join("");
+      leaderSelect.value = info.LeaderAssessmentResultID || "";
+      document.getElementById("assessmentLeaderMessage").textContent = info.LeaderAssessmentResultID ? `Selected leader: ${info.LeaderFirstName} ${info.LeaderLastName}` : "Select the team leader before future PDF preview or generation.";
       renderAssessmentParticipants("assessmentRawResults", assessment.results.map(row => ({
-        firstName: row.FirstName, lastName: row.LastName, groupName: row.GroupName, genius1: row.Genius1, genius2: row.Genius2,
+        id: row.AssessmentResultID, firstName: row.FirstName, lastName: row.LastName, groupName: row.GroupName, genius1: row.Genius1, genius2: row.Genius2,
         competency1: row.Competency1, competency2: row.Competency2, frustration1: row.Frustration1, frustration2: row.Frustration2
-      })));
+      })), info.LeaderAssessmentResultID);
+      renderAssessmentTeamView();
+      showAssessmentView("raw");
     }
 
-    function renderAssessmentParticipants(id, participants) {
-      document.getElementById(id).innerHTML = participants.map(row => `<article class="assessment-result-card"><div class="record-title">${esc(row.firstName)} ${esc(row.lastName)}</div><div class="tiny muted">${esc(row.groupName || "No group")}</div><div class="small"><strong>Genius:</strong> ${esc(row.genius1)}, ${esc(row.genius2)}</div><div class="small"><strong>Competency:</strong> ${esc(row.competency1)}, ${esc(row.competency2)}</div><div class="small"><strong>Frustration:</strong> ${esc(row.frustration1)}, ${esc(row.frustration2)}</div></article>`).join("");
+    function renderAssessmentParticipants(id, participants, leaderId = "") {
+      document.getElementById(id).innerHTML = participants.map(row => `<article class="assessment-result-card"><div class="record-title">${esc(row.firstName)} ${esc(row.lastName)}${String(row.id || "") === String(leaderId) ? ' <span class="status-badge">Leader</span>' : ''}</div><div class="tiny muted">${esc(row.groupName || "No group")}</div><div class="small"><strong>Genius:</strong> ${esc(row.genius1)}, ${esc(row.genius2)}</div><div class="small"><strong>Competency:</strong> ${esc(row.competency1)}, ${esc(row.competency2)}</div><div class="small"><strong>Frustration:</strong> ${esc(row.frustration1)}, ${esc(row.frustration2)}</div></article>`).join("");
+    }
+
+    async function saveAssessmentLeader() {
+      const assessmentResultId = document.getElementById("assessmentLeader").value;
+      if (!assessmentResultId) return toast("Select a team leader first.");
+      const button = document.getElementById("saveAssessmentLeaderButton");
+      button.disabled = true;
+      button.textContent = "Saving...";
+      try {
+        const assessment = await Database.updateAssessmentLeader({ workshopId: assessmentWorkshopId, assessmentResultId });
+        renderSavedAssessment(assessment);
+        showAssessmentView("team");
+        toast("Team leader saved.");
+      } catch (err) {
+        toast(err.message || "Unable to save leader.");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Save Leader";
+      }
+    }
+
+    function showAssessmentView(view) {
+      document.getElementById("assessmentRawView").classList.toggle("hidden", view !== "raw");
+      document.getElementById("assessmentTeamView").classList.toggle("hidden", view !== "team");
+    }
+
+    function renderAssessmentTeamView() {
+      if (!currentAssessmentData?.import) return;
+      const team = Assessments.deriveTeamView(currentAssessmentData.results, currentAssessmentData.import.LeaderAssessmentResultID || "");
+      document.getElementById("assessmentTeamSummary").innerHTML = `<div class="metric"><div class="metric-label">Actual Participants</div><div class="metric-value">${team.actualParticipants}</div></div><div class="metric"><div class="metric-label">Selected Leader</div><div class="metric-value" style="font-size:18px;">${team.leader ? esc(team.leader.firstName + " " + team.leader.lastName) : "Not selected"}</div></div><div class="metric"><div class="metric-label">Weighted Placements</div><div class="metric-value" style="font-size:18px;">G ${team.weightedGeniusPlacements} • F ${team.weightedFrustrationPlacements}</div></div><div class="metric"><div class="metric-label">Genius Coverage</div><div class="metric-value" style="font-size:18px;">${team.geniusCoverage ? "All 6 represented" : "Coverage gaps"}</div></div>`;
+      document.getElementById("assessmentTeamCards").innerHTML = team.cards.map(card => `<section class="team-view-card"><div class="team-view-type"><span class="team-view-abbr">${esc(card.abbreviation)}</span><strong>${esc(card.type)}</strong></div><div class="tiny muted">Genius: ${card.geniusActual.length} actual • ${card.geniusWeighted.length} weighted</div>${teamPeopleList(card.geniusWeighted, team.leader)}<div class="tiny muted">Frustration: ${card.frustrationActual.length} actual • ${card.frustrationWeighted.length} weighted</div>${teamPeopleList(card.frustrationWeighted, team.leader)}<div class="tiny muted">Competency count: ${card.competencyCount}</div></section>`).join("");
+    }
+
+    function teamPeopleList(people, leader) {
+      if (!people.length) return '<p class="muted small">No participants</p>';
+      return `<ul class="team-view-list">${people.map(person => `<li>${esc(person.firstName)} ${esc(person.lastName)}${leader && person.id === leader.id ? ' <span class="status-badge">Leader</span>' : ''}</li>`).join("")}</ul>`;
     }
 
     function clearAssessmentPreview() {

@@ -71,5 +71,32 @@ window.Assessments = (() => {
     return { fileName, worksheet: "Individual Results", participants, groups, groupName: groups[0] || "", errors: [...new Set(errors)], warnings: [...new Set(warnings)] };
   }
 
-  return { TYPES, parseFile, validateRows, normalizeName, participantKey };
+  function deriveTeamView(results, leaderId) {
+    const normalized = results.map(row => ({
+      id: row.AssessmentResultID || row.id, firstName: row.FirstName || row.firstName, lastName: row.LastName || row.lastName,
+      genius1: row.Genius1 || row.genius1, genius2: row.Genius2 || row.genius2,
+      competency1: row.Competency1 || row.competency1, competency2: row.Competency2 || row.competency2,
+      frustration1: row.Frustration1 || row.frustration1, frustration2: row.Frustration2 || row.frustration2
+    }));
+    const leader = normalized.find(row => String(row.id) === String(leaderId)) || null;
+    const cards = TYPES.map(type => {
+      const geniusActual = normalized.filter(row => row.genius1 === type || row.genius2 === type);
+      const frustrationActual = normalized.filter(row => row.frustration1 === type || row.frustration2 === type);
+      const competencyActual = normalized.filter(row => row.competency1 === type || row.competency2 === type);
+      const geniusWeighted = [...geniusActual];
+      const frustrationWeighted = [...frustrationActual];
+      if (leader && geniusActual.some(row => row.id === leader.id)) geniusWeighted.push(leader);
+      if (leader && frustrationActual.some(row => row.id === leader.id)) frustrationWeighted.push(leader);
+      const sortPeople = people => people.sort((a, b) => `${a.lastName}|${a.firstName}`.localeCompare(`${b.lastName}|${b.firstName}`));
+      return { type, abbreviation: type[0], geniusActual: sortPeople(geniusActual), geniusWeighted: sortPeople(geniusWeighted), frustrationActual: sortPeople(frustrationActual), frustrationWeighted: sortPeople(frustrationWeighted), competencyCount: competencyActual.length };
+    });
+    return {
+      actualParticipants: normalized.length, leader, cards,
+      weightedGeniusPlacements: normalized.length * 2 + (leader ? 2 : 0),
+      weightedFrustrationPlacements: normalized.length * 2 + (leader ? 2 : 0),
+      geniusCoverage: cards.every(card => card.geniusActual.length > 0)
+    };
+  }
+
+  return { TYPES, parseFile, validateRows, normalizeName, participantKey, deriveTeamView };
 })();
