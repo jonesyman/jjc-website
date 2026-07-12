@@ -168,14 +168,19 @@ saveSettings(data) {
         return this.get("getWorkshopAssessment", { workshopId });
     },
 
+    getAssessmentImportHistory(workshopId) {
+        return this.get("getAssessmentImportHistory", { workshopId });
+    },
+
     async saveWorkshopAssessment(data) {
         const startedAt = Date.now();
         await this.postNoCors("saveWorkshopAssessment", data);
         for (let attempt = 1; attempt <= 5; attempt++) {
             await this.wait(attempt * 500);
             const assessment = await this.getWorkshopAssessment(data.workshopId);
-            const importedAt = assessment?.import?.ImportedDate ? new Date(assessment.import.ImportedDate).getTime() : 0;
-            if (assessment && assessment.import && Number(assessment.import.ParticipantCount) === data.participants.length && importedAt >= startedAt - 2000) return assessment;
+            const eventDate = data.mode === "Merge" ? assessment?.import?.UpdatedDate : assessment?.import?.ImportedDate;
+            const savedAt = eventDate ? new Date(eventDate).getTime() : 0;
+            if (assessment && assessment.import && savedAt >= startedAt - 2000 && (data.mode === "Merge" || Number(assessment.import.ParticipantCount) === data.participants.length)) return assessment;
         }
         throw new Error("Google Sheets did not confirm the assessment import.");
     },

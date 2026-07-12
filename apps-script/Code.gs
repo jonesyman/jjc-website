@@ -14,6 +14,7 @@ const ARCHIVE_HEADERS = ["archived", "archivedDate"];
 const INVOICE_LIFECYCLE_HEADERS = ["amountPaid", "balanceDue", "paidDate", "paymentMethod", "paymentReference", "voidReason"];
 const ASSESSMENT_IMPORT_HEADERS = ["AssessmentImportID", "WorkshopID", "GroupName", "OriginalFileName", "ParticipantCount", "ImportedDate", "UpdatedDate", "Active", "ImportStatus", "ValidationWarnings", "SourceType", "SourceVersion", "LeaderAssessmentResultID", "LeaderFirstName", "LeaderLastName", "LeaderSelectedDate", "LeaderUpdatedDate", "TeamPdfFileId", "TeamPdfUrl", "TeamPdfGeneratedDate"];
 const ASSESSMENT_RESULT_HEADERS = ["AssessmentResultID", "AssessmentImportID", "WorkshopID", "FirstName", "LastName", "DisplayName", "GroupName", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "SortOrder", "ImportedDate", "UpdatedDate", "Active"];
+const ASSESSMENT_HISTORY_HEADERS = ["AssessmentImportEventID", "AssessmentImportID", "WorkshopID", "UploadMode", "OriginalFileName", "UploadedDate", "UploadedParticipantCount", "NewParticipantCount", "UpdatedParticipantCount", "UnchangedParticipantCount", "DuplicateIgnoredCount", "ConflictCount", "PreviousTotalCount", "FinalTotalCount", "GroupNameBefore", "GroupNameAfter", "LeaderBefore", "LeaderAfter", "Notes"];
 const PDF_ROOT_FOLDER = "Jeff Jones Consulting PDFs";
 const PDF_ESTIMATE_FOLDER = "Estimates";
 const PDF_INVOICE_FOLDER = "Invoices";
@@ -39,6 +40,7 @@ function doGet(e) {
     if (action === "workshops") return jsonResponse(getRows(SHEET_NAMES.workshops));
     if (action === "reserveNumber") return jsonResponse(reserveRecordNumber(e.parameter.type));
     if (action === "getWorkshopAssessment") return jsonResponse(getWorkshopAssessment(e.parameter.workshopId));
+    if (action === "getAssessmentImportHistory") return jsonResponse(getRows("AssessmentImportHistory").filter(row => String(row.WorkshopID) === String(e.parameter.workshopId || "")));
     if (action === "generateEstimatePdf") return jsonResponse(generatePdfForRecord("estimate", e.parameter.id));
     if (action === "generateInvoicePdf") return jsonResponse(generatePdfForRecord("invoice", e.parameter.invoiceNo));
     if (action === "sendEstimateEmail") return jsonResponse(sendEmailForRecord("estimate", e.parameter));
@@ -204,8 +206,19 @@ function saveWorkshopAssessment(data) {
   try {
     const importSheet = ensureSheetWithHeaders("AssessmentImports", ASSESSMENT_IMPORT_HEADERS);
     const resultSheet = ensureSheetWithHeaders("AssessmentResults", ASSESSMENT_RESULT_HEADERS);
-    const existing = getWorkshopAssessment(workshopId);
-    if (existing.import) throw new Error("This workshop already has assessment results. Updated merge and replace workflows will be added in the next Phase 12 segment.");
+    let existing = getWorkshopAssessment(workshopId);
+    let replacedAssessment = null;
+    const mode = String(data.mode || (existing.import ? "" : "Initial Import"));
+    ensureSheetWithHeaders("AssessmentImportHistory", ASSESSMENT_HISTORY_HEADERS);
+    if (existing.import && mode === "Merge") return mergeWorkshopAssessment(existing, data);
+    if (existing.import && mode === "Replace") {
+      replacedAssessment = existing;
+      const oldImport = getRowById("AssessmentImports", "AssessmentImportID", existing.import.AssessmentImportID);
+      if (oldImport) updateRowFields("AssessmentImports", oldImport.rowNumber, { Active: false, ImportStatus: "Replaced", UpdatedDate: new Date().toISOString() });
+      existing.results.forEach(row => { const info = getRowById("AssessmentResults", "AssessmentResultID", row.AssessmentResultID); if (info) updateRowFields("AssessmentResults", info.rowNumber, { Active: false, UpdatedDate: new Date().toISOString() }); });
+      existing = { import: null, results: [] };
+    }
+    if (existing.import) throw new Error("Choose Merge or Replace for an existing workshop assessment.");
     const now = new Date().toISOString();
     const importId = "AIM-" + Utilities.getUuid();
     const importStartRow = importSheet.getLastRow() + 1;
@@ -221,16 +234,58 @@ function saveWorkshopAssessment(data) {
         Genius1: participant.genius1, Genius2: participant.genius2, Competency1: participant.competency1, Competency2: participant.competency2, Frustration1: participant.frustration1, Frustration2: participant.frustration2,
         SortOrder: participant.sortOrder || index + 1, ImportedDate: now, UpdatedDate: now, Active: true
       }));
+      appendAssessmentHistory({ importId: importId, workshopId: workshopId, mode: mode, fileName: data.fileName, uploaded: participants.length, added: participants.length, updated: 0, unchanged: 0, previous: mode === "Replace" ? Number(data.previousTotal || 0) : 0, finalTotal: participants.length, groupBefore: data.groupNameBefore || "", groupAfter: data.groupName || "", leaderBefore: data.leaderBefore || "", leaderAfter: "" });
     } catch (writeError) {
       const addedResults = resultSheet.getLastRow() - resultStartRow + 1;
       if (addedResults > 0) resultSheet.deleteRows(resultStartRow, addedResults);
       if (importSheet.getLastRow() >= importStartRow) importSheet.deleteRow(importStartRow);
+      if (replacedAssessment) {
+        const oldImport = getRowById("AssessmentImports", "AssessmentImportID", replacedAssessment.import.AssessmentImportID);
+        if (oldImport) updateRowFields("AssessmentImports", oldImport.rowNumber, { Active: true, ImportStatus: "Imported", UpdatedDate: replacedAssessment.import.UpdatedDate || replacedAssessment.import.ImportedDate });
+        replacedAssessment.results.forEach(row => { const info = getRowById("AssessmentResults", "AssessmentResultID", row.AssessmentResultID); if (info) updateRowFields("AssessmentResults", info.rowNumber, { Active: true, UpdatedDate: row.UpdatedDate || row.ImportedDate }); });
+      }
       throw writeError;
     }
     return { success: true, workshopId: workshopId, assessmentImportId: importId, participantCount: participants.length };
   } finally {
     lock.releaseLock();
   }
+}
+
+function assessmentNameKey(firstName, lastName) {
+  return String(firstName || "").trim().toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, " ").replace(/\s*-\s*/g, "-") + "|" + String(lastName || "").trim().toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, " ").replace(/\s*-\s*/g, "-");
+}
+
+function mergeWorkshopAssessment(existing, data) {
+  const now = new Date().toISOString();
+  const byKey = {};
+  existing.results.forEach(row => { byKey[assessmentNameKey(row.FirstName, row.LastName)] = row; });
+  let added = 0, updated = 0, unchanged = 0;
+  const compareFields = [["GroupName", "groupName"], ["Genius1", "genius1"], ["Genius2", "genius2"], ["Competency1", "competency1"], ["Competency2", "competency2"], ["Frustration1", "frustration1"], ["Frustration2", "frustration2"]];
+  data.participants.forEach((participant, index) => {
+    const current = byKey[assessmentNameKey(participant.firstName, participant.lastName)];
+    if (!current) {
+      appendRow("AssessmentResults", { AssessmentResultID: "ASR-" + Utilities.getUuid(), AssessmentImportID: existing.import.AssessmentImportID, WorkshopID: existing.import.WorkshopID, FirstName: participant.firstName, LastName: participant.lastName, DisplayName: participant.firstName + " " + participant.lastName, GroupName: participant.groupName || existing.import.GroupName || "", Genius1: participant.genius1, Genius2: participant.genius2, Competency1: participant.competency1, Competency2: participant.competency2, Frustration1: participant.frustration1, Frustration2: participant.frustration2, SortOrder: existing.results.length + added + 1, ImportedDate: now, UpdatedDate: now, Active: true });
+      added++;
+    } else {
+      const changed = compareFields.some(pair => String(current[pair[0]] || "") !== String(participant[pair[1]] || ""));
+      if (!changed) unchanged++;
+      else {
+        const info = getRowById("AssessmentResults", "AssessmentResultID", current.AssessmentResultID);
+        updateRowFields("AssessmentResults", info.rowNumber, { FirstName: participant.firstName, LastName: participant.lastName, DisplayName: participant.firstName + " " + participant.lastName, GroupName: participant.groupName || current.GroupName || "", Genius1: participant.genius1, Genius2: participant.genius2, Competency1: participant.competency1, Competency2: participant.competency2, Frustration1: participant.frustration1, Frustration2: participant.frustration2, UpdatedDate: now });
+        updated++;
+      }
+    }
+  });
+  const importInfo = getRowById("AssessmentImports", "AssessmentImportID", existing.import.AssessmentImportID);
+  const finalTotal = existing.results.length + added;
+  updateRowFields("AssessmentImports", importInfo.rowNumber, { OriginalFileName: data.fileName || existing.import.OriginalFileName, ParticipantCount: finalTotal, UpdatedDate: now, ImportStatus: "Merged", ValidationWarnings: JSON.stringify(data.warnings || []), TeamPdfFileId: "", TeamPdfUrl: "", TeamPdfGeneratedDate: "" });
+  appendAssessmentHistory({ importId: existing.import.AssessmentImportID, workshopId: existing.import.WorkshopID, mode: "Merge", fileName: data.fileName, uploaded: data.participants.length, added: added, updated: updated, unchanged: unchanged, previous: existing.results.length, finalTotal: finalTotal, groupBefore: existing.import.GroupName, groupAfter: existing.import.GroupName, leaderBefore: existing.import.LeaderFirstName + " " + existing.import.LeaderLastName, leaderAfter: existing.import.LeaderFirstName + " " + existing.import.LeaderLastName });
+  return getWorkshopAssessment(existing.import.WorkshopID);
+}
+
+function appendAssessmentHistory(event) {
+  appendRow("AssessmentImportHistory", { AssessmentImportEventID: "AIE-" + Utilities.getUuid(), AssessmentImportID: event.importId, WorkshopID: event.workshopId, UploadMode: event.mode, OriginalFileName: event.fileName || "", UploadedDate: new Date().toISOString(), UploadedParticipantCount: event.uploaded || 0, NewParticipantCount: event.added || 0, UpdatedParticipantCount: event.updated || 0, UnchangedParticipantCount: event.unchanged || 0, DuplicateIgnoredCount: 0, ConflictCount: 0, PreviousTotalCount: event.previous || 0, FinalTotalCount: event.finalTotal || 0, GroupNameBefore: event.groupBefore || "", GroupNameAfter: event.groupAfter || "", LeaderBefore: String(event.leaderBefore || "").trim(), LeaderAfter: String(event.leaderAfter || "").trim(), Notes: "" });
 }
 
 function updateAssessmentLeader(data) {

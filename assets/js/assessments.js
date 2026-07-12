@@ -98,5 +98,31 @@ window.Assessments = (() => {
     };
   }
 
-  return { TYPES, parseFile, validateRows, normalizeName, participantKey, deriveTeamView };
+  function compareParticipants(existingRows, uploadedRows) {
+    const fields = ["groupName", "genius1", "genius2", "competency1", "competency2", "frustration1", "frustration2"];
+    const normalizedExisting = existingRows.map(row => ({
+      source: row, firstName: row.FirstName, lastName: row.LastName, groupName: row.GroupName,
+      genius1: row.Genius1, genius2: row.Genius2, competency1: row.Competency1, competency2: row.Competency2, frustration1: row.Frustration1, frustration2: row.Frustration2
+    }));
+    const existingByKey = new Map(normalizedExisting.map(row => [participantKey(row), row]));
+    const uploadedKeys = new Set();
+    const comparison = { newParticipants: [], unchanged: [], updated: [], omitted: [] };
+    uploadedRows.forEach(row => {
+      const key = participantKey(row);
+      uploadedKeys.add(key);
+      const existing = existingByKey.get(key);
+      if (!existing) comparison.newParticipants.push(row);
+      else {
+        const changes = fields.filter(field => String(existing[field] || "") !== String(row[field] || "")).map(field => ({ field, before: existing[field] || "", after: row[field] || "" }));
+        if (changes.length) comparison.updated.push({ existing: existing.source, uploaded: row, changes });
+        else comparison.unchanged.push(row);
+      }
+    });
+    normalizedExisting.forEach(row => { if (!uploadedKeys.has(participantKey(row))) comparison.omitted.push(row.source); });
+    comparison.finalMergeCount = existingRows.length + comparison.newParticipants.length;
+    comparison.finalReplaceCount = uploadedRows.length;
+    return comparison;
+  }
+
+  return { TYPES, parseFile, validateRows, normalizeName, participantKey, deriveTeamView, compareParticipants };
 })();

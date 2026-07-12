@@ -780,15 +780,16 @@ Sanger, CA 93657"></textarea>
       <div id="assessmentLoading" class="metric"><div class="metric-label">Loading Assessment</div><div class="metric-note">Checking this workshop for saved individual results…</div></div>
       <div id="assessmentUploadArea">
         <div class="field"><label for="assessmentFile">Official Individual Results workbook (.xlsx)</label><input id="assessmentFile" type="file" accept=".xlsx" onchange="previewAssessmentFile(this.files[0])"></div>
-        <div id="assessmentPreview" class="hidden"><p id="assessmentPreviewSummary" class="muted small"></p><div id="assessmentMessages" class="assessment-messages"></div><div id="assessmentPreviewRows" class="assessment-results-grid"></div><div class="send-dialog-actions"><button id="assessmentImportButton" class="button" onclick="importAssessmentResults()">Import Results</button><button class="button secondary" onclick="clearAssessmentPreview()">Choose Different File</button></div></div>
+        <div id="assessmentPreview" class="hidden"><p id="assessmentPreviewSummary" class="muted small"></p><div id="assessmentMessages" class="assessment-messages"></div><div id="assessmentComparison" class="hidden"><div class="field"><label>Import Mode</label><select id="assessmentImportMode" onchange="renderAssessmentComparison()"><option value="Merge">Merge New and Updated Participants</option><option value="Replace">Replace Entire Existing Import</option></select></div><div id="assessmentComparisonSummary" class="client-detail-summary"></div><div id="assessmentComparisonDetails" class="assessment-messages"></div></div><div id="assessmentPreviewRows" class="assessment-results-grid"></div><div class="send-dialog-actions"><button id="assessmentImportButton" class="button" onclick="importAssessmentResults()">Import Results</button><button class="button secondary" onclick="clearAssessmentPreview()">Choose Different File</button></div></div>
       </div>
       <div id="assessmentSavedArea" class="hidden">
         <div id="assessmentSavedSummary" class="metric-note"></div>
         <div class="form-row" style="margin-top:14px;"><div class="field"><label for="assessmentLeader">Team Leader</label><select id="assessmentLeader"></select></div><div class="field" style="justify-content:end;"><label>&nbsp;</label><button id="saveAssessmentLeaderButton" class="button" onclick="saveAssessmentLeader()">Save Leader</button></div></div>
         <p id="assessmentLeaderMessage" class="muted small">Select the team leader before future PDF preview or generation.</p>
-        <div class="actions"><button class="button secondary small-btn" onclick="showAssessmentView('raw')">Individual Results</button><button class="button secondary small-btn" onclick="showAssessmentView('team')">Team View</button></div>
+        <div class="actions"><button class="button secondary small-btn" onclick="showAssessmentView('raw')">Individual Results</button><button class="button secondary small-btn" onclick="showAssessmentView('team')">Team View</button><button class="button secondary small-btn" onclick="startUpdatedAssessmentImport()">Upload Updated Results</button><button class="button secondary small-btn" onclick="loadAssessmentHistory()">View Import History</button></div>
         <div id="assessmentRawView"><div class="section-title"><h3>Individual Results</h3><span id="assessmentResultCount" class="tiny muted"></span></div><div id="assessmentRawResults" class="assessment-results-grid"></div></div>
         <div id="assessmentTeamView" class="hidden"><div id="assessmentTeamSummary" class="client-detail-summary"></div><div id="assessmentTeamCards" class="team-view-grid"></div><p class="muted small">The selected leader is represented twice in Genius and Frustration areas to reflect the leader’s influence on the team environment. The underlying participant record is not duplicated.</p></div>
+        <div id="assessmentHistoryView" class="hidden"><div class="section-title"><h3>Import History</h3></div><div id="assessmentHistoryList" class="dashboard-list"></div></div>
       </div>
     </div>
   </div>
@@ -877,7 +878,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.9";
+    const APP_VERSION = "2026.07.12.10";
 
     const K = {
       clients: "jjc_clients",
@@ -894,6 +895,7 @@ Sanger, CA 93657"></textarea>
     let assessmentWorkshopId = "";
     let assessmentPreviewData = null;
     let currentAssessmentData = null;
+    let assessmentComparisonData = null;
     let estimates = [];
     let invoices = [];
     let settings = {};
@@ -1594,6 +1596,9 @@ Sanger, CA 93657"></textarea>
           ...assessmentPreviewData.warnings.map(message => `<div class="assessment-warning">Warning: ${esc(message)}</div>`)
         ].join("") || '<div class="muted small">Validation passed with no warnings.</div>';
         renderAssessmentParticipants("assessmentPreviewRows", assessmentPreviewData.participants.slice(0, 8));
+        assessmentComparisonData = currentAssessmentData?.import ? Assessments.compareParticipants(currentAssessmentData.results, assessmentPreviewData.participants) : null;
+        document.getElementById("assessmentComparison").classList.toggle("hidden", !assessmentComparisonData);
+        if (assessmentComparisonData) renderAssessmentComparison();
         document.getElementById("assessmentImportButton").disabled = assessmentPreviewData.errors.length > 0;
       } catch (err) {
         assessmentPreviewData = null;
@@ -1613,7 +1618,10 @@ Sanger, CA 93657"></textarea>
       try {
         const assessment = await Database.saveWorkshopAssessment({
           workshopId: assessmentWorkshopId, fileName: assessmentPreviewData.fileName, groupName: assessmentPreviewData.groupName,
-          warnings: assessmentPreviewData.warnings, participants: assessmentPreviewData.participants
+          warnings: assessmentPreviewData.warnings, participants: assessmentPreviewData.participants,
+          mode: currentAssessmentData?.import ? document.getElementById("assessmentImportMode").value : "Initial Import",
+          previousTotal: currentAssessmentData?.results?.length || 0, groupNameBefore: currentAssessmentData?.import?.GroupName || "",
+          leaderBefore: currentAssessmentData?.import ? `${currentAssessmentData.import.LeaderFirstName || ""} ${currentAssessmentData.import.LeaderLastName || ""}`.trim() : ""
         });
         renderSavedAssessment(assessment);
         toast("Assessment results imported.");
@@ -1628,11 +1636,11 @@ Sanger, CA 93657"></textarea>
 
     function renderSavedAssessment(assessment) {
       const hasAssessment = Boolean(assessment?.import);
+      currentAssessmentData = hasAssessment ? assessment : null;
       document.getElementById("assessmentLoading").classList.add("hidden");
       document.getElementById("assessmentUploadArea").classList.toggle("hidden", hasAssessment);
       document.getElementById("assessmentSavedArea").classList.toggle("hidden", !hasAssessment);
       if (!hasAssessment) return;
-      currentAssessmentData = assessment;
       const info = assessment.import;
       document.getElementById("assessmentSavedSummary").textContent = `${info.OriginalFileName || "Assessment export"} • ${info.GroupName || "No group"} • Imported ${formatDate(info.ImportedDate)} • Active`;
       document.getElementById("assessmentResultCount").textContent = `${assessment.results.length} participants`;
@@ -1674,6 +1682,36 @@ Sanger, CA 93657"></textarea>
     function showAssessmentView(view) {
       document.getElementById("assessmentRawView").classList.toggle("hidden", view !== "raw");
       document.getElementById("assessmentTeamView").classList.toggle("hidden", view !== "team");
+      document.getElementById("assessmentHistoryView").classList.toggle("hidden", view !== "history");
+    }
+
+    function startUpdatedAssessmentImport() {
+      assessmentPreviewData = null;
+      assessmentComparisonData = null;
+      document.getElementById("assessmentSavedArea").classList.add("hidden");
+      document.getElementById("assessmentUploadArea").classList.remove("hidden");
+      document.getElementById("assessmentPreview").classList.add("hidden");
+      document.getElementById("assessmentFile").value = "";
+      document.getElementById("assessmentFile").focus();
+    }
+
+    function renderAssessmentComparison() {
+      if (!assessmentComparisonData) return;
+      const mode = document.getElementById("assessmentImportMode").value;
+      const c = assessmentComparisonData;
+      const finalCount = mode === "Merge" ? c.finalMergeCount : c.finalReplaceCount;
+      document.getElementById("assessmentComparisonSummary").innerHTML = `<div class="metric"><div class="metric-label">New</div><div class="metric-value">${c.newParticipants.length}</div></div><div class="metric"><div class="metric-label">Updated</div><div class="metric-value">${c.updated.length}</div></div><div class="metric"><div class="metric-label">Unchanged</div><div class="metric-value">${c.unchanged.length}</div></div><div class="metric"><div class="metric-label">Not Uploaded</div><div class="metric-value">${c.omitted.length}</div></div><div class="metric"><div class="metric-label">Final Count</div><div class="metric-value">${finalCount}</div></div>`;
+      const updatedDetails = c.updated.map(item => `${item.uploaded.firstName} ${item.uploaded.lastName}: ${item.changes.map(change => `${change.field} (${change.before} → ${change.after})`).join(", ")}`);
+      document.getElementById("assessmentComparisonDetails").innerHTML = `<div class="muted small">${mode === "Merge" ? "Participants not included in this file will remain active." : "Participants omitted from this file will be deactivated and the leader may need to be selected again."}</div>${updatedDetails.map(text => `<div class="assessment-warning">Updated: ${esc(text)}</div>`).join("")}`;
+      document.getElementById("assessmentImportButton").textContent = mode === "Merge" ? "Confirm Merge" : "Confirm Replace";
+    }
+
+    async function loadAssessmentHistory() {
+      try {
+        const history = await Database.getAssessmentImportHistory(assessmentWorkshopId);
+        document.getElementById("assessmentHistoryList").innerHTML = history.length ? history.slice().reverse().map(event => `<div class="dashboard-item"><div class="dashboard-item-title">${esc(event.UploadMode)} • ${formatDate(event.UploadedDate)}</div><div class="tiny muted">${esc(event.OriginalFileName || "Workbook")} • ${event.NewParticipantCount || 0} new • ${event.UpdatedParticipantCount || 0} updated • ${event.FinalTotalCount || 0} final</div></div>`).join("") : '<div class="dashboard-empty">No import history yet.</div>';
+        showAssessmentView("history");
+      } catch (err) { toast(err.message || "Unable to load import history."); }
     }
 
     function renderAssessmentTeamView() {
@@ -1690,10 +1728,12 @@ Sanger, CA 93657"></textarea>
 
     function clearAssessmentPreview() {
       assessmentPreviewData = null;
+      assessmentComparisonData = null;
       document.getElementById("assessmentFile").value = "";
       document.getElementById("assessmentPreview").classList.add("hidden");
       document.getElementById("assessmentMessages").innerHTML = "";
       document.getElementById("assessmentPreviewRows").innerHTML = "";
+      document.getElementById("assessmentComparison").classList.add("hidden");
       document.getElementById("assessmentUploadArea").classList.remove("hidden");
       document.getElementById("assessmentSavedArea").classList.add("hidden");
     }
