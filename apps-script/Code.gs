@@ -11,6 +11,7 @@ const PDF_HEADERS = ["pdfUrl", "pdfFileId", "pdfGeneratedDate"];
 const EMAIL_HEADERS = ["sentDate", "firstSentDate", "lastSentDate", "sentTo", "sentCc", "sentSubject", "sendCount"];
 const WORKSHOP_HEADERS = ["WorkshopDate", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization"];
 const ARCHIVE_HEADERS = ["archived", "archivedDate"];
+const INVOICE_LIFECYCLE_HEADERS = ["amountPaid", "balanceDue", "paidDate", "paymentMethod", "paymentReference", "voidReason"];
 const PDF_ROOT_FOLDER = "Jeff Jones Consulting PDFs";
 const PDF_ESTIMATE_FOLDER = "Estimates";
 const PDF_INVOICE_FOLDER = "Invoices";
@@ -116,7 +117,7 @@ function doPost(e) {
         "invoiceFooter",
         "paymentInstructions",
         "checksPayableTo"
-      ].concat(PDF_HEADERS, EMAIL_HEADERS, ARCHIVE_HEADERS));
+      ].concat(PDF_HEADERS, EMAIL_HEADERS, ARCHIVE_HEADERS, INVOICE_LIFECYCLE_HEADERS));
       upsertRow(SHEET_NAMES.invoices, "invoiceNo", body.data || {});
       return jsonResponse({ success: true });
     }
@@ -383,7 +384,7 @@ function sendEmailForRecord(type, params) {
     sentCc: cc,
     sentSubject: subject,
     sendCount: sendCount,
-    status: "Sent"
+    status: type === "invoice" && record.status && record.status !== "Draft" ? record.status : "Sent"
   };
 
   updateRowFields(config.sheetName, recordInfo.rowNumber, metadata);

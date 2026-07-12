@@ -661,7 +661,7 @@
                 <div class="field"><label>Invoice #</label><input id="invNo" readonly></div>
                 <div class="field"><label>Terms</label><select id="invTerms" onchange="updateInvoiceDueDateFromTerms()"><option>Due on Receipt</option><option>Net 15</option><option selected>Net 30</option><option>Net 45</option></select></div>
               </div>
-              <div class="field"><label>Status</label><select id="invStatus"><option>Draft</option><option>Sent</option><option>Paid</option><option>Partially Paid</option><option>Cancelled</option><option>Void</option></select></div>
+              <div class="field"><label>Status</label><select id="invStatus"><option>Draft</option><option>Sent</option><option>Viewed</option><option>Partially Paid</option><option>Paid</option><option>Overdue</option><option>Canceled</option><option>Void</option></select></div>
               <div class="field"><label>Client / Organization</label><input id="invClientName" list="clientsDatalist" onchange="selectInvoiceClient()" oninput="selectInvoiceClient(false)"></div>
               <div class="field"><label>Client Email</label><input id="invClientEmail" type="email"></div>
               <div class="form-row-3">
@@ -674,6 +674,16 @@
                 <div class="field"><label>Issue Date</label><input id="invIssueDate" type="date" onchange="updateInvoiceDueDateFromTerms()"></div>
                 <div class="field"><label>Due Date</label><input id="invDueDate" type="date"></div>
               </div>
+              <div class="form-row-3">
+                <div class="field"><label>Amount Paid</label><input id="invAmountPaid" type="number" min="0" step="0.01" value="0"></div>
+                <div class="field"><label>Payment Date</label><input id="invPaidDate" type="date"></div>
+                <div class="field"><label>Payment Method</label><select id="invPaymentMethod"><option value="">Not specified</option><option>Check</option><option>ACH</option><option>Credit Card</option><option>Cash</option><option>Other</option></select></div>
+              </div>
+              <div class="form-row">
+                <div class="field"><label>Payment Reference</label><input id="invPaymentReference" placeholder="Check, ACH, or transaction reference"></div>
+                <div class="field"><label>Void Reason</label><input id="invVoidReason" placeholder="Required when status is Void"></div>
+              </div>
+              <div class="metric" style="margin-bottom:15px;"><div class="metric-label">Calculated Balance Due</div><div id="invBalancePreview" class="metric-value">$0</div></div>
               <div class="actions">
                 <button class="button secondary" onclick="previewInvoice()">Preview Invoice</button>
                 <button class="button" onclick="saveInvoiceFromForm()">Save Invoice</button>
@@ -829,7 +839,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.4";
+    const APP_VERSION = "2026.07.12.5";
 
     const K = {
       clients: "jjc_clients",
@@ -1704,6 +1714,12 @@ Sanger, CA 93657"></textarea>
       document.getElementById("invStatus").value = "Draft";
       document.getElementById("invClientName").value = "";
       document.getElementById("invClientEmail").value = "";
+      document.getElementById("invAmountPaid").value = 0;
+      document.getElementById("invPaidDate").value = "";
+      document.getElementById("invPaymentMethod").value = "";
+      document.getElementById("invPaymentReference").value = "";
+      document.getElementById("invVoidReason").value = "";
+      document.getElementById("invBalancePreview").textContent = JJC_money(0);
       ["invConsultingDiscount", "invPrepDiscount", "invAssessmentDiscount"].forEach(id => document.getElementById(id).value = "");
       await prepareInvoiceDefaults();
     }
@@ -1785,21 +1801,38 @@ Sanger, CA 93657"></textarea>
       }
       const source = getInvoiceSourceForForm();
       const c = source ? invoiceCalcFromSource(source) : recalc();
+      const amountPaid = Number(document.getElementById("invAmountPaid").value || 0);
+      if (amountPaid < 0) return alert("Amount paid cannot be negative."), null;
+      if (amountPaid > Number(c.total || 0)) return alert("Amount paid cannot exceed the invoice total."), null;
+      let status = document.getElementById("invStatus").value;
+      if (status === "Void" && !document.getElementById("invVoidReason").value.trim()) return alert("A void reason is required."), null;
+      if (!["Canceled", "Void"].includes(status)) {
+        if (amountPaid === Number(c.total || 0) && Number(c.total || 0) > 0) status = "Paid";
+        else if (amountPaid > 0) status = "Partially Paid";
+        else if (normalizeDateInput(document.getElementById("invDueDate").value) < new Date().toISOString().slice(0, 10) && status !== "Draft") status = "Overdue";
+      }
+      const balanceDue = Math.max(0, Number(c.total || 0) - amountPaid);
       const preservedEstimateId = source?.estimateId || window.currentEstimateForInvoice?.id || "";
       const existing = editingInvoiceNo ? (invoices.find(inv => inv.invoiceNo === editingInvoiceNo) || {}) : {};
       return normalizeInvoice({
         ...existing,
+        ...c,
         id: editingInvoiceNo || (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2)),
         invoiceNo: document.getElementById("invNo").value.trim() || nextId(invoices, "INV", "invoiceNo"),
         estimateId: preservedEstimateId,
         terms: document.getElementById("invTerms").value,
-        status: document.getElementById("invStatus").value,
+        status,
+        amountPaid,
+        balanceDue,
+        paidDate: document.getElementById("invPaidDate").value || (amountPaid > 0 ? new Date().toISOString().slice(0, 10) : ""),
+        paymentMethod: document.getElementById("invPaymentMethod").value,
+        paymentReference: document.getElementById("invPaymentReference").value.trim(),
+        voidReason: document.getElementById("invVoidReason").value.trim(),
         clientName,
         clientEmail: document.getElementById("invClientEmail").value.trim(),
         issueDate: document.getElementById("invIssueDate").value,
         dueDate: document.getElementById("invDueDate").value,
-        profile: { ...profile },
-        ...c
+        profile: { ...profile }
       });
     }
 
@@ -1852,7 +1885,37 @@ Sanger, CA 93657"></textarea>
       document.getElementById("invAssessmentDiscount").value = lineDiscounts.assessmentDiscount || "";
       document.getElementById("invIssueDate").value = normalizeDateInput(inv.issueDate);
       document.getElementById("invDueDate").value = normalizeDateInput(inv.dueDate);
+      document.getElementById("invAmountPaid").value = inv.amountPaid || 0;
+      document.getElementById("invPaidDate").value = normalizeDateInput(inv.paidDate);
+      document.getElementById("invPaymentMethod").value = inv.paymentMethod || "";
+      document.getElementById("invPaymentReference").value = inv.paymentReference || "";
+      document.getElementById("invVoidReason").value = inv.voidReason || "";
+      document.getElementById("invBalancePreview").textContent = JJC_money(inv.balanceDue);
       showView("invoices");
+    }
+
+    async function duplicateInvoice(invoiceNo) {
+      const source = invoices.find(inv => inv.invoiceNo === invoiceNo);
+      if (!source) return toast("Invoice not found.");
+      await resetInvoiceForm();
+      editingInvoiceSource = { ...source, estimateId: source.estimateId || "" };
+      document.getElementById("invClientName").value = source.clientName || "";
+      document.getElementById("invClientEmail").value = source.clientEmail || "";
+      document.getElementById("invTerms").value = source.terms || "Net 30";
+      document.getElementById("invConsultingDiscount").value = source.consultingDiscount || "";
+      document.getElementById("invPrepDiscount").value = source.prepDiscount || "";
+      document.getElementById("invAssessmentDiscount").value = source.assessmentDiscount || "";
+      document.getElementById("invoiceFormTitle").textContent = `Duplicate of ${invoiceNo}`;
+      updateInvoiceBalancePreview();
+      showView("invoices");
+      toast("Invoice duplicated into a new draft. Review and save it.");
+    }
+
+    function updateInvoiceBalancePreview() {
+      const source = getInvoiceSourceForForm();
+      const total = source ? invoiceCalcFromSource(source).total : recalc().total;
+      const paid = Math.max(0, Number(document.getElementById("invAmountPaid").value || 0));
+      document.getElementById("invBalancePreview").textContent = JJC_money(Math.max(0, total - paid));
     }
 
     async function generateInvoicePdf(invoiceNo, button) {
@@ -1877,7 +1940,7 @@ Sanger, CA 93657"></textarea>
       visibleInvoices.forEach(inv => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(inv.clientName)}</div><div class="tiny muted">${esc(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${esc(inv.terms)} • ${esc(inv.status || "Draft")}</div>${isArchived(inv) ? '<span class="status-badge">Archived</span>' : ''}<div class="record-total">${JJC_money(inv.total)}</div><div class="actions">${isArchived(inv) ? `<button class="button secondary small-btn" onclick="setRecordArchived('invoice','${jsEsc(inv.invoiceNo)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('invoice','${jsEsc(inv.invoiceNo)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="showSavedInvoice('${jsEsc(inv.invoiceNo)}')">Preview</button><button class="button secondary small-btn" onclick="editInvoice('${jsEsc(inv.invoiceNo)}')">Edit</button><button class="button secondary small-btn" onclick="generateInvoicePdf('${jsEsc(inv.invoiceNo)}', this)">${inv.pdfUrl ? "Regenerate PDF" : "Generate PDF"}</button>${inv.pdfUrl ? `<button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Open PDF</button><button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Download PDF</button>` : ""}<button class="button secondary small-btn" onclick="openSendDialog('invoice', '${jsEsc(inv.invoiceNo)}')">${inv.lastSentDate ? "Resend" : "Send"}</button><button class="button ghost small-btn" onclick="setRecordArchived('invoice','${jsEsc(inv.invoiceNo)}',true)">Archive</button>`}</div>`;
+        el.innerHTML = `<div class="record-title">${esc(inv.clientName)}</div><div class="tiny muted">${esc(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${esc(inv.terms)}</div><span class="status-badge">${esc(inv.status || "Draft")}</span>${isArchived(inv) ? '<span class="status-badge">Archived</span>' : ''}<div class="record-total">${JJC_money(inv.balanceDue)} due of ${JJC_money(inv.total)}</div><div class="actions">${isArchived(inv) ? `<button class="button secondary small-btn" onclick="setRecordArchived('invoice','${jsEsc(inv.invoiceNo)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('invoice','${jsEsc(inv.invoiceNo)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="showSavedInvoice('${jsEsc(inv.invoiceNo)}')">Preview</button><button class="button secondary small-btn" onclick="editInvoice('${jsEsc(inv.invoiceNo)}')">Edit</button><button class="button secondary small-btn" onclick="duplicateInvoice('${jsEsc(inv.invoiceNo)}')">Duplicate</button><button class="button secondary small-btn" onclick="generateInvoicePdf('${jsEsc(inv.invoiceNo)}', this)">${inv.pdfUrl ? "Regenerate PDF" : "Generate PDF"}</button>${inv.pdfUrl ? `<button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Open PDF</button><button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Download PDF</button>` : ""}<button class="button secondary small-btn" onclick="openSendDialog('invoice', '${jsEsc(inv.invoiceNo)}')">${inv.lastSentDate ? "Resend" : "Send"}</button><button class="button ghost small-btn" onclick="setRecordArchived('invoice','${jsEsc(inv.invoiceNo)}',true)">Archive</button>`}</div>`;
         wrap.appendChild(el);
       });
     }
@@ -2135,6 +2198,12 @@ Sanger, CA 93657"></textarea>
       const prepNet = Math.max(0, prepGross - lineDiscounts.prepDiscount);
       const assessmentNet = Math.max(0, assessmentGross - lineDiscounts.assessmentDiscount);
       const discounts = lineDiscounts.consultingDiscount + lineDiscounts.prepDiscount + lineDiscounts.assessmentDiscount;
+      const amountPaid = Math.max(0, Number(inv.amountPaid || inv.AmountPaid || 0));
+      const balanceDue = Math.max(0, Number(inv.balanceDue !== undefined && inv.balanceDue !== "" ? inv.balanceDue : Number(inv.total || (consultingNet + prepNet + assessmentNet)) - amountPaid));
+      let lifecycleStatus = inv.status || inv.Status || "Draft";
+      if (!["Canceled", "Cancelled", "Void", "Draft"].includes(lifecycleStatus) && balanceDue > 0 && normalizeDateInput(inv.dueDate) < new Date().toISOString().slice(0, 10)) lifecycleStatus = "Overdue";
+      if (amountPaid > 0 && balanceDue > 0 && !["Canceled", "Cancelled", "Void"].includes(lifecycleStatus)) lifecycleStatus = "Partially Paid";
+      if (balanceDue === 0 && Number(inv.total || 0) > 0 && !["Canceled", "Cancelled", "Void"].includes(lifecycleStatus)) lifecycleStatus = "Paid";
       return {
         ...merged,
         ...inv,
@@ -2142,7 +2211,13 @@ Sanger, CA 93657"></textarea>
         clientName: inv.clientName || inv.name || "",
         clientEmail: inv.clientEmail || "",
         terms: inv.terms || "Net 30",
-        status: inv.status || inv.Status || "Draft",
+        status: lifecycleStatus === "Cancelled" ? "Canceled" : lifecycleStatus,
+        amountPaid,
+        balanceDue,
+        paidDate: inv.paidDate || inv.PaidDate || "",
+        paymentMethod: inv.paymentMethod || inv.PaymentMethod || "",
+        paymentReference: inv.paymentReference || inv.PaymentReference || "",
+        voidReason: inv.voidReason || inv.VoidReason || "",
         issueDate: normalizeDateInput(inv.issueDate) || new Date().toISOString().slice(0, 10),
         dueDate: normalizeDateInput(inv.dueDate),
         consultingGross,
@@ -2209,6 +2284,7 @@ Sanger, CA 93657"></textarea>
     function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 
     document.querySelectorAll("#view-estimates input, #view-estimates select").forEach(el => el.addEventListener("input", recalc));
+    document.querySelectorAll("#view-invoices input, #view-invoices select").forEach(el => el.addEventListener("input", updateInvoiceBalancePreview));
     document.querySelectorAll('input[name="orgType"]').forEach(el => el.addEventListener("change", recalc));
 
     window.addEventListener("load", async () => {
