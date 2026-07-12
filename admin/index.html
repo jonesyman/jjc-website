@@ -320,6 +320,20 @@
     .genius-metric-value { font-size:27px; font-weight:900; line-height:1; }
     .genius-metric-percent { color:#86efac; font-size:14px; font-weight:850; margin-top:6px; }
     .analytics-results { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .tutorial-intro { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(240px,.6fr); gap:18px; align-items:start; margin-bottom:18px; }
+    .tutorial-flow { display:grid; gap:12px; }
+    .tutorial-step { border:1px solid rgba(96,165,250,.22); border-radius:16px; background:rgba(15,23,42,.52); overflow:hidden; }
+    .tutorial-step summary { display:flex; align-items:center; gap:12px; padding:16px; cursor:pointer; font-weight:850; list-style:none; }
+    .tutorial-step summary::-webkit-details-marker { display:none; }
+    .tutorial-step summary::after { content:"+"; margin-left:auto; color:#93c5fd; font-size:20px; }
+    .tutorial-step[open] summary::after { content:"−"; }
+    .tutorial-number { display:grid; place-items:center; width:34px; height:34px; flex:0 0 34px; border-radius:50%; background:#1d4ed8; color:#fff; font-weight:900; }
+    .tutorial-body { padding:0 16px 16px 62px; color:var(--muted); }
+    .tutorial-body ul { margin:8px 0 14px; padding-left:18px; }
+    .tutorial-body li + li { margin-top:6px; }
+    .practice-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .practice-card { border:1px solid rgba(148,163,184,.16); border-radius:14px; padding:15px; background:rgba(15,23,42,.48); }
+    .practice-card h3 { margin-top:0; }
 
     .status-badge {
       display: inline-flex;
@@ -419,6 +433,7 @@
         grid-template-columns: 1fr;
       }
       .genius-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .tutorial-intro, .practice-grid { grid-template-columns:1fr; }
 
       .admin-content {
         padding: 16px;
@@ -504,6 +519,7 @@
         <button data-view-btn="assessments">📊 Assessment Analytics</button>
         <button data-view-btn="estimates">📝 Estimates</button>
         <button data-view-btn="invoices">💵 Invoices</button>
+        <button data-view-btn="tutorial">📖 Tutorial & Best Practices</button>
         <button data-view-btn="settings">⚙️ Settings</button>
       </nav>
 
@@ -775,6 +791,40 @@
           </div>
         </section>
 
+        <!-- TUTORIAL & BEST PRACTICES -->
+        <section id="view-tutorial" class="view">
+          <div class="tutorial-intro">
+            <div class="card"><div class="section-title"><div><h2>Tutorial & Best Practices</h2><p class="muted small">The recommended order for managing a client engagement from setup through follow-up.</p></div></div><p>Use this workflow for a clean record trail. Each step includes a shortcut to the correct admin area.</p><div class="actions" style="justify-content:flex-start;"><button class="button" onclick="showView('clients')">Start with a Client</button><button class="button secondary" onclick="showView('dashboard')">Return to Dashboard</button></div></div>
+            <div class="metric"><div class="metric-label">Recommended Workflow</div><div class="metric-value">10 Steps</div><div class="metric-note">Client → workshop → billing → assessments → follow-up</div></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title"><h2>Complete Engagement Workflow</h2><span class="tiny muted">Open any step for instructions</span></div>
+            <div class="tutorial-flow">
+              <details class="tutorial-step" open><summary><span class="tutorial-number">1</span><span>Confirm settings and rates</span></summary><div class="tutorial-body">Before preparing financial documents, confirm your business information, payment instructions, invoice footer, and loaded rates.<ul><li>Profile information appears on estimates and invoices.</li><li>Rates are maintained in Google Sheets and displayed here for verification.</li></ul><button class="button secondary small-btn" onclick="showView('settings')">Open Settings</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">2</span><span>Create the client record</span></summary><div class="tutorial-body">Create one client record for the organization before creating related work.<ul><li>Use the organization’s consistent official name.</li><li>Save the primary contact, email, phone, and useful relationship notes.</li><li>Reuse the existing client instead of creating duplicates.</li></ul><button class="button secondary small-btn" onclick="showView('clients')">Open Clients</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">3</span><span>Create and schedule the workshop</span></summary><div class="tutorial-body">Select the saved client and enter the workshop date, type, participant estimate, delivery format, contact details, and status.<ul><li>Keep the workshop status current from Inquiry through Completed.</li><li>Use Follow-up Date and Follow-up Needed when another action is required.</li></ul><button class="button secondary small-btn" onclick="showView('workshops')">Open Workshops</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">4</span><span>Prepare and send the estimate</span></summary><div class="tutorial-body">Create the estimate from the workshop whenever possible so the records stay linked. Review participant counts, hours, preparation, assessment fees, and discounts before sending.<ul><li>Preview the estimate before delivery.</li><li>Use the saved estimate rather than creating a second copy for revisions.</li></ul><button class="button secondary small-btn" onclick="showView('estimates')">Open Estimates</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">5</span><span>Create and manage the invoice</span></summary><div class="tutorial-body">Create the invoice from the accepted estimate, then verify issue date, due date, recipient, totals, and payment instructions.<ul><li>Record partial payments as they arrive.</li><li>Mark the invoice Paid only when the balance is satisfied.</li><li>Use Void or Canceled instead of deleting a legitimate financial record.</li></ul><button class="button secondary small-btn" onclick="showView('invoices')">Open Invoices</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">6</span><span>Import and validate assessment results</span></summary><div class="tutorial-body">From the workshop, choose Assessment Results and upload the official Individual Results workbook.<ul><li>Review validation messages and participant previews before importing.</li><li>Use Merge for additions or corrections that should preserve omitted people.</li><li>Use Replace only when the uploaded workbook should become the complete active roster.</li></ul><button class="button secondary small-btn" onclick="showView('workshops')">Find Workshop Assessments</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">7</span><span>Select the leader and review the Team View</span></summary><div class="tutorial-body">Choose and save the team leader, then review all six Team View cards. The leader is intentionally represented twice in Genius and Frustration lists to reflect leadership influence; the person’s stored result is not duplicated.</div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">8</span><span>Preview and save the Team Map</span></summary><div class="tutorial-body">Preview the Team Map, choose the preferred name format, and check all six Genius and Frustration sections.<ul><li>Use Print / Save as PDF to store the map locally.</li><li>Team Map PDFs are not stored in Google Sheets or Google Drive by the app.</li></ul></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">9</span><span>Review Assessment Analytics</span></summary><div class="tutorial-body">Use the analytics page to review total people served and Genius distribution. Filter by client, workshop, dates, Genius, or participant search; all dashboard counts and percentages update with the filtered list.<ul><li>Each person has two Geniuses, so the six percentages normally total approximately 200%.</li><li>Removed and replaced assessment imports are excluded.</li></ul><button class="button secondary small-btn" onclick="showView('assessments')">Open Assessment Analytics</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">10</span><span>Complete follow-up and maintain records</span></summary><div class="tutorial-body">Update the workshop status, follow-up date, invoice status, and notes after the engagement.<ul><li>Archive inactive business records to reduce clutter while preserving history.</li><li>Use permanent deletion only for genuine mistakes or test records.</li><li>Assessment removal leaves the workshop and financial documents intact and retains inactive import history.</li></ul><button class="button secondary small-btn" onclick="showView('dashboard')">Review Dashboard</button></div></details>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title"><h2>Best Practices at a Glance</h2></div>
+            <div class="practice-grid">
+              <article class="practice-card"><h3>Keep one source of truth</h3><p class="muted small">Link workshops, estimates, and invoices. Update existing records instead of making duplicates.</p></article>
+              <article class="practice-card"><h3>Preview before sending</h3><p class="muted small">Confirm names, dates, totals, recipients, and payment details before delivering any document.</p></article>
+              <article class="practice-card"><h3>Protect history</h3><p class="muted small">Prefer archive, replace, remove, void, or cancel workflows when the record represents real activity.</p></article>
+              <article class="practice-card"><h3>Refresh after external changes</h3><p class="muted small">If data is edited directly in Google Sheets, refresh the relevant admin page before continuing.</p></article>
+            </div>
+          </div>
+        </section>
+
         <!-- SETTINGS -->
         <section id="view-settings" class="view">
           <div class="card">
@@ -943,7 +993,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.14";
+    const APP_VERSION = "2026.07.12.15";
 
     const K = {
       clients: "jjc_clients",
@@ -1078,7 +1128,8 @@ Sanger, CA 93657"></textarea>
       document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
       document.getElementById("view-" + view).classList.add("active");
       document.querySelectorAll("[data-view-btn]").forEach(btn => btn.classList.toggle("active", btn.dataset.viewBtn === view));
-      document.getElementById("pageTitle").textContent = view.charAt(0).toUpperCase() + view.slice(1);
+      const viewTitles = { assessments: "Assessment Analytics", tutorial: "Tutorial & Best Practices" };
+      document.getElementById("pageTitle").textContent = viewTitles[view] || view.charAt(0).toUpperCase() + view.slice(1);
       closeSidebar();
       location.hash = view;
       if (view === "assessments") loadAssessmentAnalytics();
