@@ -40,6 +40,7 @@ function doGet(e) {
     if (action === "workshops") return jsonResponse(getRows(SHEET_NAMES.workshops));
     if (action === "reserveNumber") return jsonResponse(reserveRecordNumber(e.parameter.type));
     if (action === "getWorkshopAssessment") return jsonResponse(getWorkshopAssessment(e.parameter.workshopId));
+    if (action === "getAllActiveAssessmentResults") return jsonResponse(getAllActiveAssessmentResults());
     if (action === "getAssessmentImportHistory") return jsonResponse(getRows("AssessmentImportHistory").filter(row => String(row.WorkshopID) === String(e.parameter.workshopId || "")));
     if (action === "generateEstimatePdf") return jsonResponse(generatePdfForRecord("estimate", e.parameter.id));
     if (action === "generateInvoicePdf") return jsonResponse(generatePdfForRecord("invoice", e.parameter.invoiceNo));
@@ -186,6 +187,21 @@ function getWorkshopAssessment(workshopId) {
   const activeImport = imports[imports.length - 1];
   const results = getRows("AssessmentResults").filter(row => String(row.AssessmentImportID) === String(activeImport.AssessmentImportID) && String(row.Active).toLowerCase() !== "false");
   return { workshopId: workshopId, import: activeImport, results: results };
+}
+
+function getAllActiveAssessmentResults() {
+  const imports = getRows("AssessmentImports").filter(row => String(row.Active).toLowerCase() !== "false");
+  const importsById = {};
+  imports.forEach(row => { importsById[String(row.AssessmentImportID)] = row; });
+  return getRows("AssessmentResults")
+    .filter(row => String(row.Active).toLowerCase() !== "false" && importsById[String(row.AssessmentImportID)])
+    .map(row => {
+      const source = importsById[String(row.AssessmentImportID)];
+      return Object.assign({}, row, {
+        AssessmentImportedDate: source.ImportedDate || row.ImportedDate || "",
+        AssessmentGroupName: source.GroupName || row.GroupName || ""
+      });
+    });
 }
 
 function saveWorkshopAssessment(data) {

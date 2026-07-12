@@ -168,6 +168,10 @@ saveSettings(data) {
         return this.get("getWorkshopAssessment", { workshopId });
     },
 
+    getAllActiveAssessmentResults() {
+        return this.get("getAllActiveAssessmentResults");
+    },
+
     getAssessmentImportHistory(workshopId) {
         return this.get("getAssessmentImportHistory", { workshopId });
     },
