@@ -345,6 +345,10 @@
     .team-view-type { display:flex; align-items:center; gap:9px; margin-bottom:10px; }
     .team-view-abbr { display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:#1d4ed8; color:white; font-weight:900; }
     .team-view-list { margin:7px 0 12px; padding-left:18px; }
+    .team-genius-label { color:#86efac; font-weight:850; }
+    .team-frustration-label { color:#fca5a5; font-weight:850; }
+    .team-genius-list { color:#bbf7d0; }
+    .team-frustration-list { color:#fecaca; }
 
 
     @media (max-width: 980px) {
@@ -873,7 +877,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.8";
+    const APP_VERSION = "2026.07.12.9";
 
     const K = {
       clients: "jjc_clients",
@@ -1676,12 +1680,12 @@ Sanger, CA 93657"></textarea>
       if (!currentAssessmentData?.import) return;
       const team = Assessments.deriveTeamView(currentAssessmentData.results, currentAssessmentData.import.LeaderAssessmentResultID || "");
       document.getElementById("assessmentTeamSummary").innerHTML = `<div class="metric"><div class="metric-label">Actual Participants</div><div class="metric-value">${team.actualParticipants}</div></div><div class="metric"><div class="metric-label">Selected Leader</div><div class="metric-value" style="font-size:18px;">${team.leader ? esc(team.leader.firstName + " " + team.leader.lastName) : "Not selected"}</div></div><div class="metric"><div class="metric-label">Weighted Placements</div><div class="metric-value" style="font-size:18px;">G ${team.weightedGeniusPlacements} • F ${team.weightedFrustrationPlacements}</div></div><div class="metric"><div class="metric-label">Genius Coverage</div><div class="metric-value" style="font-size:18px;">${team.geniusCoverage ? "All 6 represented" : "Coverage gaps"}</div></div>`;
-      document.getElementById("assessmentTeamCards").innerHTML = team.cards.map(card => `<section class="team-view-card"><div class="team-view-type"><span class="team-view-abbr">${esc(card.abbreviation)}</span><strong>${esc(card.type)}</strong></div><div class="tiny muted">Genius: ${card.geniusActual.length} actual • ${card.geniusWeighted.length} weighted</div>${teamPeopleList(card.geniusWeighted, team.leader)}<div class="tiny muted">Frustration: ${card.frustrationActual.length} actual • ${card.frustrationWeighted.length} weighted</div>${teamPeopleList(card.frustrationWeighted, team.leader)}<div class="tiny muted">Competency count: ${card.competencyCount}</div></section>`).join("");
+      document.getElementById("assessmentTeamCards").innerHTML = team.cards.map(card => `<section class="team-view-card"><div class="team-view-type"><span class="team-view-abbr">${esc(card.abbreviation)}</span><strong>${esc(card.type)}</strong></div><div class="team-genius-label">Genius: ${card.geniusActual.length} actual • ${card.geniusWeighted.length} weighted</div>${teamPeopleList(card.geniusWeighted, team.leader, "team-genius-list")}<div class="team-frustration-label">Frustration: ${card.frustrationActual.length} actual • ${card.frustrationWeighted.length} weighted</div>${teamPeopleList(card.frustrationWeighted, team.leader, "team-frustration-list")}<div class="tiny muted">Competency count: ${card.competencyCount}</div></section>`).join("");
     }
 
-    function teamPeopleList(people, leader) {
+    function teamPeopleList(people, leader, className = "") {
       if (!people.length) return '<p class="muted small">No participants</p>';
-      return `<ul class="team-view-list">${people.map(person => `<li>${esc(person.firstName)} ${esc(person.lastName)}${leader && person.id === leader.id ? ' <span class="status-badge">Leader</span>' : ''}</li>`).join("")}</ul>`;
+      return `<ul class="team-view-list ${className}">${people.map(person => `<li>${esc(person.firstName)} ${esc(person.lastName)}${leader && person.id === leader.id ? ' <span class="status-badge">Leader</span>' : ''}</li>`).join("")}</ul>`;
     }
 
     function clearAssessmentPreview() {
