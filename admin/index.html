@@ -336,6 +336,7 @@
     .practice-card h3 { margin-top:0; }
     .mobile-action-overflow, .mobile-action-panel { display:contents; }
     .mobile-action-toggle { display:none; }
+    .team-map-mobile-note { display:none; }
     .list-filter-toggle { display:none; }
     .list-filter-controls { margin-bottom:14px; }
     .simple-list-filters { display:grid; grid-template-columns:minmax(180px,1fr) auto auto; gap:10px; align-items:center; }
@@ -529,6 +530,17 @@
       .list-filter-panel.open .list-filter-toggle::after { content:"▴"; }
       .list-filter-panel:not(.open) .list-filter-controls { display:none; }
       .simple-list-filters { grid-template-columns:1fr; }
+      .analytics-results { grid-template-columns:1fr; }
+      .assessment-dialog { height:100dvh; max-height:100dvh; border-radius:0; border-left:0; border-right:0; padding:14px; }
+      .assessment-dialog-backdrop { padding:0; }
+      .assessment-dialog > .section-title:first-child { position:sticky; top:-14px; z-index:4; background:#0f172a; padding:14px 0 12px; }
+      .assessment-action-bar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .assessment-action-bar > .button { width:100%; }
+      #teamMapPreview { padding:8px; overflow:auto; }
+      #teamMapPreview .print-toolbar { position:sticky; top:0; z-index:5; margin-bottom:8px; }
+      #teamMapPreview .print-toolbar > .actions { width:100%; }
+      .team-map-mobile-note { display:block; width:100%; color:#475569; font-size:11px; }
+      #teamMapPreview .team-map-sheet { width:8.5in; min-width:8.5in; }
 
       .table-wrap {
         border: 1px solid rgba(148,163,184,.13);
@@ -550,10 +562,12 @@
       .tutorial-step summary { padding:14px; }
       .admin-topbar .tiny { display:none; }
       .workspace .card > .actions { grid-template-columns:1fr; }
+      .assessment-action-bar { grid-template-columns:1fr; }
     }
 
     @media (max-height: 600px) and (max-width: 980px) {
       .dialog-backdrop { align-items:start; padding:8px; }
+      .assessment-dialog-backdrop { padding:0; }
       .send-dialog { width:100%; max-height:calc(100dvh - 16px); overflow:auto; padding:14px; }
     }
 
@@ -689,7 +703,7 @@
             <div class="section-title"><div><h2>Assessment Analytics</h2><p class="tiny muted">Live statistics from active assessment imports</p></div><button class="button secondary small-btn" onclick="loadAssessmentAnalytics(true)">Refresh</button></div>
             <div id="assessmentAnalyticsLoading" class="muted small">Loading assessment results...</div>
             <div id="assessmentAnalyticsContent" class="hidden">
-              <div class="analytics-filters">
+              <div class="list-filter-panel"><button class="button secondary small-btn list-filter-toggle" onclick="toggleListFilters(this)">Analytics Filters</button><div class="list-filter-controls analytics-filters">
                 <input id="analyticsSearch" placeholder="Search people or organizations..." oninput="renderAssessmentAnalytics()">
                 <select id="analyticsClient" onchange="updateAnalyticsWorkshopOptions(); renderAssessmentAnalytics()"><option value="">All clients</option></select>
                 <select id="analyticsWorkshop" onchange="renderAssessmentAnalytics()"><option value="">All workshops</option></select>
@@ -697,7 +711,7 @@
                 <input id="analyticsEndDate" type="date" aria-label="End date" onchange="renderAssessmentAnalytics()">
                 <select id="analyticsGenius" onchange="renderAssessmentAnalytics()"><option value="">All Geniuses</option><option>Wonder</option><option>Invention</option><option>Discernment</option><option>Galvanizing</option><option>Enablement</option><option>Tenacity</option></select>
                 <button class="button ghost small-btn" onclick="clearAnalyticsFilters()">Clear Filters</button>
-              </div>
+              </div></div>
               <div class="client-detail-summary"><div class="metric"><div class="metric-label">People Served</div><div id="analyticsPeopleCount" class="metric-value">0</div><div class="metric-note">Filtered assessment records</div></div><div class="metric"><div class="metric-label">Workshops</div><div id="analyticsWorkshopCount" class="metric-value">0</div><div class="metric-note">Represented in this view</div></div><div class="metric"><div class="metric-label">Genius Selections</div><div id="analyticsGeniusCount" class="metric-value">0</div><div class="metric-note">Two per person</div></div></div>
               <div id="analyticsGeniusMetrics" class="genius-metrics"></div>
               <div class="section-title"><h3>Individual Assessments</h3><span id="analyticsMatchCount" class="tiny muted"></span></div>
@@ -952,9 +966,9 @@ Sanger, CA 93657"></textarea>
   <datalist id="estimatesDatalist"></datalist>
   <datalist id="invoicesDatalist"></datalist>
 
-  <div id="assessmentDialogBackdrop" class="dialog-backdrop no-print">
-    <div class="send-dialog" role="dialog" aria-modal="true" aria-labelledby="assessmentDialogTitle">
-      <div class="section-title"><div><h2 id="assessmentDialogTitle">Workshop Assessment Results</h2><p id="assessmentDialogMeta" class="tiny muted"></p></div><button class="button ghost small-btn" onclick="closeAssessmentDialog()">Close</button></div>
+  <div id="assessmentDialogBackdrop" class="dialog-backdrop assessment-dialog-backdrop no-print">
+    <div class="send-dialog assessment-dialog" role="dialog" aria-modal="true" aria-labelledby="assessmentDialogTitle">
+      <div class="section-title"><div><h2 id="assessmentDialogTitle">Workshop Assessment Results</h2><p id="assessmentDialogMeta" class="tiny muted"></p></div><button id="closeAssessmentDialogButton" class="button ghost small-btn" onclick="closeAssessmentDialog()">Close</button></div>
       <div id="assessmentLoading" class="metric"><div class="metric-label">Loading Assessment</div><div class="metric-note">Checking this workshop for saved individual results…</div></div>
       <div id="assessmentUploadArea">
         <div class="field"><label for="assessmentFile">Official Individual Results workbook (.xlsx)</label><input id="assessmentFile" type="file" accept=".xlsx" onchange="previewAssessmentFile(this.files[0])"></div>
@@ -964,8 +978,8 @@ Sanger, CA 93657"></textarea>
         <div id="assessmentSavedSummary" class="metric-note"></div>
         <div class="form-row" style="margin-top:14px;"><div class="field"><label for="assessmentLeader">Team Leader</label><select id="assessmentLeader" onchange="document.getElementById('previewTeamMapButton').disabled=true; document.getElementById('assessmentLeaderMessage').textContent='Save the leader selection before previewing the Team Map.'"></select></div><div class="field" style="justify-content:end;"><label>&nbsp;</label><button id="saveAssessmentLeaderButton" class="button" onclick="saveAssessmentLeader()">Save Leader</button></div></div>
         <p id="assessmentLeaderMessage" class="muted small">Select the team leader before future PDF preview or generation.</p>
-        <div class="actions"><button class="button secondary small-btn" onclick="showAssessmentView('raw')">Individual Results</button><button class="button secondary small-btn" onclick="showAssessmentView('team')">Team View</button><button id="previewTeamMapButton" class="button small-btn" onclick="openTeamMapPreview()">Preview Team Map</button><button class="button secondary small-btn" onclick="startUpdatedAssessmentImport()">Upload Updated Results</button><button class="button secondary small-btn" onclick="loadAssessmentHistory()">View Import History</button><button class="button danger small-btn" onclick="removeAssessmentData()">Remove Assessment Data</button></div>
-        <div id="assessmentRawView"><div class="section-title"><h3>Individual Results</h3><span id="assessmentResultCount" class="tiny muted"></span></div><div class="assessment-filters"><input id="assessmentSearch" placeholder="Search participant..." oninput="renderFilteredAssessmentResults()"><select id="assessmentRoleFilter" onchange="renderFilteredAssessmentResults()"><option value="">All result types</option><option value="genius">Genius</option><option value="competency">Competency</option><option value="frustration">Frustration</option></select><select id="assessmentTypeFilter" onchange="renderFilteredAssessmentResults()"><option value="">All six types</option><option>Wonder</option><option>Invention</option><option>Discernment</option><option>Galvanizing</option><option>Enablement</option><option>Tenacity</option></select><select id="assessmentSort" onchange="renderFilteredAssessmentResults()"><option value="last">Sort by last name</option><option value="first">Sort by first name</option></select><button class="button ghost small-btn" onclick="clearAssessmentFilters()">Clear Filters</button></div><div id="assessmentRawResults" class="assessment-results-grid"></div></div>
+        <div class="actions assessment-action-bar"><button class="button secondary small-btn" onclick="showAssessmentView('raw')">Individual Results</button><button class="button secondary small-btn" onclick="showAssessmentView('team')">Team View</button><button id="previewTeamMapButton" class="button small-btn" onclick="openTeamMapPreview()">Preview Team Map</button><div class="mobile-action-overflow"><button class="button secondary small-btn mobile-action-toggle" type="button" aria-expanded="false" onclick="toggleMobileActions(this)">More actions</button><div class="mobile-action-panel"><button class="button secondary small-btn" onclick="startUpdatedAssessmentImport()">Upload Updated Results</button><button class="button secondary small-btn" onclick="loadAssessmentHistory()">View Import History</button><button class="button danger small-btn" onclick="removeAssessmentData()">Remove Assessment Data</button></div></div></div>
+        <div id="assessmentRawView"><div class="section-title"><h3>Individual Results</h3><span id="assessmentResultCount" class="tiny muted"></span></div><div class="list-filter-panel"><button class="button secondary small-btn list-filter-toggle" onclick="toggleListFilters(this)">Result Filters</button><div class="list-filter-controls assessment-filters"><input id="assessmentSearch" placeholder="Search participant..." oninput="renderFilteredAssessmentResults()"><select id="assessmentRoleFilter" onchange="renderFilteredAssessmentResults()"><option value="">All result types</option><option value="genius">Genius</option><option value="competency">Competency</option><option value="frustration">Frustration</option></select><select id="assessmentTypeFilter" onchange="renderFilteredAssessmentResults()"><option value="">All six types</option><option>Wonder</option><option>Invention</option><option>Discernment</option><option>Galvanizing</option><option>Enablement</option><option>Tenacity</option></select><select id="assessmentSort" onchange="renderFilteredAssessmentResults()"><option value="last">Sort by last name</option><option value="first">Sort by first name</option></select><button class="button ghost small-btn" onclick="clearAssessmentFilters()">Clear Filters</button></div></div><div id="assessmentRawResults" class="assessment-results-grid"></div></div>
         <div id="assessmentTeamView" class="hidden"><div id="assessmentTeamSummary" class="client-detail-summary"></div><div id="assessmentTeamCards" class="team-view-grid"></div><p class="muted small">The selected leader is represented twice in Genius and Frustration areas to reflect the leader’s influence on the team environment. The underlying participant record is not duplicated.</p></div>
         <div id="assessmentHistoryView" class="hidden"><div class="section-title"><h3>Import History</h3></div><div id="assessmentHistoryList" class="dashboard-list"></div></div>
       </div>
@@ -976,7 +990,7 @@ Sanger, CA 93657"></textarea>
     <div class="send-dialog" role="dialog" aria-modal="true" aria-labelledby="sendDialogTitle">
       <div class="section-title">
         <h2 id="sendDialogTitle">Send Document</h2>
-        <button class="button ghost small-btn" onclick="closeSendDialog()">Close</button>
+        <button id="closeSendDialogButton" class="button ghost small-btn" onclick="closeSendDialog()">Close</button>
       </div>
       <p id="sendDialogMeta" class="muted small"></p>
       <input id="sendRecordType" type="hidden">
@@ -994,7 +1008,7 @@ Sanger, CA 93657"></textarea>
 
   <!-- PRINT VIEW -->
   <div id="teamMapPreview" class="print-view hidden">
-    <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="closeTeamMapPreview(); document.getElementById('assessmentLeader').focus()">Change Leader</button><button class="button small-btn" onclick="window.print()">Print / Save as PDF</button></div></div>
+    <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="closeTeamMapPreview(); document.getElementById('assessmentLeader').focus()">Change Leader</button><button class="button small-btn" onclick="window.print()">Print / Save as PDF</button></div></div>
     <div id="teamMapSheet" class="team-map-sheet"></div>
   </div>
 
@@ -1061,7 +1075,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.20";
+    const APP_VERSION = "2026.07.12.21";
 
     const K = {
       clients: "jjc_clients",
@@ -1088,6 +1102,9 @@ Sanger, CA 93657"></textarea>
     let editingInvoiceNo = "";
     let editingInvoiceSource = null;
     const dirtyFormViews = new Set();
+    let assessmentReturnFocus = null;
+    let sendDialogReturnFocus = null;
+    let previewReturnFocus = null;
 
     let profile = {
       senderName: "Jeff Jones Consulting",
@@ -1952,11 +1969,13 @@ Sanger, CA 93657"></textarea>
     async function openAssessmentDialog(workshopId) {
       const workshop = workshops.find(w => w.WorkshopID === workshopId);
       if (!workshop) return toast("Workshop not found.");
+      assessmentReturnFocus = document.activeElement;
       assessmentWorkshopId = workshopId;
       assessmentPreviewData = null;
       document.getElementById("assessmentDialogMeta").textContent = `${workshopId} • ${workshop.Organization}`;
       resetAssessmentDialogForLoading();
       document.getElementById("assessmentDialogBackdrop").classList.add("open");
+      setTimeout(() => document.getElementById("closeAssessmentDialogButton").focus(), 0);
       try {
         const assessment = await Database.getWorkshopAssessment(workshopId);
         renderSavedAssessment(assessment);
@@ -1973,6 +1992,8 @@ Sanger, CA 93657"></textarea>
       assessmentWorkshopId = "";
       assessmentPreviewData = null;
       currentAssessmentData = null;
+      if (assessmentReturnFocus?.focus) assessmentReturnFocus.focus();
+      assessmentReturnFocus = null;
     }
 
     async function previewAssessmentFile(file) {
@@ -2154,11 +2175,15 @@ Sanger, CA 93657"></textarea>
     function openTeamMapPreview() {
       if (!currentAssessmentData?.import?.LeaderAssessmentResultID) return toast("Select and save the team leader before previewing the Team Map.");
       renderTeamMapPreview();
+      previewReturnFocus = document.activeElement;
       document.getElementById("teamMapPreview").classList.remove("hidden");
+      setTimeout(() => document.getElementById("closeTeamMapPreviewButton").focus(), 0);
     }
 
     function closeTeamMapPreview() {
       document.getElementById("teamMapPreview").classList.add("hidden");
+      if (previewReturnFocus?.focus) previewReturnFocus.focus();
+      previewReturnFocus = null;
     }
 
     function teamMapDisplayName(person, mode) {
@@ -2715,6 +2740,7 @@ Sanger, CA 93657"></textarea>
         : estimates.find(e => e.id === id);
 
       if (!record) return toast("Record not found.");
+      sendDialogReturnFocus = document.activeElement;
 
       const label = type === "invoice" ? "Invoice" : "Estimate";
       const number = type === "invoice" ? record.invoiceNo : record.id;
@@ -2732,6 +2758,8 @@ Sanger, CA 93657"></textarea>
 
     function closeSendDialog() {
       document.getElementById("sendDialogBackdrop").classList.remove("open");
+      if (sendDialogReturnFocus?.focus) sendDialogReturnFocus.focus();
+      sendDialogReturnFocus = null;
     }
 
     function emailForRecord(record, type) {
@@ -2815,6 +2843,7 @@ Sanger, CA 93657"></textarea>
     }
 
     function showDocumentPreview(doc, type = "Invoice") {
+      previewReturnFocus = document.activeElement;
       const docProfile = { ...profile, ...(doc.profile || {}) };
       document.getElementById("printPreviewLabel").textContent = `Printable ${type.toLowerCase()} preview`;
       document.getElementById("printDocumentTitle").textContent = type;
@@ -2853,7 +2882,11 @@ Sanger, CA 93657"></textarea>
       document.getElementById("printView").classList.remove("hidden");
     }
 
-    function closePrintView() { document.getElementById("printView").classList.add("hidden"); }
+    function closePrintView() {
+      document.getElementById("printView").classList.add("hidden");
+      if (previewReturnFocus?.focus) previewReturnFocus.focus();
+      previewReturnFocus = null;
+    }
 
     function loadProfile() {
       document.getElementById("senderName").value = profile.senderName;
@@ -3039,6 +3072,14 @@ Sanger, CA 93657"></textarea>
     document.querySelectorAll("#view-estimates input, #view-estimates select").forEach(el => el.addEventListener("input", recalc));
     document.querySelectorAll("#view-invoices input, #view-invoices select").forEach(el => el.addEventListener("input", updateInvoiceBalancePreview));
     document.querySelectorAll('input[name="orgType"]').forEach(el => el.addEventListener("change", recalc));
+    document.addEventListener("keydown", event => {
+      if (event.key !== "Escape") return;
+      if (!document.getElementById("teamMapPreview").classList.contains("hidden")) return closeTeamMapPreview();
+      if (!document.getElementById("printView").classList.contains("hidden")) return closePrintView();
+      if (document.getElementById("sendDialogBackdrop").classList.contains("open")) return closeSendDialog();
+      if (document.getElementById("assessmentDialogBackdrop").classList.contains("open")) return closeAssessmentDialog();
+      if (document.getElementById("sidebar").classList.contains("open")) closeSidebar();
+    });
 
     window.addEventListener("load", async () => {
       document.getElementById("appVersionLabel").textContent = APP_VERSION;
