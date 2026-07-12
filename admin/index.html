@@ -334,6 +334,8 @@
     .practice-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
     .practice-card { border:1px solid rgba(148,163,184,.16); border-radius:14px; padding:15px; background:rgba(15,23,42,.48); }
     .practice-card h3 { margin-top:0; }
+    .mobile-action-overflow, .mobile-action-panel { display:contents; }
+    .mobile-action-toggle { display:none; }
 
     .status-badge {
       display: inline-flex;
@@ -462,6 +464,15 @@
       .sidebar {
         max-width: calc(100vw - 54px);
       }
+      .button, button { min-height:44px; }
+      .record-card .actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; gap:8px; justify-content:stretch; }
+      .record-card .actions > .button, .record-card .mobile-action-panel > .button { width:100%; min-width:0; white-space:normal; }
+      .mobile-action-overflow { display:block; grid-column:1 / -1; }
+      .mobile-action-toggle { display:flex; width:100%; justify-content:center; align-items:center; }
+      .mobile-action-toggle::after { content:"▾"; margin-left:8px; }
+      .mobile-action-overflow.open .mobile-action-toggle::after { content:"▴"; }
+      .mobile-action-panel { display:none; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:8px; }
+      .mobile-action-overflow.open .mobile-action-panel { display:grid; }
     }
 
     @media (max-width: 700px) {
@@ -480,8 +491,33 @@
       }
 
       .admin-topbar {
-        flex-direction: column;
+        flex-direction: row;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        background: rgba(8,15,30,.96);
+        backdrop-filter: blur(14px);
       }
+      .admin-topbar h2 { margin:0; font-size:20px; line-height:1.15; }
+      .mobile-menu-btn { flex:0 0 auto; width:auto; }
+
+      .status-pill { display:none; }
+      .admin-content { padding:12px; }
+      .card { padding:16px; border-radius:16px; }
+      input, select, textarea { font-size:16px; }
+      .button, button { min-height:44px; }
+      .record-card { padding:14px; overflow:hidden; }
+      .record-card button { min-height:44px; }
+      .record-card .actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; gap:8px; justify-content:stretch; }
+      .record-card .actions > .button, .record-card .mobile-action-panel > .button { width:100%; min-width:0; white-space:normal; }
+      .mobile-action-overflow { display:block; grid-column:1 / -1; }
+      .mobile-action-toggle { display:flex; width:100%; justify-content:center; align-items:center; }
+      .mobile-action-toggle::after { content:"▾"; margin-left:8px; }
+      .mobile-action-overflow.open .mobile-action-toggle::after { content:"▴"; }
+      .mobile-action-panel { display:none; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:8px; }
+      .mobile-action-overflow.open .mobile-action-panel { display:grid; }
+      .send-dialog { width:100%; max-height:calc(100dvh - 24px); overflow:auto; }
 
       .table-wrap {
         border: 1px solid rgba(148,163,184,.13);
@@ -497,6 +533,16 @@
       .dashboard-grid {
         grid-template-columns: 1fr;
       }
+      .genius-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .record-card .actions, .mobile-action-panel { grid-template-columns:1fr; }
+      .tutorial-body { padding:0 14px 14px; }
+      .tutorial-step summary { padding:14px; }
+      .admin-topbar .tiny { display:none; }
+    }
+
+    @media (max-height: 600px) and (max-width: 980px) {
+      .dialog-backdrop { align-items:start; padding:8px; }
+      .send-dialog { width:100%; max-height:calc(100dvh - 16px); overflow:auto; padding:14px; }
     }
   </style>
 </head>
@@ -993,7 +1039,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.16";
+    const APP_VERSION = "2026.07.12.17";
 
     const K = {
       clients: "jjc_clients",
@@ -1124,7 +1170,29 @@ Sanger, CA 93657"></textarea>
       if (backdrop) backdrop.classList.toggle("open", willOpen);
     }
 
+    function toggleMobileActions(button) {
+      const menu = button.closest(".mobile-action-overflow");
+      if (!menu) return;
+      document.querySelectorAll(".mobile-action-overflow.open").forEach(item => { if (item !== menu) item.classList.remove("open"); });
+      menu.classList.toggle("open");
+      button.setAttribute("aria-expanded", menu.classList.contains("open") ? "true" : "false");
+    }
+
+    function prepareMobileActionMenus(container) {
+      container.querySelectorAll(".record-card > .actions").forEach(actions => {
+        const buttons = Array.from(actions.children).filter(item => item.matches("button"));
+        if (buttons.length <= 2 || actions.querySelector(".mobile-action-overflow")) return;
+        const overflow = document.createElement("div");
+        overflow.className = "mobile-action-overflow";
+        overflow.innerHTML = '<button class="button secondary small-btn mobile-action-toggle" type="button" aria-expanded="false" onclick="toggleMobileActions(this)">More actions</button><div class="mobile-action-panel"></div>';
+        const panel = overflow.querySelector(".mobile-action-panel");
+        buttons.slice(2).forEach(button => panel.appendChild(button));
+        actions.appendChild(overflow);
+      });
+    }
+
     function showView(view) {
+      document.querySelectorAll(".mobile-action-overflow.open").forEach(item => item.classList.remove("open"));
       document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
       document.getElementById("view-" + view).classList.add("active");
       document.querySelectorAll("[data-view-btn]").forEach(btn => btn.classList.toggle("active", btn.dataset.viewBtn === view));
@@ -1324,6 +1392,7 @@ Sanger, CA 93657"></textarea>
         el.innerHTML = `<div class="record-title">${esc(c.Organization)}</div>${isArchived(c) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(c.ClientID)} • ${esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button small-btn" onclick="showClientDetail('${jsEsc(c.ClientID)}')">View Details</button>${isArchived(c) ? `<button class="button secondary small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('client','${jsEsc(c.ClientID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editClient('${jsEsc(c.ClientID)}')">Edit</button><button class="button ghost small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',true)">Archive</button>`}</div>`;
         wrap.appendChild(el);
       });
+      prepareMobileActionMenus(wrap);
     }
 
     function showClientDetail(id) {
@@ -1591,6 +1660,7 @@ Sanger, CA 93657"></textarea>
         el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${formatDate(w.WorkshopDate)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
         wrap.appendChild(el);
       });
+      prepareMobileActionMenus(wrap);
     }
 
     function clearWorkshopFilters() {
@@ -2187,6 +2257,7 @@ Sanger, CA 93657"></textarea>
           </div>`;
         wrap.appendChild(el);
       });
+      prepareMobileActionMenus(wrap);
     }
 
     function previewSavedEstimate(id) {
@@ -2467,6 +2538,7 @@ Sanger, CA 93657"></textarea>
         el.innerHTML = `<div class="record-title">${esc(inv.clientName)}</div><div class="tiny muted">${esc(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${esc(inv.terms)}</div><span class="status-badge">${esc(inv.status || "Draft")}</span>${isArchived(inv) ? '<span class="status-badge">Archived</span>' : ''}<div class="record-total">${JJC_money(inv.balanceDue)} due of ${JJC_money(inv.total)}</div><div class="actions">${isArchived(inv) ? `<button class="button secondary small-btn" onclick="setRecordArchived('invoice','${jsEsc(inv.invoiceNo)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('invoice','${jsEsc(inv.invoiceNo)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="showSavedInvoice('${jsEsc(inv.invoiceNo)}')">Preview</button><button class="button secondary small-btn" onclick="editInvoice('${jsEsc(inv.invoiceNo)}')">Edit</button><button class="button secondary small-btn" onclick="duplicateInvoice('${jsEsc(inv.invoiceNo)}')">Duplicate</button><button class="button secondary small-btn" onclick="generateInvoicePdf('${jsEsc(inv.invoiceNo)}', this)">${inv.pdfUrl ? "Regenerate PDF" : "Generate PDF"}</button>${inv.pdfUrl ? `<button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Open PDF</button><button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Download PDF</button>` : ""}<button class="button secondary small-btn" onclick="openSendDialog('invoice', '${jsEsc(inv.invoiceNo)}')">${inv.lastSentDate ? "Resend" : "Send"}</button><button class="button ghost small-btn" onclick="setRecordArchived('invoice','${jsEsc(inv.invoiceNo)}',true)">Archive</button>`}</div>`;
         wrap.appendChild(el);
       });
+      prepareMobileActionMenus(wrap);
     }
 
     function showSavedInvoice(invoiceNo) {
