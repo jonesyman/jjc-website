@@ -307,7 +307,7 @@
 
     .workshop-filters {
       display: grid;
-      grid-template-columns: minmax(180px, 1fr) minmax(150px, .65fr) auto;
+      grid-template-columns: minmax(180px, 1fr) minmax(150px, .65fr) auto auto;
       gap: 10px;
       margin-bottom: 14px;
     }
@@ -323,6 +323,16 @@
       background: rgba(30,41,59,.72);
       font-size: 11px;
       font-weight: 800;
+    }
+
+    .archive-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
     }
 
 
@@ -517,7 +527,8 @@
               </div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>Client List</h2><input id="clientSearch" placeholder="Search..." oninput="renderClients()"></div>
+              <div class="section-title"><h2>Client List</h2><label class="archive-toggle"><input id="includeArchivedClients" type="checkbox" onchange="renderClients()"> Include Archived</label></div>
+              <input id="clientSearch" placeholder="Search..." oninput="renderClients()" style="margin-bottom:12px;">
               <div id="clientsList" class="list-grid"></div>
               <p id="noClientsMsg" class="muted small">No clients yet.</p>
             </div>
@@ -533,6 +544,7 @@
             <div class="client-detail-section"><div class="section-title"><h3>Workshops</h3><span id="clientWorkshopCount" class="tiny muted"></span></div><div id="clientDetailWorkshops" class="client-detail-records"></div></div>
             <div class="client-detail-section"><div class="section-title"><h3>Estimates</h3><span id="clientEstimateCount" class="tiny muted"></span></div><div id="clientDetailEstimates" class="client-detail-records"></div></div>
             <div class="client-detail-section"><div class="section-title"><h3>Invoices</h3><span id="clientInvoiceCount" class="tiny muted"></span></div><div id="clientDetailInvoices" class="client-detail-records"></div></div>
+            <div id="clientArchivedSection" class="client-detail-section hidden"><div class="section-title"><h3>Archived Records</h3><span id="clientArchivedCount" class="tiny muted"></span></div><div id="clientDetailArchived" class="client-detail-records"></div></div>
           </div>
         </section>
 
@@ -583,6 +595,7 @@
               <div class="workshop-filters">
                 <input id="workshopSearch" placeholder="Search workshops..." oninput="renderWorkshops()">
                 <select id="workshopFilter" onchange="renderWorkshops()"><option value="all">All workshops</option><option value="upcoming">Upcoming</option><option value="completed">Completed</option><option value="canceled">Canceled</option><option value="unpaid">Unpaid</option><option value="followup">Follow-up Needed</option></select>
+                <label class="archive-toggle"><input id="includeArchivedWorkshops" type="checkbox" onchange="renderWorkshops()"> Include Archived</label>
                 <button class="button ghost small-btn" onclick="clearWorkshopFilters()">Clear Filters</button>
               </div>
               <div id="workshopsList" class="list-grid"></div>
@@ -632,7 +645,7 @@
             </div>
 
             <div class="card">
-              <div class="section-title"><h2>Saved Estimates</h2><span class="tiny muted">Local + Google Sheet</span></div>
+              <div class="section-title"><h2>Saved Estimates</h2><label class="archive-toggle"><input id="includeArchivedEstimates" type="checkbox" onchange="renderEstimates()"> Include Archived</label></div>
               <div id="estimatesList" class="list-grid"></div>
               <p id="noEstimatesMsg" class="muted small">No estimates yet.</p>
             </div>
@@ -668,7 +681,7 @@
               </div>
             </div>
             <div class="card">
-              <div class="section-title"><h2>Invoices</h2><span class="tiny muted">Local + Google Sheet</span></div>
+              <div class="section-title"><h2>Invoices</h2><label class="archive-toggle"><input id="includeArchivedInvoices" type="checkbox" onchange="renderInvoices()"> Include Archived</label></div>
               <div id="invoicesList" class="list-grid"></div>
               <p id="noInvoicesMsg" class="muted small">No invoices yet.</p>
             </div>
@@ -816,7 +829,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.2";
+    const APP_VERSION = "2026.07.12.3";
 
     const K = {
       clients: "jjc_clients",
@@ -952,10 +965,10 @@ Sanger, CA 93657"></textarea>
     document.querySelectorAll("[data-view-btn]").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.viewBtn)));
 
     function updateMetrics() {
-      document.getElementById("metricClients").textContent = clients.length;
-      document.getElementById("metricWorkshops").textContent = workshops.length;
-      document.getElementById("metricEstimates").textContent = estimates.length;
-      document.getElementById("metricInvoices").textContent = invoices.length;
+      document.getElementById("metricClients").textContent = clients.filter(record => !isArchived(record)).length;
+      document.getElementById("metricWorkshops").textContent = workshops.filter(record => !isArchived(record)).length;
+      document.getElementById("metricEstimates").textContent = estimates.filter(record => !isArchived(record)).length;
+      document.getElementById("metricInvoices").textContent = invoices.filter(record => !isArchived(record)).length;
       updateDashboard();
     }
 
@@ -966,15 +979,18 @@ Sanger, CA 93657"></textarea>
       const activeInvoice = inv => !["paid", "canceled", "cancelled", "void"].includes(String(inv.status || inv.Status || "Draft").toLowerCase());
       const invoiceDate = inv => normalizeDateInput(inv.paidDate || inv.PaidDate || inv.issueDate);
       const invoiceBalance = inv => inv.balanceDue !== undefined && inv.balanceDue !== "" ? Number(inv.balanceDue) : Math.max(0, Number(inv.total || 0) - Number(inv.amountPaid || 0));
-      const paidInvoices = invoices.filter(inv => String(inv.status || inv.Status || "").toLowerCase() === "paid");
-      const unpaidInvoices = invoices.filter(activeInvoice);
+      const activeWorkshops = workshops.filter(record => !isArchived(record));
+      const activeEstimates = estimates.filter(record => !isArchived(record));
+      const activeInvoices = invoices.filter(record => !isArchived(record));
+      const paidInvoices = activeInvoices.filter(inv => String(inv.status || inv.Status || "").toLowerCase() === "paid");
+      const unpaidInvoices = activeInvoices.filter(activeInvoice);
       const overdueInvoices = unpaidInvoices.filter(inv => normalizeDateInput(inv.dueDate) && normalizeDateInput(inv.dueDate) < today);
-      const upcoming = workshops.filter(w => {
+      const upcoming = activeWorkshops.filter(w => {
         const date = normalizeDateInput(w.WorkshopDate);
         return date >= today && !["Completed", "Canceled"].includes(normalizeWorkshopStatus(w.Status));
       }).sort((a, b) => normalizeDateInput(a.WorkshopDate).localeCompare(normalizeDateInput(b.WorkshopDate)));
-      const drafts = estimates.filter(e => String(e.status || "Draft").toLowerCase() === "draft");
-      const sent = estimates.filter(e => String(e.status || "").toLowerCase() === "sent");
+      const drafts = activeEstimates.filter(e => String(e.status || "Draft").toLowerCase() === "draft");
+      const sent = activeEstimates.filter(e => String(e.status || "").toLowerCase() === "sent");
       const outstanding = unpaidInvoices.reduce((sum, inv) => sum + invoiceBalance(inv), 0);
       const revenueMonth = paidInvoices.filter(inv => invoiceDate(inv).startsWith(monthKey)).reduce((sum, inv) => sum + Number(inv.amountPaid || inv.total || 0), 0);
       const revenueYear = paidInvoices.filter(inv => invoiceDate(inv).startsWith(yearKey)).reduce((sum, inv) => sum + Number(inv.amountPaid || inv.total || 0), 0);
@@ -1010,9 +1026,9 @@ Sanger, CA 93657"></textarea>
       })), "No draft or sent estimates.");
 
       const activity = [
-        ...workshops.map(w => ({ title: `Workshop • ${w.Organization || w.WorkshopID}`, date: normalizeDateInput(w.WorkshopDate), action: `editWorkshop('${jsEsc(w.WorkshopID)}')` })),
-        ...estimates.map(e => ({ title: `Estimate • ${e.id} • ${e.name || ""}`, date: normalizeDateInput(e.lastSentDate || e.createdAt), action: `editEstimate('${jsEsc(e.id)}')` })),
-        ...invoices.map(inv => ({ title: `Invoice • ${inv.invoiceNo} • ${inv.clientName || ""}`, date: normalizeDateInput(inv.lastSentDate || inv.issueDate), action: `editInvoice('${jsEsc(inv.invoiceNo)}')` }))
+        ...activeWorkshops.map(w => ({ title: `Workshop • ${w.Organization || w.WorkshopID}`, date: normalizeDateInput(w.WorkshopDate), action: `editWorkshop('${jsEsc(w.WorkshopID)}')` })),
+        ...activeEstimates.map(e => ({ title: `Estimate • ${e.id} • ${e.name || ""}`, date: normalizeDateInput(e.lastSentDate || e.createdAt), action: `editEstimate('${jsEsc(e.id)}')` })),
+        ...activeInvoices.map(inv => ({ title: `Invoice • ${inv.invoiceNo} • ${inv.clientName || ""}`, date: normalizeDateInput(inv.lastSentDate || inv.issueDate), action: `editInvoice('${jsEsc(inv.invoiceNo)}')` }))
       ].filter(item => item.date).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6).map(item => ({ ...item, meta: formatDate(item.date), label: "Open" }));
       renderDashboardList("dashboardActivity", activity, "No recent activity.");
     }
@@ -1031,16 +1047,16 @@ Sanger, CA 93657"></textarea>
     }
 
     function updateLookupLists() {
-      const clientOptions = clients
+      const clientOptions = clients.filter(record => !isArchived(record))
         .map(c => `<option value="${esc(c.Organization)}" data-id="${esc(c.ClientID)}" data-email="${esc(c.Email)}">${esc(c.ClientID)}${c.Contact ? " • " + esc(c.Contact) : ""}</option>`)
         .join("");
       document.getElementById("clientsDatalist").innerHTML = clientOptions;
 
-      document.getElementById("estimatesDatalist").innerHTML = estimates
+      document.getElementById("estimatesDatalist").innerHTML = estimates.filter(record => !isArchived(record))
         .map(e => `<option value="${esc(e.id)}">${esc(e.name)} • ${JJC_money(e.total)}</option>`)
         .join("");
 
-      document.getElementById("invoicesDatalist").innerHTML = invoices
+      document.getElementById("invoicesDatalist").innerHTML = invoices.filter(record => !isArchived(record))
         .map(inv => `<option value="${esc(inv.invoiceNo)}">${esc(inv.clientName)} • ${JJC_money(inv.total)}</option>`)
         .join("");
     }
@@ -1048,8 +1064,8 @@ Sanger, CA 93657"></textarea>
     function findClientByNameOrId(value) {
       const v = String(value || "").trim().toLowerCase();
       if (!v) return null;
-      return clients.find(c => String(c.Organization || "").trim().toLowerCase() === v)
-        || clients.find(c => String(c.ClientID || "").trim().toLowerCase() === v)
+      return clients.find(c => !isArchived(c) && String(c.Organization || "").trim().toLowerCase() === v)
+        || clients.find(c => !isArchived(c) && String(c.ClientID || "").trim().toLowerCase() === v)
         || null;
     }
 
@@ -1113,14 +1129,15 @@ Sanger, CA 93657"></textarea>
 
     function renderClients() {
       const q = (document.getElementById("clientSearch")?.value || "").toLowerCase();
+      const includeArchived = document.getElementById("includeArchivedClients")?.checked;
       const wrap = document.getElementById("clientsList");
-      const filtered = clients.filter(c => Object.values(c).join(" ").toLowerCase().includes(q));
+      const filtered = clients.filter(c => (includeArchived || !isArchived(c)) && Object.values(c).join(" ").toLowerCase().includes(q));
       wrap.innerHTML = "";
       document.getElementById("noClientsMsg").classList.toggle("hidden", filtered.length > 0);
       filtered.forEach(c => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(c.Organization)}</div><div class="tiny muted">${esc(c.ClientID)} • ${esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button small-btn" onclick="showClientDetail('${jsEsc(c.ClientID)}')">View Details</button><button class="button secondary small-btn" onclick="editClient('${jsEsc(c.ClientID)}')">Edit</button><button class="button ghost small-btn" onclick="deleteClient('${jsEsc(c.ClientID)}')">Delete</button></div>`;
+        el.innerHTML = `<div class="record-title">${esc(c.Organization)}</div>${isArchived(c) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(c.ClientID)} • ${esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button small-btn" onclick="showClientDetail('${jsEsc(c.ClientID)}')">View Details</button>${isArchived(c) ? `<button class="button secondary small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('client','${jsEsc(c.ClientID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editClient('${jsEsc(c.ClientID)}')">Edit</button><button class="button ghost small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',true)">Archive</button>`}</div>`;
         wrap.appendChild(el);
       });
     }
@@ -1135,7 +1152,15 @@ Sanger, CA 93657"></textarea>
       const clientEstimates = uniqueRecords(estimates.filter(e => e.ClientID === id || e.clientId === id || workshopEstimateIds.has(e.id) || clientNameMatchesOrganization(e.name, org)), "id");
       const estimateIds = new Set(clientEstimates.map(e => e.id));
       const clientInvoices = uniqueRecords(invoices.filter(inv => inv.ClientID === id || inv.clientId === id || workshopInvoiceIds.has(inv.invoiceNo) || estimateIds.has(inv.estimateId) || clientNameMatchesOrganization(inv.clientName, org)), "invoiceNo");
-      const financialInvoices = clientInvoices.filter(inv => !["canceled", "cancelled", "void"].includes(String(inv.status || inv.Status || "").toLowerCase()));
+      const activeClientWorkshops = clientWorkshops.filter(record => !isArchived(record));
+      const activeClientEstimates = clientEstimates.filter(record => !isArchived(record));
+      const activeClientInvoices = clientInvoices.filter(record => !isArchived(record));
+      const archivedClientRecords = [
+        ...clientWorkshops.filter(isArchived).map(w => ({ title: `Workshop • ${w.WorkshopID}`, meta: formatDate(w.WorkshopDate), action: `showArchivedRecord('workshop')` })),
+        ...clientEstimates.filter(isArchived).map(e => ({ title: `Estimate • ${e.id}`, meta: JJC_money(e.total), action: `showArchivedRecord('estimate')` })),
+        ...clientInvoices.filter(isArchived).map(inv => ({ title: `Invoice • ${inv.invoiceNo}`, meta: JJC_money(inv.total), action: `showArchivedRecord('invoice')` }))
+      ];
+      const financialInvoices = activeClientInvoices.filter(inv => !["canceled", "cancelled", "void"].includes(String(inv.status || inv.Status || "").toLowerCase()));
       const totalBilled = financialInvoices.reduce((sum, inv) => sum + Number(inv.total || 0), 0);
       const totalPaid = financialInvoices.reduce((sum, inv) => {
         const amountPaid = Number(inv.amountPaid || inv.AmountPaid || 0);
@@ -1153,14 +1178,19 @@ Sanger, CA 93657"></textarea>
       document.getElementById("clientTotalBilled").textContent = JJC_money(totalBilled);
       document.getElementById("clientTotalPaid").textContent = JJC_money(totalPaid);
       document.getElementById("clientOutstanding").textContent = JJC_money(outstanding);
-      document.getElementById("clientWorkshopCount").textContent = `${clientWorkshops.length} records`;
-      document.getElementById("clientEstimateCount").textContent = `${clientEstimates.length} records`;
-      document.getElementById("clientInvoiceCount").textContent = `${clientInvoices.length} records`;
-      document.getElementById("clientDetailEditButton").onclick = () => editClient(id);
+      document.getElementById("clientWorkshopCount").textContent = `${activeClientWorkshops.length} active`;
+      document.getElementById("clientEstimateCount").textContent = `${activeClientEstimates.length} active`;
+      document.getElementById("clientInvoiceCount").textContent = `${activeClientInvoices.length} active`;
+      const detailButton = document.getElementById("clientDetailEditButton");
+      detailButton.textContent = isArchived(client) ? "Restore Client" : "Edit Client";
+      detailButton.onclick = () => isArchived(client) ? setRecordArchived("client", id, false) : editClient(id);
 
-      renderClientRecords("clientDetailWorkshops", clientWorkshops.map(w => ({ title: w.WorkshopID, meta: `${formatDate(w.WorkshopDate)} • ${normalizeWorkshopStatus(w.Status)}`, action: `editWorkshop('${jsEsc(w.WorkshopID)}')` })), "No workshops linked.");
-      renderClientRecords("clientDetailEstimates", clientEstimates.map(e => ({ title: e.id, meta: `${e.status || "Draft"} • ${JJC_money(e.total)}`, action: `editEstimate('${jsEsc(e.id)}')` })), "No estimates linked.");
-      renderClientRecords("clientDetailInvoices", clientInvoices.map(inv => ({ title: inv.invoiceNo, meta: `${inv.status || "Draft"} • ${JJC_money(inv.total)}`, action: `editInvoice('${jsEsc(inv.invoiceNo)}')` })), "No invoices linked.");
+      renderClientRecords("clientDetailWorkshops", activeClientWorkshops.map(w => ({ title: w.WorkshopID, meta: `${formatDate(w.WorkshopDate)} • ${normalizeWorkshopStatus(w.Status)}`, action: `editWorkshop('${jsEsc(w.WorkshopID)}')` })), "No active workshops linked.");
+      renderClientRecords("clientDetailEstimates", activeClientEstimates.map(e => ({ title: e.id, meta: `${e.status || "Draft"} • ${JJC_money(e.total)}`, action: `editEstimate('${jsEsc(e.id)}')` })), "No active estimates linked.");
+      renderClientRecords("clientDetailInvoices", activeClientInvoices.map(inv => ({ title: inv.invoiceNo, meta: `${inv.status || "Draft"} • ${JJC_money(inv.total)}`, action: `editInvoice('${jsEsc(inv.invoiceNo)}')` })), "No active invoices linked.");
+      document.getElementById("clientArchivedCount").textContent = `${archivedClientRecords.length} records`;
+      document.getElementById("clientArchivedSection").classList.toggle("hidden", archivedClientRecords.length === 0);
+      renderClientRecords("clientDetailArchived", archivedClientRecords, "No archived records.");
       document.getElementById("clientDetail").classList.remove("hidden");
       document.getElementById("clientDetail").scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -1180,8 +1210,110 @@ Sanger, CA 93657"></textarea>
       });
     }
 
+    function isArchived(record) {
+      return record?.archived === true || String(record?.archived || "").toLowerCase() === "true";
+    }
+
+    function clientLinkedRecords(client) {
+      const org = String(client?.Organization || "").trim().toLowerCase();
+      const linkedWorkshops = workshops.filter(w => w.ClientID === client.ClientID || String(w.Organization || "").trim().toLowerCase() === org);
+      const estimateIds = new Set(linkedWorkshops.map(w => w.EstimateID).filter(Boolean));
+      const invoiceIds = new Set(linkedWorkshops.map(w => w.InvoiceID).filter(Boolean));
+      const linkedEstimates = estimates.filter(e => e.ClientID === client.ClientID || e.clientId === client.ClientID || estimateIds.has(e.id) || clientNameMatchesOrganization(e.name, org));
+      linkedEstimates.forEach(e => estimateIds.add(e.id));
+      const linkedInvoices = invoices.filter(inv => inv.ClientID === client.ClientID || inv.clientId === client.ClientID || invoiceIds.has(inv.invoiceNo) || estimateIds.has(inv.estimateId) || clientNameMatchesOrganization(inv.clientName, org));
+      return {
+        workshops: uniqueRecords(linkedWorkshops, "WorkshopID"),
+        estimates: uniqueRecords(linkedEstimates, "id"),
+        invoices: uniqueRecords(linkedInvoices, "invoiceNo")
+      };
+    }
+
+    async function setRecordArchived(type, id, archived) {
+      const config = recordArchiveConfig(type, id);
+      if (!config.record) return toast("Record not found.");
+      let detail = "";
+      if (type === "client") {
+        const linked = clientLinkedRecords(config.record);
+        detail = `\n\nLinked records: ${linked.workshops.length} workshops, ${linked.estimates.length} estimates, ${linked.invoices.length} invoices.`;
+      }
+      if (archived && !confirm(`Archive ${config.label}? It will be hidden from normal lists and lookups.${detail}`)) return;
+      const updated = { ...config.record, archived, archivedDate: archived ? new Date().toISOString() : "" };
+      await config.save(updated);
+      config.replace(updated);
+      refreshAfterArchiveChange();
+      toast(archived ? `${config.label} archived.` : `${config.label} restored.`);
+    }
+
+    async function permanentlyDeleteRecord(type, id) {
+      const config = recordArchiveConfig(type, id);
+      if (!config.record) return toast("Record not found.");
+      if (!isArchived(config.record)) return toast("Archive this record before permanently deleting it.");
+      if (type === "client") {
+        const linked = clientLinkedRecords(config.record);
+        if (linked.workshops.length || linked.estimates.length || linked.invoices.length) {
+          return alert(`This client cannot be permanently deleted because it has linked business history:\n\n${linked.workshops.length} workshops\n${linked.estimates.length} estimates\n${linked.invoices.length} invoices\n\nKeep the client archived instead.`);
+        }
+      }
+      if (type === "estimate") {
+        const workshopLinks = workshops.filter(w => w.EstimateID === id).length;
+        const invoiceLinks = invoices.filter(inv => inv.estimateId === id).length;
+        if (workshopLinks || invoiceLinks) return alert(`This estimate cannot be permanently deleted because it is linked to ${workshopLinks} workshops and ${invoiceLinks} invoices. Keep it archived instead.`);
+      }
+      if (type === "invoice") {
+        const workshopLinks = workshops.filter(w => w.InvoiceID === id).length;
+        if (workshopLinks) return alert(`This invoice cannot be permanently deleted because it is linked to ${workshopLinks} workshops. Keep it archived instead.`);
+      }
+      if (!confirm(`Permanently delete ${config.label}? This cannot be undone.`)) return;
+      await config.remove();
+      config.drop();
+      closeClientDetail();
+      refreshAfterArchiveChange();
+      toast(`${config.label} permanently deleted.`);
+    }
+
+    function recordArchiveConfig(type, id) {
+      if (type === "client") {
+        const record = clients.find(c => c.ClientID === id);
+        return { record, label: record?.Organization || id, save: data => Database.saveClient(data), remove: () => Database.deleteClient(id), replace: data => { clients = upsertPreservingOrder(clients, data, "ClientID"); }, drop: () => { clients = clients.filter(c => c.ClientID !== id); } };
+      }
+      if (type === "workshop") {
+        const record = workshops.find(w => w.WorkshopID === id);
+        return { record, label: record?.WorkshopID || id, save: data => Database.saveWorkshop(data), remove: () => Database.deleteWorkshop(id), replace: data => { workshops = upsertPreservingOrder(workshops, data, "WorkshopID"); }, drop: () => { workshops = workshops.filter(w => w.WorkshopID !== id); } };
+      }
+      if (type === "estimate") {
+        const record = estimates.find(e => e.id === id);
+        return { record, label: record?.id || id, save: data => Database.saveEstimate(data), remove: () => Database.deleteEstimate(id), replace: data => { estimates = upsertPreservingOrder(estimates, data, "id"); }, drop: () => { estimates = estimates.filter(e => e.id !== id); } };
+      }
+      const record = invoices.find(inv => inv.invoiceNo === id);
+      return { record, label: record?.invoiceNo || id, save: data => Database.saveInvoice(data), remove: () => Database.deleteInvoice(id), replace: data => { invoices = upsertPreservingOrder(invoices, data, "invoiceNo"); }, drop: () => { invoices = invoices.filter(inv => inv.invoiceNo !== id); } };
+    }
+
+    function refreshAfterArchiveChange() {
+      localStorage.setItem(K.clients, JSON.stringify(clients));
+      localStorage.setItem(K.workshops, JSON.stringify(workshops));
+      localStorage.setItem(K.estimates, JSON.stringify(estimates));
+      localStorage.setItem(K.invoices, JSON.stringify(invoices));
+      updateMetrics();
+      updateLookupLists();
+      renderClients();
+      renderWorkshops();
+      renderEstimates();
+      renderInvoices();
+    }
+
     function renderClientRecords(id, records, emptyMessage) {
       document.getElementById(id).innerHTML = records.length ? records.map(record => `<div class="dashboard-item"><div class="dashboard-item-title">${esc(record.title)}</div><div class="tiny muted">${esc(record.meta)}</div><div class="actions"><button class="button secondary small-btn" onclick="${record.action}">Open</button></div></div>`).join("") : `<div class="dashboard-empty">${esc(emptyMessage)}</div>`;
+    }
+
+    function showArchivedRecord(type) {
+      const view = type === "workshop" ? "workshops" : type + "s";
+      const checkbox = document.getElementById(type === "workshop" ? "includeArchivedWorkshops" : type === "estimate" ? "includeArchivedEstimates" : "includeArchivedInvoices");
+      if (checkbox) checkbox.checked = true;
+      if (type === "workshop") renderWorkshops();
+      if (type === "estimate") renderEstimates();
+      if (type === "invoice") renderInvoices();
+      showView(view);
     }
 
     function closeClientDetail() {
@@ -1197,16 +1329,6 @@ Sanger, CA 93657"></textarea>
       document.getElementById("clientEmail").value = c.Email || "";
       document.getElementById("clientPhone").value = c.Phone || "";
       document.getElementById("clientNotes").value = c.Notes || "";
-    }
-
-    async function deleteClient(id) {
-      if (!confirm("Delete this client?")) return;
-      clients = clients.filter(c => c.ClientID !== id);
-      saveLocal(K.clients, clients);
-      await Database.deleteClient(id);
-      renderClients();
-      resetClientForm();
-      toast("Client deleted.");
     }
 
     function resetWorkshopForm() {
@@ -1253,10 +1375,11 @@ Sanger, CA 93657"></textarea>
     function renderWorkshops() {
       const q = (document.getElementById("workshopSearch")?.value || "").toLowerCase();
       const filter = document.getElementById("workshopFilter")?.value || "all";
+      const includeArchived = document.getElementById("includeArchivedWorkshops")?.checked;
       const wrap = document.getElementById("workshopsList");
       const today = new Date().toISOString().slice(0, 10);
       const filtered = workshops
-        .filter(w => Object.values(w).join(" ").toLowerCase().includes(q))
+        .filter(w => (includeArchived || !isArchived(w)) && Object.values(w).join(" ").toLowerCase().includes(q))
         .filter(w => {
           const status = normalizeWorkshopStatus(w.Status);
           const financial = workshopFinancialStatus(w);
@@ -1280,7 +1403,7 @@ Sanger, CA 93657"></textarea>
         const financial = workshopFinancialStatus(w);
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${formatDate(w.WorkshopDate)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span><div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions"><button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button danger small-btn" onclick="deleteWorkshop('${jsEsc(w.WorkshopID)}')">Delete</button></div>`;
+        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${formatDate(w.WorkshopDate)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
         wrap.appendChild(el);
       });
     }
@@ -1288,6 +1411,7 @@ Sanger, CA 93657"></textarea>
     function clearWorkshopFilters() {
       document.getElementById("workshopSearch").value = "";
       document.getElementById("workshopFilter").value = "all";
+      document.getElementById("includeArchivedWorkshops").checked = false;
       renderWorkshops();
     }
 
@@ -1368,16 +1492,6 @@ Sanger, CA 93657"></textarea>
       if (!value || !/^\d{1,2}:\d{2}/.test(String(value))) return null;
       const [hours, minutes] = String(value).split(":").map(Number);
       return (hours * 60) + minutes;
-    }
-
-    async function deleteWorkshop(id) {
-      if (!confirm("Delete this workshop?")) return;
-      workshops = workshops.filter(w => w.WorkshopID !== id);
-      saveLocal(K.workshops, workshops);
-      await Database.deleteWorkshop(id);
-      renderWorkshops();
-      resetWorkshopForm();
-      toast("Workshop deleted.");
     }
 
     function currentCalc() {
@@ -1485,16 +1599,6 @@ Sanger, CA 93657"></textarea>
       recalc();
     }
 
-    async function deleteEstimate(id) {
-      if (!confirm("Delete this estimate?")) return;
-      estimates = estimates.filter(e => e.id !== id);
-      saveLocal(K.estimates, estimates);
-      await Database.deleteEstimate(id);
-      renderEstimates();
-      resetEstimateForm();
-      toast("Estimate deleted.");
-    }
-
     async function generateEstimatePdf(id, button) {
       const estimate = estimates.find(e => e.id === id);
       if (!estimate) return toast("Estimate not found.");
@@ -1510,23 +1614,26 @@ Sanger, CA 93657"></textarea>
 
     function renderEstimates() {
       const wrap = document.getElementById("estimatesList");
+      const includeArchived = document.getElementById("includeArchivedEstimates")?.checked;
+      const visibleEstimates = estimates.filter(e => includeArchived || !isArchived(e));
       wrap.innerHTML = "";
-      document.getElementById("noEstimatesMsg").classList.toggle("hidden", estimates.length > 0);
-      estimates.forEach(e => {
+      document.getElementById("noEstimatesMsg").classList.toggle("hidden", visibleEstimates.length > 0);
+      visibleEstimates.forEach(e => {
         const el = document.createElement("div");
         el.className = "record-card";
         el.innerHTML = `
           <div class="record-title">${esc(e.name)}</div>
-          <div class="tiny muted">${esc(e.id)} • ${esc(e.orgType)}</div>
+          <div class="tiny muted">${esc(e.id)} • ${esc(e.orgType)}</div>${isArchived(e) ? '<span class="status-badge">Archived</span>' : ''}
           <div class="record-total">${JJC_money(e.total)}</div>
           <div class="actions">
+            ${isArchived(e) ? `<button class="button secondary small-btn" onclick="setRecordArchived('estimate','${jsEsc(e.id)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('estimate','${jsEsc(e.id)}')">Delete Permanently</button>` : `
             <button class="button secondary small-btn" onclick="previewSavedEstimate('${jsEsc(e.id)}')">Preview</button>
             <button class="button secondary small-btn" onclick="editEstimate('${jsEsc(e.id)}')">Edit</button>
             <button class="button secondary small-btn" onclick="generateEstimatePdf('${jsEsc(e.id)}', this)">${e.pdfUrl ? "Regenerate PDF" : "Generate PDF"}</button>
             ${e.pdfUrl ? `<button class="button secondary small-btn" onclick="openPdf('${jsEsc(e.pdfUrl)}')">Open PDF</button><button class="button secondary small-btn" onclick="openPdf('${jsEsc(e.pdfUrl)}')">Download PDF</button>` : ""}
             <button class="button secondary small-btn" onclick="openSendDialog('estimate', '${jsEsc(e.id)}')">${e.lastSentDate ? "Resend" : "Send"}</button>
             <button class="button small-btn" onclick="convertEstimateToInvoice('${jsEsc(e.id)}')">Convert to Invoice</button>
-            <button class="button danger small-btn" onclick="deleteEstimate('${jsEsc(e.id)}')">Delete</button>
+            <button class="button ghost small-btn" onclick="setRecordArchived('estimate','${jsEsc(e.id)}',true)">Archive</button>`}
           </div>`;
         wrap.appendChild(el);
       });
@@ -1721,16 +1828,6 @@ Sanger, CA 93657"></textarea>
       showView("invoices");
     }
 
-    async function deleteInvoice(invoiceNo) {
-      if (!confirm("Delete this invoice?")) return;
-      invoices = invoices.filter(inv => inv.invoiceNo !== invoiceNo);
-      saveLocal(K.invoices, invoices);
-      await Database.deleteInvoice(invoiceNo);
-      renderInvoices();
-      resetInvoiceForm();
-      toast("Invoice deleted.");
-    }
-
     async function generateInvoicePdf(invoiceNo, button) {
       const invoice = invoices.find(inv => inv.invoiceNo === invoiceNo);
       if (!invoice) return toast("Invoice not found.");
@@ -1746,12 +1843,14 @@ Sanger, CA 93657"></textarea>
 
     function renderInvoices() {
       const wrap = document.getElementById("invoicesList");
+      const includeArchived = document.getElementById("includeArchivedInvoices")?.checked;
+      const visibleInvoices = invoices.filter(inv => includeArchived || !isArchived(inv));
       wrap.innerHTML = "";
-      document.getElementById("noInvoicesMsg").classList.toggle("hidden", invoices.length > 0);
-      invoices.forEach(inv => {
+      document.getElementById("noInvoicesMsg").classList.toggle("hidden", visibleInvoices.length > 0);
+      visibleInvoices.forEach(inv => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(inv.clientName)}</div><div class="tiny muted">${esc(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${esc(inv.terms)} • ${esc(inv.status || "Draft")}</div><div class="record-total">${JJC_money(inv.total)}</div><div class="actions"><button class="button secondary small-btn" onclick="showSavedInvoice('${jsEsc(inv.invoiceNo)}')">Preview</button><button class="button secondary small-btn" onclick="editInvoice('${jsEsc(inv.invoiceNo)}')">Edit</button><button class="button secondary small-btn" onclick="generateInvoicePdf('${jsEsc(inv.invoiceNo)}', this)">${inv.pdfUrl ? "Regenerate PDF" : "Generate PDF"}</button>${inv.pdfUrl ? `<button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Open PDF</button><button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Download PDF</button>` : ""}<button class="button secondary small-btn" onclick="openSendDialog('invoice', '${jsEsc(inv.invoiceNo)}')">${inv.lastSentDate ? "Resend" : "Send"}</button><button class="button danger small-btn" onclick="deleteInvoice('${jsEsc(inv.invoiceNo)}')">Delete</button></div>`;
+        el.innerHTML = `<div class="record-title">${esc(inv.clientName)}</div><div class="tiny muted">${esc(inv.invoiceNo)} • ${formatDate(inv.issueDate)} • ${esc(inv.terms)} • ${esc(inv.status || "Draft")}</div>${isArchived(inv) ? '<span class="status-badge">Archived</span>' : ''}<div class="record-total">${JJC_money(inv.total)}</div><div class="actions">${isArchived(inv) ? `<button class="button secondary small-btn" onclick="setRecordArchived('invoice','${jsEsc(inv.invoiceNo)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('invoice','${jsEsc(inv.invoiceNo)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="showSavedInvoice('${jsEsc(inv.invoiceNo)}')">Preview</button><button class="button secondary small-btn" onclick="editInvoice('${jsEsc(inv.invoiceNo)}')">Edit</button><button class="button secondary small-btn" onclick="generateInvoicePdf('${jsEsc(inv.invoiceNo)}', this)">${inv.pdfUrl ? "Regenerate PDF" : "Generate PDF"}</button>${inv.pdfUrl ? `<button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Open PDF</button><button class="button secondary small-btn" onclick="openPdf('${jsEsc(inv.pdfUrl)}')">Download PDF</button>` : ""}<button class="button secondary small-btn" onclick="openSendDialog('invoice', '${jsEsc(inv.invoiceNo)}')">${inv.lastSentDate ? "Resend" : "Send"}</button><button class="button ghost small-btn" onclick="setRecordArchived('invoice','${jsEsc(inv.invoiceNo)}',true)">Archive</button>`}</div>`;
         wrap.appendChild(el);
       });
     }

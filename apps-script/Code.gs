@@ -10,6 +10,7 @@ const SHEET_NAMES = {
 const PDF_HEADERS = ["pdfUrl", "pdfFileId", "pdfGeneratedDate"];
 const EMAIL_HEADERS = ["sentDate", "firstSentDate", "lastSentDate", "sentTo", "sentCc", "sentSubject", "sendCount"];
 const WORKSHOP_HEADERS = ["WorkshopDate", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization"];
+const ARCHIVE_HEADERS = ["archived", "archivedDate"];
 const PDF_ROOT_FOLDER = "Jeff Jones Consulting PDFs";
 const PDF_ESTIMATE_FOLDER = "Estimates";
 const PDF_INVOICE_FOLDER = "Invoices";
@@ -55,6 +56,7 @@ function doPost(e) {
     }
 
     if (action === "saveClient") {
+      ensureHeaders(SHEET_NAMES.clients, ARCHIVE_HEADERS);
       upsertRow(SHEET_NAMES.clients, "ClientID", body.data || {});
       return jsonResponse({ success: true });
     }
@@ -65,7 +67,7 @@ function doPost(e) {
     }
 
     if (action === "saveEstimate") {
-      ensureHeaders(SHEET_NAMES.estimates, PDF_HEADERS.concat(EMAIL_HEADERS));
+      ensureHeaders(SHEET_NAMES.estimates, PDF_HEADERS.concat(EMAIL_HEADERS, ARCHIVE_HEADERS));
       upsertRow(SHEET_NAMES.estimates, "id", body.data || {});
       return jsonResponse({ success: true });
     }
@@ -83,7 +85,7 @@ function doPost(e) {
         "invoiceFooter",
         "paymentInstructions",
         "checksPayableTo"
-      ].concat(PDF_HEADERS, EMAIL_HEADERS));
+      ].concat(PDF_HEADERS, EMAIL_HEADERS, ARCHIVE_HEADERS));
       upsertRow(SHEET_NAMES.invoices, "invoiceNo", body.data || {});
       return jsonResponse({ success: true });
     }
@@ -93,7 +95,7 @@ function doPost(e) {
     }
 
     if (action === "saveWorkshop") {
-      ensureHeaders(SHEET_NAMES.workshops, WORKSHOP_HEADERS);
+      ensureHeaders(SHEET_NAMES.workshops, WORKSHOP_HEADERS.concat(ARCHIVE_HEADERS));
       upsertRow(SHEET_NAMES.workshops, "WorkshopID", body.data || {});
       return jsonResponse({ success: true });
     }
