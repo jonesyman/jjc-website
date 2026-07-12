@@ -359,6 +359,7 @@
       font-weight: 750;
       white-space: nowrap;
     }
+    .archive-toggle input[type="checkbox"] { width:18px; height:18px; min-height:18px; flex:0 0 18px; margin:0; }
 
     .assessment-results-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-height:55vh; overflow:auto; }
     .assessment-result-card { border:1px solid rgba(148,163,184,.16); border-radius:14px; padding:12px; background:rgba(15,23,42,.55); }
@@ -543,6 +544,14 @@
     @media (max-height: 600px) and (max-width: 980px) {
       .dialog-backdrop { align-items:start; padding:8px; }
       .send-dialog { width:100%; max-height:calc(100dvh - 16px); overflow:auto; padding:14px; }
+    }
+
+    @media (orientation: landscape) and (min-width: 700px) and (max-width: 980px) {
+      #view-workshops .workspace { grid-template-columns:1fr; }
+      #view-workshops .form-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #view-workshops .form-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      #view-workshops .workshop-filters { grid-template-columns:minmax(200px,1fr) minmax(170px,.7fr); align-items:center; }
+      #workshopsList { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
   </style>
 </head>
@@ -1039,7 +1048,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.17";
+    const APP_VERSION = "2026.07.12.18";
 
     const K = {
       clients: "jjc_clients",
