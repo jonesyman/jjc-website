@@ -504,7 +504,7 @@
       .mobile-menu-btn { flex:0 0 auto; width:auto; }
 
       .status-pill { display:none; }
-      .admin-content { padding:12px; }
+      .admin-content { padding:12px 12px calc(32px + env(safe-area-inset-bottom)); }
       .card { padding:16px; border-radius:16px; }
       input, select, textarea { font-size:16px; }
       .button, button { min-height:44px; }
@@ -519,6 +519,8 @@
       .mobile-action-panel { display:none; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:8px; }
       .mobile-action-overflow.open .mobile-action-panel { display:grid; }
       .send-dialog { width:100%; max-height:calc(100dvh - 24px); overflow:auto; }
+      .workspace .card > .actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
+      .workspace .card > .actions .button { width:100%; }
 
       .table-wrap {
         border: 1px solid rgba(148,163,184,.13);
@@ -539,6 +541,7 @@
       .tutorial-body { padding:0 14px 14px; }
       .tutorial-step summary { padding:14px; }
       .admin-topbar .tiny { display:none; }
+      .workspace .card > .actions { grid-template-columns:1fr; }
     }
 
     @media (max-height: 600px) and (max-width: 980px) {
@@ -638,15 +641,15 @@
             <div class="card">
               <div class="section-title"><h2>Client Form</h2><button class="button ghost small-btn" onclick="resetClientForm()">New</button></div>
               <div class="field"><label>Client ID</label><input id="clientId" placeholder="CLI-0001" readonly></div>
-              <div class="field"><label>Organization</label><input id="clientOrg"></div>
+              <div class="field"><label>Organization</label><input id="clientOrg" autocomplete="organization"></div>
               <div class="form-row">
-                <div class="field"><label>Contact</label><input id="clientContact"></div>
-                <div class="field"><label>Email</label><input id="clientEmail" type="email"></div>
+                <div class="field"><label>Contact</label><input id="clientContact" autocomplete="name"></div>
+                <div class="field"><label>Email</label><input id="clientEmail" type="email" inputmode="email" autocomplete="email"></div>
               </div>
-              <div class="field"><label>Phone</label><input id="clientPhone"></div>
+              <div class="field"><label>Phone</label><input id="clientPhone" type="tel" inputmode="tel" autocomplete="tel"></div>
               <div class="field"><label>Notes</label><textarea id="clientNotes" rows="5"></textarea></div>
               <div class="actions">
-                <button class="button" onclick="saveClient()">Save Client</button>
+                <button class="button" onclick="saveClient(this)">Save Client</button>
                 <button class="button secondary" onclick="resetClientForm()">Clear</button>
               </div>
             </div>
@@ -715,7 +718,7 @@
                 <div class="field"><label>Status</label><select id="workshopStatus"><option>Inquiry</option><option>Proposed</option><option>Scheduled</option><option>Completed</option><option>Canceled</option><option>Follow-up Needed</option></select></div>
               </div>
               <div class="form-row-3">
-                <div class="field"><label>Participants</label><input id="workshopParticipants" type="number" value="12"></div>
+                <div class="field"><label>Participants</label><input id="workshopParticipants" type="number" inputmode="numeric" min="1" value="12"></div>
                 <div class="field"><label>Start Time</label><input id="workshopStartTime" type="time"></div>
                 <div class="field"><label>End Time</label><input id="workshopEndTime" type="time"></div>
               </div>
@@ -726,7 +729,7 @@
               </div>
               <div class="form-row">
                 <div class="field"><label>Primary Contact</label><input id="workshopPrimaryContact"></div>
-                <div class="field"><label>Contact Email</label><input id="workshopContactEmail" type="email"></div>
+                <div class="field"><label>Contact Email</label><input id="workshopContactEmail" type="email" inputmode="email" autocomplete="email"></div>
               </div>
               <div class="form-row">
                 <div class="field"><label>Estimate ID</label><input id="workshopEstimateId" list="estimatesDatalist" placeholder="Search estimates..."></div>
@@ -734,7 +737,7 @@
               </div>
               <div class="field"><label>Notes</label><textarea id="workshopNotes" rows="5"></textarea></div>
               <div class="actions">
-                <button class="button" onclick="saveWorkshop()">Save Workshop</button>
+                <button class="button" onclick="saveWorkshop(this)">Save Workshop</button>
                 <button class="button secondary" onclick="resetWorkshopForm()">Clear</button>
               </div>
             </div>
@@ -771,9 +774,9 @@
               </div>
 
               <div class="form-row-3">
-                <div class="field"><label>Consulting Discount</label><input id="consultingDiscount" type="number" min="0" placeholder="0"></div>
-                <div class="field"><label>Prep Discount</label><input id="prepDiscount" type="number" min="0" placeholder="0"></div>
-                <div class="field"><label>Assessment Discount</label><input id="assessmentDiscount" type="number" min="0" placeholder="0"></div>
+                <div class="field"><label>Consulting Discount</label><input id="consultingDiscount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0"></div>
+                <div class="field"><label>Prep Discount</label><input id="prepDiscount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0"></div>
+                <div class="field"><label>Assessment Discount</label><input id="assessmentDiscount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0"></div>
               </div>
 
               <div class="field"><label>Estimate Name / Notes</label><input id="estimateName" placeholder="Loma Vista Staff Retreat"></div>
@@ -787,7 +790,7 @@
 
               <div class="actions">
                 <button class="button secondary" onclick="previewEstimate()">Preview Estimate</button>
-                <button class="button" onclick="saveEstimate()">Save Estimate</button>
+                <button class="button" onclick="saveEstimate(this)">Save Estimate</button>
                 <button class="button ghost" onclick="resetEstimateForm()">Cancel / Clear</button>
               </div>
             </div>
@@ -811,11 +814,11 @@
               </div>
               <div class="field"><label>Status</label><select id="invStatus"><option>Draft</option><option>Sent</option><option>Viewed</option><option>Partially Paid</option><option>Paid</option><option>Overdue</option><option>Canceled</option><option>Void</option></select></div>
               <div class="field"><label>Client / Organization</label><input id="invClientName" list="clientsDatalist" onchange="selectInvoiceClient()" oninput="selectInvoiceClient(false)"></div>
-              <div class="field"><label>Client Email</label><input id="invClientEmail" type="email"></div>
+              <div class="field"><label>Client Email</label><input id="invClientEmail" type="email" inputmode="email" autocomplete="email"></div>
               <div class="form-row-3">
-                <div class="field"><label>Consulting Discount</label><input id="invConsultingDiscount" type="number" min="0" placeholder="0"></div>
-                <div class="field"><label>Prep Discount</label><input id="invPrepDiscount" type="number" min="0" placeholder="0"></div>
-                <div class="field"><label>Assessment Discount</label><input id="invAssessmentDiscount" type="number" min="0" placeholder="0"></div>
+                <div class="field"><label>Consulting Discount</label><input id="invConsultingDiscount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0"></div>
+                <div class="field"><label>Prep Discount</label><input id="invPrepDiscount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0"></div>
+                <div class="field"><label>Assessment Discount</label><input id="invAssessmentDiscount" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0"></div>
               </div>
               <p class="muted small" style="margin-top:-6px;">Use these only when the invoice needs a different discount than the estimate.</p>
               <div class="form-row">
@@ -834,7 +837,7 @@
               <div class="metric" style="margin-bottom:15px;"><div class="metric-label">Calculated Balance Due</div><div id="invBalancePreview" class="metric-value">$0</div></div>
               <div class="actions">
                 <button class="button secondary" onclick="previewInvoice()">Preview Invoice</button>
-                <button class="button" onclick="saveInvoiceFromForm()">Save Invoice</button>
+                <button class="button" onclick="saveInvoiceFromForm(this)">Save Invoice</button>
                 <button class="button ghost" onclick="resetInvoiceForm()">Cancel / Clear</button>
               </div>
             </div>
@@ -1048,7 +1051,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.18";
+    const APP_VERSION = "2026.07.12.19";
 
     const K = {
       clients: "jjc_clients",
@@ -1074,6 +1077,7 @@ Sanger, CA 93657"></textarea>
     let editingEstimateId = "";
     let editingInvoiceNo = "";
     let editingInvoiceSource = null;
+    const dirtyFormViews = new Set();
 
     let profile = {
       senderName: "Jeff Jones Consulting",
@@ -1165,6 +1169,43 @@ Sanger, CA 93657"></textarea>
       updateLookupLists();
     }
 
+    function focusRequiredField(id, message) {
+      const field = document.getElementById(id);
+      alert(message);
+      if (field) {
+        field.focus({ preventScroll: true });
+        field.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return false;
+    }
+
+    function beginSave(button, busyText) {
+      if (!button || button.disabled) return null;
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      button.textContent = busyText;
+      return () => {
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+        button.textContent = originalText;
+      };
+    }
+
+    function initializeDirtyFormTracking() {
+      ["clients", "workshops", "estimates", "invoices"].forEach(view => {
+        document.querySelectorAll(`#view-${view} .workspace > .card:first-child input, #view-${view} .workspace > .card:first-child select, #view-${view} .workspace > .card:first-child textarea`).forEach(field => {
+          field.addEventListener("input", () => dirtyFormViews.add(view));
+          field.addEventListener("change", () => dirtyFormViews.add(view));
+        });
+      });
+      window.addEventListener("beforeunload", event => {
+        if (!dirtyFormViews.size) return;
+        event.preventDefault();
+        event.returnValue = "";
+      });
+    }
+
     function closeSidebar() {
       document.getElementById("sidebar").classList.remove("open");
       const backdrop = document.getElementById("sidebarBackdrop");
@@ -1201,6 +1242,11 @@ Sanger, CA 93657"></textarea>
     }
 
     function showView(view) {
+      const currentView = document.querySelector(".view.active")?.id.replace("view-", "") || "";
+      if (currentView && currentView !== view && dirtyFormViews.has(currentView)) {
+        if (!confirm("Leave this form without saving your changes?")) return false;
+        dirtyFormViews.delete(currentView);
+      }
       document.querySelectorAll(".mobile-action-overflow.open").forEach(item => item.classList.remove("open"));
       document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
       document.getElementById("view-" + view).classList.add("active");
@@ -1365,12 +1411,13 @@ Sanger, CA 93657"></textarea>
     }
 
     async function resetClientForm() {
+      dirtyFormViews.delete("clients");
       document.getElementById("clientId").value = nextId(clients, "CLI", "ClientID");
       ["clientOrg", "clientContact", "clientEmail", "clientPhone", "clientNotes"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("clientId").value = await reserveNumberOrFallback("client", document.getElementById("clientId").value);
     }
 
-    async function saveClient() {
+    async function saveClient(button) {
       const c = {
         ClientID: document.getElementById("clientId").value.trim(),
         Organization: document.getElementById("clientOrg").value.trim(),
@@ -1379,13 +1426,22 @@ Sanger, CA 93657"></textarea>
         Phone: document.getElementById("clientPhone").value.trim(),
         Notes: document.getElementById("clientNotes").value.trim()
       };
-      if (!c.ClientID || !c.Organization) return alert("Client ID and Organization are required.");
-      clients = [c, ...clients.filter(x => x.ClientID !== c.ClientID)];
-      saveLocal(K.clients, clients);
-      await Database.saveClient(c);
-      resetClientForm();
-      renderClients();
-      toast("Client saved.");
+      if (!c.ClientID) return focusRequiredField("clientId", "Client ID is required.");
+      if (!c.Organization) return focusRequiredField("clientOrg", "Organization is required.");
+      const finishSave = beginSave(button, "Saving Client...");
+      if (!finishSave) return;
+      try {
+        await Database.saveClient(c);
+        clients = [c, ...clients.filter(x => x.ClientID !== c.ClientID)];
+        saveLocal(K.clients, clients);
+        await resetClientForm();
+        renderClients();
+        toast("Client saved.");
+      } catch (err) {
+        toast(err.message || "Unable to save client.");
+      } finally {
+        finishSave();
+      }
     }
 
     function renderClients() {
@@ -1594,6 +1650,7 @@ Sanger, CA 93657"></textarea>
     }
 
     async function resetWorkshopForm() {
+      dirtyFormViews.delete("workshops");
       document.getElementById("workshopId").value = nextId(workshops, "WRK", "WorkshopID");
       ["workshopClientName", "workshopClientId", "workshopOrg", "workshopEstimateId", "workshopInvoiceId", "workshopLocation", "workshopNotes", "workshopStartTime", "workshopEndTime", "workshopPrimaryContact", "workshopContactEmail"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("workshopDate").value = "";
@@ -1605,7 +1662,7 @@ Sanger, CA 93657"></textarea>
       document.getElementById("workshopId").value = await reserveNumberOrFallback("workshop", document.getElementById("workshopId").value);
     }
 
-    async function saveWorkshop() {
+    async function saveWorkshop(button) {
       selectWorkshopClient(false);
       const w = {
         WorkshopID: document.getElementById("workshopId").value.trim(),
@@ -1626,13 +1683,22 @@ Sanger, CA 93657"></textarea>
         Location: document.getElementById("workshopLocation").value.trim(),
         Notes: document.getElementById("workshopNotes").value.trim()
       };
-      if (!w.WorkshopID || !w.Organization) return alert("Workshop ID and Organization are required.");
-      workshops = upsertPreservingOrder(workshops, w, "WorkshopID");
-      saveLocal(K.workshops, workshops);
-      await Database.saveWorkshop(w);
-      resetWorkshopForm();
-      renderWorkshops();
-      toast("Workshop saved.");
+      if (!w.WorkshopID) return focusRequiredField("workshopId", "Workshop ID is required.");
+      if (!w.Organization) return focusRequiredField("workshopOrg", "Organization is required.");
+      const finishSave = beginSave(button, "Saving Workshop...");
+      if (!finishSave) return;
+      try {
+        await Database.saveWorkshop(w);
+        workshops = upsertPreservingOrder(workshops, w, "WorkshopID");
+        saveLocal(K.workshops, workshops);
+        await resetWorkshopForm();
+        renderWorkshops();
+        toast("Workshop saved.");
+      } catch (err) {
+        toast(err.message || "Unable to save workshop.");
+      } finally {
+        finishSave();
+      }
     }
 
     function renderWorkshops() {
@@ -2158,7 +2224,27 @@ Sanger, CA 93657"></textarea>
       });
     }
 
-    async function saveEstimate() {
+    async function saveEstimate(button) {
+      const finishSave = beginSave(button, "Saving Estimate...");
+      if (!finishSave) return;
+      const previousEstimates = [...estimates];
+      const previousWorkshops = [...workshops];
+      try {
+        await saveEstimateRecord();
+      } catch (err) {
+        estimates = previousEstimates;
+        workshops = previousWorkshops;
+        localStorage.setItem(K.estimates, JSON.stringify(estimates));
+        localStorage.setItem(K.workshops, JSON.stringify(workshops));
+        renderEstimates();
+        renderWorkshops();
+        toast(err.message || "Unable to save estimate.");
+      } finally {
+        finishSave();
+      }
+    }
+
+    async function saveEstimateRecord() {
       if (!editingEstimateId && !reservedEstimateId) reservedEstimateId = await reserveNumberOrFallback("estimate", nextId(estimates, "EST", "id"));
       const estimate = getEstimateFromForm();
       estimates = upsertPreservingOrder(estimates, estimate, "id");
@@ -2216,6 +2302,7 @@ Sanger, CA 93657"></textarea>
     }
 
     async function resetEstimateForm() {
+      dirtyFormViews.delete("estimates");
       editingEstimateId = "";
       pendingWorkshopEstimateId = "";
       reservedEstimateId = "";
@@ -2310,6 +2397,7 @@ Sanger, CA 93657"></textarea>
     }
 
     async function resetInvoiceForm() {
+      dirtyFormViews.delete("invoices");
       editingInvoiceNo = "";
       window.currentEstimateForInvoice = null;
       editingInvoiceSource = null;
@@ -2400,16 +2488,16 @@ Sanger, CA 93657"></textarea>
     function getInvoiceFromForm() {
       const clientName = document.getElementById("invClientName").value.trim();
       if (!clientName) {
-        alert("Client / Organization is required.");
+        focusRequiredField("invClientName", "Client / Organization is required.");
         return null;
       }
       const source = getInvoiceSourceForForm();
       const c = source ? invoiceCalcFromSource(source) : recalc();
       const amountPaid = Number(document.getElementById("invAmountPaid").value || 0);
-      if (amountPaid < 0) return alert("Amount paid cannot be negative."), null;
-      if (amountPaid > Number(c.total || 0)) return alert("Amount paid cannot exceed the invoice total."), null;
+      if (amountPaid < 0) return focusRequiredField("invAmountPaid", "Amount paid cannot be negative."), null;
+      if (amountPaid > Number(c.total || 0)) return focusRequiredField("invAmountPaid", "Amount paid cannot exceed the invoice total."), null;
       let status = document.getElementById("invStatus").value;
-      if (status === "Void" && !document.getElementById("invVoidReason").value.trim()) return alert("A void reason is required."), null;
+      if (status === "Void" && !document.getElementById("invVoidReason").value.trim()) return focusRequiredField("invVoidReason", "A void reason is required."), null;
       if (!["Canceled", "Void"].includes(status)) {
         if (amountPaid === Number(c.total || 0) && Number(c.total || 0) > 0) status = "Paid";
         else if (amountPaid > 0) status = "Partially Paid";
@@ -2446,10 +2534,26 @@ Sanger, CA 93657"></textarea>
       showDocumentPreview(invoice, "Invoice");
     }
 
-    async function saveInvoiceFromForm() {
+    async function saveInvoiceFromForm(button) {
       if (!editingInvoiceNo && !document.getElementById("invNo").value.trim()) document.getElementById("invNo").value = await reserveNumberOrFallback("invoice", nextId(invoices, "INV", "invoiceNo"));
       const invoice = getInvoiceFromForm();
       if (!invoice) return;
+      const finishSave = beginSave(button, "Saving Invoice...");
+      if (!finishSave) return;
+      const previousInvoices = [...invoices];
+      try {
+        await saveInvoiceRecord(invoice);
+      } catch (err) {
+        invoices = previousInvoices;
+        localStorage.setItem(K.invoices, JSON.stringify(invoices));
+        renderInvoices();
+        toast(err.message || "Unable to save invoice.");
+      } finally {
+        finishSave();
+      }
+    }
+
+    async function saveInvoiceRecord(invoice) {
       invoices = upsertPreservingOrder(invoices, invoice, "invoiceNo");
       saveLocal(K.invoices, invoices);
       renderInvoices();
@@ -2912,6 +3016,7 @@ Sanger, CA 93657"></textarea>
       renderInvoices();
       updateMetrics();
       updateLookupLists();
+      initializeDirtyFormTracking();
       const initial = location.hash ? location.hash.replace("#", "") : "dashboard";
       if (document.getElementById("view-" + initial)) showView(initial);
     });
