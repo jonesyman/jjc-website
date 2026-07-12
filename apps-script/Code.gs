@@ -12,6 +12,8 @@ const EMAIL_HEADERS = ["sentDate", "firstSentDate", "lastSentDate", "sentTo", "s
 const WORKSHOP_HEADERS = ["WorkshopDate", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization"];
 const ARCHIVE_HEADERS = ["archived", "archivedDate"];
 const INVOICE_LIFECYCLE_HEADERS = ["amountPaid", "balanceDue", "paidDate", "paymentMethod", "paymentReference", "voidReason"];
+const ASSESSMENT_IMPORT_HEADERS = ["AssessmentImportID", "WorkshopID", "GroupName", "OriginalFileName", "ParticipantCount", "ImportedDate", "UpdatedDate", "Active", "ImportStatus", "ValidationWarnings", "SourceType", "SourceVersion", "LeaderAssessmentResultID", "LeaderFirstName", "LeaderLastName", "LeaderSelectedDate", "LeaderUpdatedDate", "TeamPdfFileId", "TeamPdfUrl", "TeamPdfGeneratedDate"];
+const ASSESSMENT_RESULT_HEADERS = ["AssessmentResultID", "AssessmentImportID", "WorkshopID", "FirstName", "LastName", "DisplayName", "GroupName", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "SortOrder", "ImportedDate", "UpdatedDate", "Active"];
 const PDF_ROOT_FOLDER = "Jeff Jones Consulting PDFs";
 const PDF_ESTIMATE_FOLDER = "Estimates";
 const PDF_INVOICE_FOLDER = "Invoices";
@@ -36,6 +38,7 @@ function doGet(e) {
     if (action === "invoices") return jsonResponse(getRows(SHEET_NAMES.invoices));
     if (action === "workshops") return jsonResponse(getRows(SHEET_NAMES.workshops));
     if (action === "reserveNumber") return jsonResponse(reserveRecordNumber(e.parameter.type));
+    if (action === "getWorkshopAssessment") return jsonResponse(getWorkshopAssessment(e.parameter.workshopId));
     if (action === "generateEstimatePdf") return jsonResponse(generatePdfForRecord("estimate", e.parameter.id));
     if (action === "generateInvoicePdf") return jsonResponse(generatePdfForRecord("invoice", e.parameter.invoiceNo));
     if (action === "sendEstimateEmail") return jsonResponse(sendEmailForRecord("estimate", e.parameter));
@@ -132,6 +135,10 @@ function doPost(e) {
       return jsonResponse({ success: true });
     }
 
+    if (action === "saveWorkshopAssessment") {
+      return jsonResponse(saveWorkshopAssessment(body.data || {}));
+    }
+
     if (action === "deleteWorkshop") {
       deleteRowById(SHEET_NAMES.workshops, "WorkshopID", (body.data || {}).id);
       return jsonResponse({ success: true });
@@ -150,6 +157,75 @@ function doPost(e) {
     return jsonResponse({ error: "Unknown action: " + action });
   } catch (err) {
     return jsonResponse({ error: String(err && err.message ? err.message : err) });
+  }
+}
+
+function ensureSheetWithHeaders(sheetName, headers) {
+  const spreadsheet = SpreadsheetApp.getActive();
+  let sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) sheet = spreadsheet.insertSheet(sheetName);
+  if (sheet.getLastColumn() === 0) sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  ensureHeaders(sheetName, headers);
+  return sheet;
+}
+
+function getWorkshopAssessment(workshopId) {
+  if (!workshopId) throw new Error("Workshop ID is required.");
+  const imports = getRows("AssessmentImports").filter(row => String(row.WorkshopID) === String(workshopId) && String(row.Active).toLowerCase() !== "false");
+  if (!imports.length) return { workshopId: workshopId, import: null, results: [] };
+  const activeImport = imports[imports.length - 1];
+  const results = getRows("AssessmentResults").filter(row => String(row.AssessmentImportID) === String(activeImport.AssessmentImportID) && String(row.Active).toLowerCase() !== "false");
+  return { workshopId: workshopId, import: activeImport, results: results };
+}
+
+function saveWorkshopAssessment(data) {
+  const workshopId = String(data.workshopId || "").trim();
+  const participants = Array.isArray(data.participants) ? data.participants : [];
+  if (!workshopId || !getRowById(SHEET_NAMES.workshops, "WorkshopID", workshopId)) throw new Error("The target workshop does not exist.");
+  if (!participants.length) throw new Error("At least one participant is required.");
+  const validTypes = ["Wonder", "Invention", "Discernment", "Galvanizing", "Enablement", "Tenacity"];
+  const seen = {};
+  participants.forEach((participant, index) => {
+    const name = String(participant.firstName || "").trim() + " " + String(participant.lastName || "").trim();
+    if (!String(participant.firstName || "").trim() || !String(participant.lastName || "").trim()) throw new Error("Participant " + (index + 1) + " is missing a name.");
+    const values = [participant.genius1, participant.genius2, participant.competency1, participant.competency2, participant.frustration1, participant.frustration2];
+    if (values.some(value => validTypes.indexOf(value) === -1) || new Set(values).size !== 6) throw new Error(name + " must have all six valid Working Genius types exactly once.");
+    const key = workshopId + "|" + String(participant.firstName).trim().toLowerCase().replace(/\s+/g, " ") + "|" + String(participant.lastName).trim().toLowerCase().replace(/\s+/g, " ");
+    if (seen[key]) throw new Error("Duplicate participant: " + name);
+    seen[key] = true;
+  });
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const importSheet = ensureSheetWithHeaders("AssessmentImports", ASSESSMENT_IMPORT_HEADERS);
+    const resultSheet = ensureSheetWithHeaders("AssessmentResults", ASSESSMENT_RESULT_HEADERS);
+    const existing = getWorkshopAssessment(workshopId);
+    if (existing.import) throw new Error("This workshop already has assessment results. Updated merge and replace workflows will be added in the next Phase 12 segment.");
+    const now = new Date().toISOString();
+    const importId = "AIM-" + Utilities.getUuid();
+    const importStartRow = importSheet.getLastRow() + 1;
+    const resultStartRow = resultSheet.getLastRow() + 1;
+    try {
+      appendRow("AssessmentImports", {
+        AssessmentImportID: importId, WorkshopID: workshopId, GroupName: String(data.groupName || ""), OriginalFileName: String(data.fileName || ""), ParticipantCount: participants.length,
+        ImportedDate: now, UpdatedDate: now, Active: true, ImportStatus: "Imported", ValidationWarnings: JSON.stringify(data.warnings || []), SourceType: "Working Genius XLSX", SourceVersion: "Individual Results"
+      });
+      participants.forEach((participant, index) => appendRow("AssessmentResults", {
+        AssessmentResultID: "ASR-" + Utilities.getUuid(), AssessmentImportID: importId, WorkshopID: workshopId,
+        FirstName: participant.firstName, LastName: participant.lastName, DisplayName: participant.firstName + " " + participant.lastName, GroupName: participant.groupName || data.groupName || "",
+        Genius1: participant.genius1, Genius2: participant.genius2, Competency1: participant.competency1, Competency2: participant.competency2, Frustration1: participant.frustration1, Frustration2: participant.frustration2,
+        SortOrder: participant.sortOrder || index + 1, ImportedDate: now, UpdatedDate: now, Active: true
+      }));
+    } catch (writeError) {
+      const addedResults = resultSheet.getLastRow() - resultStartRow + 1;
+      if (addedResults > 0) resultSheet.deleteRows(resultStartRow, addedResults);
+      if (importSheet.getLastRow() >= importStartRow) importSheet.deleteRow(importStartRow);
+      throw writeError;
+    }
+    return { success: true, workshopId: workshopId, assessmentImportId: importId, participantCount: participants.length };
+  } finally {
+    lock.releaseLock();
   }
 }
 

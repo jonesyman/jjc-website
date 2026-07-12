@@ -164,6 +164,20 @@ saveSettings(data) {
         return this.post("deleteWorkshop", { id });
     },
 
+    getWorkshopAssessment(workshopId) {
+        return this.get("getWorkshopAssessment", { workshopId });
+    },
+
+    async saveWorkshopAssessment(data) {
+        await this.postNoCors("saveWorkshopAssessment", data);
+        for (let attempt = 1; attempt <= 5; attempt++) {
+            await this.wait(attempt * 500);
+            const assessment = await this.getWorkshopAssessment(data.workshopId);
+            if (assessment && assessment.import && Number(assessment.import.ParticipantCount) === data.participants.length) return assessment;
+        }
+        throw new Error("Google Sheets did not confirm the assessment import.");
+    },
+
     //----------------------------------------------------
     // Estimates
     //----------------------------------------------------
