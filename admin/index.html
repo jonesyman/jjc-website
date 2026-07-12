@@ -193,6 +193,27 @@
       padding: 10px 0;
     }
 
+    .client-detail {
+      margin-top: 16px;
+    }
+
+    .client-detail-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .client-detail-section {
+      margin-top: 18px;
+    }
+
+    .client-detail-records {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
     .form-row {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -329,6 +350,8 @@
 
       .dashboard-grid,
       .dashboard-sections,
+      .client-detail-summary,
+      .client-detail-records,
       .form-row,
       .form-row-3,
       .workshop-filters {
@@ -498,6 +521,18 @@
               <div id="clientsList" class="list-grid"></div>
               <p id="noClientsMsg" class="muted small">No clients yet.</p>
             </div>
+          </div>
+          <div id="clientDetail" class="card client-detail hidden">
+            <div class="section-title"><div><h2 id="clientDetailName">Client Details</h2><div id="clientDetailContact" class="tiny muted"></div></div><div class="actions"><button class="button secondary small-btn" id="clientDetailEditButton">Edit Client</button><button class="button ghost small-btn" onclick="closeClientDetail()">Close</button></div></div>
+            <div id="clientDetailNotes" class="muted small"></div>
+            <div class="client-detail-summary">
+              <div class="metric"><div class="metric-label">Total Billed</div><div id="clientTotalBilled" class="metric-value">$0</div><div class="metric-note">Excludes canceled and void invoices</div></div>
+              <div class="metric"><div class="metric-label">Total Paid</div><div id="clientTotalPaid" class="metric-value">$0</div><div class="metric-note">Recorded payments or paid invoices</div></div>
+              <div class="metric"><div class="metric-label">Outstanding</div><div id="clientOutstanding" class="metric-value">$0</div><div class="metric-note">Open invoice balances</div></div>
+            </div>
+            <div class="client-detail-section"><div class="section-title"><h3>Workshops</h3><span id="clientWorkshopCount" class="tiny muted"></span></div><div id="clientDetailWorkshops" class="client-detail-records"></div></div>
+            <div class="client-detail-section"><div class="section-title"><h3>Estimates</h3><span id="clientEstimateCount" class="tiny muted"></span></div><div id="clientDetailEstimates" class="client-detail-records"></div></div>
+            <div class="client-detail-section"><div class="section-title"><h3>Invoices</h3><span id="clientInvoiceCount" class="tiny muted"></span></div><div id="clientDetailInvoices" class="client-detail-records"></div></div>
           </div>
         </section>
 
@@ -781,7 +816,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.1";
+    const APP_VERSION = "2026.07.12.2";
 
     const K = {
       clients: "jjc_clients",
@@ -1085,9 +1120,72 @@ Sanger, CA 93657"></textarea>
       filtered.forEach(c => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(c.Organization)}</div><div class="tiny muted">${esc(c.ClientID)} • ${esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button secondary small-btn" onclick="editClient('${jsEsc(c.ClientID)}')">Edit</button><button class="button ghost small-btn" onclick="deleteClient('${jsEsc(c.ClientID)}')">Delete</button></div>`;
+        el.innerHTML = `<div class="record-title">${esc(c.Organization)}</div><div class="tiny muted">${esc(c.ClientID)} • ${esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button small-btn" onclick="showClientDetail('${jsEsc(c.ClientID)}')">View Details</button><button class="button secondary small-btn" onclick="editClient('${jsEsc(c.ClientID)}')">Edit</button><button class="button ghost small-btn" onclick="deleteClient('${jsEsc(c.ClientID)}')">Delete</button></div>`;
         wrap.appendChild(el);
       });
+    }
+
+    function showClientDetail(id) {
+      const client = clients.find(c => c.ClientID === id);
+      if (!client) return toast("Client not found.");
+      const org = String(client.Organization || "").trim().toLowerCase();
+      const clientWorkshops = uniqueRecords(workshops.filter(w => w.ClientID === id || String(w.Organization || "").trim().toLowerCase() === org), "WorkshopID");
+      const workshopEstimateIds = new Set(clientWorkshops.map(w => w.EstimateID).filter(Boolean));
+      const workshopInvoiceIds = new Set(clientWorkshops.map(w => w.InvoiceID).filter(Boolean));
+      const clientEstimates = uniqueRecords(estimates.filter(e => e.ClientID === id || e.clientId === id || workshopEstimateIds.has(e.id) || clientNameMatchesOrganization(e.name, org)), "id");
+      const estimateIds = new Set(clientEstimates.map(e => e.id));
+      const clientInvoices = uniqueRecords(invoices.filter(inv => inv.ClientID === id || inv.clientId === id || workshopInvoiceIds.has(inv.invoiceNo) || estimateIds.has(inv.estimateId) || clientNameMatchesOrganization(inv.clientName, org)), "invoiceNo");
+      const financialInvoices = clientInvoices.filter(inv => !["canceled", "cancelled", "void"].includes(String(inv.status || inv.Status || "").toLowerCase()));
+      const totalBilled = financialInvoices.reduce((sum, inv) => sum + Number(inv.total || 0), 0);
+      const totalPaid = financialInvoices.reduce((sum, inv) => {
+        const amountPaid = Number(inv.amountPaid || inv.AmountPaid || 0);
+        return sum + (amountPaid || (String(inv.status || inv.Status || "").toLowerCase() === "paid" ? Number(inv.total || 0) : 0));
+      }, 0);
+      const outstanding = financialInvoices.reduce((sum, inv) => {
+        if (String(inv.status || inv.Status || "").toLowerCase() === "paid") return sum;
+        const balance = inv.balanceDue !== undefined && inv.balanceDue !== "" ? Number(inv.balanceDue) : Math.max(0, Number(inv.total || 0) - Number(inv.amountPaid || inv.AmountPaid || 0));
+        return sum + balance;
+      }, 0);
+
+      document.getElementById("clientDetailName").textContent = client.Organization || "Client Details";
+      document.getElementById("clientDetailContact").textContent = [client.Contact, client.Email, client.Phone].filter(Boolean).join(" • ") || client.ClientID;
+      document.getElementById("clientDetailNotes").textContent = client.Notes || "No client notes.";
+      document.getElementById("clientTotalBilled").textContent = JJC_money(totalBilled);
+      document.getElementById("clientTotalPaid").textContent = JJC_money(totalPaid);
+      document.getElementById("clientOutstanding").textContent = JJC_money(outstanding);
+      document.getElementById("clientWorkshopCount").textContent = `${clientWorkshops.length} records`;
+      document.getElementById("clientEstimateCount").textContent = `${clientEstimates.length} records`;
+      document.getElementById("clientInvoiceCount").textContent = `${clientInvoices.length} records`;
+      document.getElementById("clientDetailEditButton").onclick = () => editClient(id);
+
+      renderClientRecords("clientDetailWorkshops", clientWorkshops.map(w => ({ title: w.WorkshopID, meta: `${formatDate(w.WorkshopDate)} • ${normalizeWorkshopStatus(w.Status)}`, action: `editWorkshop('${jsEsc(w.WorkshopID)}')` })), "No workshops linked.");
+      renderClientRecords("clientDetailEstimates", clientEstimates.map(e => ({ title: e.id, meta: `${e.status || "Draft"} • ${JJC_money(e.total)}`, action: `editEstimate('${jsEsc(e.id)}')` })), "No estimates linked.");
+      renderClientRecords("clientDetailInvoices", clientInvoices.map(inv => ({ title: inv.invoiceNo, meta: `${inv.status || "Draft"} • ${JJC_money(inv.total)}`, action: `editInvoice('${jsEsc(inv.invoiceNo)}')` })), "No invoices linked.");
+      document.getElementById("clientDetail").classList.remove("hidden");
+      document.getElementById("clientDetail").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function clientNameMatchesOrganization(name, normalizedOrg) {
+      const value = String(name || "").trim().toLowerCase();
+      return Boolean(normalizedOrg) && (value === normalizedOrg || value.startsWith(normalizedOrg + " - "));
+    }
+
+    function uniqueRecords(records, key) {
+      const seen = new Set();
+      return records.filter(record => {
+        const value = String(record[key] || "");
+        if (!value || seen.has(value)) return false;
+        seen.add(value);
+        return true;
+      });
+    }
+
+    function renderClientRecords(id, records, emptyMessage) {
+      document.getElementById(id).innerHTML = records.length ? records.map(record => `<div class="dashboard-item"><div class="dashboard-item-title">${esc(record.title)}</div><div class="tiny muted">${esc(record.meta)}</div><div class="actions"><button class="button secondary small-btn" onclick="${record.action}">Open</button></div></div>`).join("") : `<div class="dashboard-empty">${esc(emptyMessage)}</div>`;
+    }
+
+    function closeClientDetail() {
+      document.getElementById("clientDetail").classList.add("hidden");
     }
 
     function editClient(id) {
