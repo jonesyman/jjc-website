@@ -5,13 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>JJC Admin Console</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="icon" href="../assets/images/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
   <link rel="apple-touch-icon" href="../assets/images/apple-touch-icon.png">
   <link rel="manifest" href="../assets/images/site.webmanifest">
 
-  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/admin.css?v=2026071223">
 
   <style>
     .admin-shell {
@@ -402,6 +406,41 @@
     .team-map-name { overflow-wrap:anywhere; }
     .team-map-leader { font-weight:400; }
     .team-map-footer { border-top:1px solid #cbd5e1; margin-top:10px; padding-top:7px; display:flex; justify-content:space-between; gap:14px; color:#64748b; font-size:8.5px; line-height:1.35; }
+
+    /* Working Genius-inspired visual system */
+    body { font-family:"Montserrat",Arial,Helvetica,sans-serif; background:#18222F; }
+    .admin-main { background:radial-gradient(circle at 82% 0%,rgba(79,143,234,.09),transparent 28%),#18222F; }
+    .sidebar { background:#111827; border-right-color:#364152; }
+    .sidebar-title { font-weight:650; letter-spacing:-.02em; }
+    .sidebar-subtitle { color:#8C96A6; font-weight:500; }
+    .side-nav button { color:#B8C0CC; font-weight:600; transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .16s ease; }
+    .side-nav button:hover { background:rgba(79,143,234,.12); border-color:rgba(79,143,234,.28); transform:translateX(2px); }
+    .side-nav button.active { background:rgba(79,143,234,.18); border-color:#4F8FEA; color:#F8FAFC; box-shadow:inset 3px 0 0 #4F8FEA; }
+    .admin-topbar { background:rgba(24,34,47,.94); border-bottom-color:#364152; }
+    .card,.metric,.dashboard-item,.assessment-result-card,.team-view-card,.genius-metric,.practice-card,.tutorial-step { background:#232F3E; border-color:#364152; box-shadow:0 10px 26px rgba(0,0,0,.13); }
+    .metric { border-radius:14px; }
+    .metric-label { color:#8C96A6; font-weight:600; letter-spacing:.10em; }
+    .metric-value { color:#F8FAFC; font-weight:650; }
+    .dashboard-item { background:#1E2936; transition:border-color .16s ease,transform .16s ease; }
+    .dashboard-item:hover { border-color:#4F8FEA; transform:translateY(-1px); }
+    .dashboard-item-title { color:#F8FAFC; font-weight:650; }
+    .status-badge { color:#B8C0CC; background:#1E2936; border-color:#364152; font-weight:600; }
+    table.admin-table th { color:#B8C0CC; }
+    .estimate-box { background:rgba(38,56,96,.55); border-color:#364152; }
+    .radio-card { background:#1E2936; border-color:#364152; }
+    .send-dialog { background:#232F3E; border-color:#364152; }
+    .team-view-card,.genius-metric { background:linear-gradient(180deg,#263646,#232F3E); }
+    .team-view-abbr,.genius-metric-abbr { background:#4F8FEA; }
+    .team-genius-label,.team-genius-list,.genius-metric-percent { color:#34C759; }
+    .team-frustration-label,.team-frustration-list,.assessment-error { color:#FF5A5F; }
+    .assessment-warning { color:#FFB020; }
+    .view.active { animation:viewFade .18s ease-out; }
+    .dialog-backdrop.open { animation:backdropFade .16s ease-out; }
+    .dialog-backdrop.open .send-dialog { animation:dialogRise .18s ease-out; }
+    @keyframes viewFade { from { opacity:.4; transform:translateY(3px); } to { opacity:1; transform:none; } }
+    @keyframes backdropFade { from { opacity:0; } to { opacity:1; } }
+    @keyframes dialogRise { from { opacity:0; transform:translateY(8px) scale(.99); } to { opacity:1; transform:none; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
     @page { size:Letter portrait; margin:0; }
     @media print { .team-map-sheet { width:8.5in; min-height:11in; box-shadow:none; padding:.42in .48in .34in; } .team-map-panel { break-inside:avoid; } }
 
@@ -501,7 +540,7 @@
         position: sticky;
         top: 0;
         z-index: 30;
-        background: rgba(8,15,30,.96);
+        background: rgba(24,34,47,.97);
         backdrop-filter: blur(14px);
       }
       .admin-topbar h2 { margin:0; font-size:20px; line-height:1.15; }
@@ -533,7 +572,7 @@
       .analytics-results { grid-template-columns:1fr; }
       .assessment-dialog { height:100dvh; max-height:100dvh; border-radius:0; border-left:0; border-right:0; padding:14px; }
       .assessment-dialog-backdrop { padding:0; }
-      .assessment-dialog > .section-title:first-child { position:sticky; top:-14px; z-index:4; background:#0f172a; padding:14px 0 12px; }
+      .assessment-dialog > .section-title:first-child { position:sticky; top:-14px; z-index:4; background:#232F3E; padding:14px 0 12px; }
       .assessment-action-bar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
       .assessment-action-bar > .button { width:100%; }
       #teamMapPreview { padding:8px; overflow:auto; }
@@ -1086,7 +1125,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.22";
+    const APP_VERSION = "2026.07.12.23";
 
     const K = {
       clients: "jjc_clients",
