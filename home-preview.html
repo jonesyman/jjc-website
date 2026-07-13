@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Public Homepage Design Preview | Jeff Jones Consulting</title>
+  <style>
+    html, body, iframe { width: 100%; min-height: 100%; margin: 0; border: 0; }
+    body { background: #18222f; }
+    iframe { display: block; height: 100vh; }
+  </style>
+</head>
+<body>
+  <iframe id="homepagePreview" src="index.html" title="Jeff Jones Consulting homepage design preview"></iframe>
+  <script>
+    const frame = document.getElementById("homepagePreview");
+    frame.addEventListener("load", () => {
+      const doc = frame.contentDocument;
+      if (!doc || doc.getElementById("publicPreviewStyles")) return;
+
+      const previewStyles = doc.createElement("link");
+      previewStyles.id = "publicPreviewStyles";
+      previewStyles.rel = "stylesheet";
+      previewStyles.href = "assets/css/site-preview.css?v=1";
+      doc.head.appendChild(previewStyles);
+      doc.body.classList.add("public-design-preview");
+
+      const nav = doc.querySelector("header nav");
+      if (nav) {
+        nav.id = "publicPreviewNav";
+        const toggle = doc.createElement("button");
+        toggle.className = "preview-menu-toggle";
+        toggle.type = "button";
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.setAttribute("aria-controls", nav.id);
+        toggle.innerHTML = '<span></span><span></span><span></span><span class="preview-menu-label">Menu</span>';
+        nav.before(toggle);
+        toggle.addEventListener("click", () => {
+          const open = doc.body.classList.toggle("preview-menu-open");
+          toggle.setAttribute("aria-expanded", String(open));
+          toggle.querySelector(".preview-menu-label").textContent = open ? "Close" : "Menu";
+        });
+        nav.querySelectorAll("a").forEach(link => link.addEventListener("click", () => {
+          doc.body.classList.remove("preview-menu-open");
+          toggle.setAttribute("aria-expanded", "false");
+          toggle.querySelector(".preview-menu-label").textContent = "Menu";
+        }));
+      }
+    });
+  </script>
+</body>
+</html>
