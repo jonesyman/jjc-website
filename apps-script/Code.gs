@@ -10,6 +10,7 @@ const SHEET_NAMES = {
 const PDF_HEADERS = ["pdfUrl", "pdfFileId", "pdfGeneratedDate"];
 const EMAIL_HEADERS = ["sentDate", "firstSentDate", "lastSentDate", "sentTo", "sentCc", "sentSubject", "sendCount"];
 const WORKSHOP_HEADERS = ["WorkshopDate", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization"];
+const ESTIMATE_HEADERS = ["ClientID", "ClientName"];
 const ARCHIVE_HEADERS = ["archived", "archivedDate"];
 const INVOICE_LIFECYCLE_HEADERS = ["amountPaid", "balanceDue", "paidDate", "paymentMethod", "paymentReference", "voidReason"];
 const ASSESSMENT_IMPORT_HEADERS = ["AssessmentImportID", "WorkshopID", "GroupName", "OriginalFileName", "ParticipantCount", "ImportedDate", "UpdatedDate", "Active", "ImportStatus", "ValidationWarnings", "SourceType", "SourceVersion", "LeaderAssessmentResultID", "LeaderFirstName", "LeaderLastName", "LeaderSelectedDate", "LeaderUpdatedDate", "TeamPdfFileId", "TeamPdfUrl", "TeamPdfGeneratedDate"];
@@ -105,7 +106,7 @@ function doPost(e) {
     }
 
     if (action === "saveEstimate") {
-      ensureHeaders(SHEET_NAMES.estimates, PDF_HEADERS.concat(EMAIL_HEADERS, ARCHIVE_HEADERS));
+      ensureHeaders(SHEET_NAMES.estimates, ESTIMATE_HEADERS.concat(PDF_HEADERS, EMAIL_HEADERS, ARCHIVE_HEADERS));
       upsertRow(SHEET_NAMES.estimates, "id", body.data || {});
       return jsonResponse({ success: true });
     }

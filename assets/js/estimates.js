@@ -5,6 +5,7 @@ window.Estimates = {
 return {
   id: estimate.id,
   ClientID: estimate.clientId || "",
+  ClientName: estimate.clientName || "",
   createdAt: (estimate.createdAt || new Date().toISOString()).slice(0, 10),
   orgType: estimate.orgType,
   hours: estimate.hours,

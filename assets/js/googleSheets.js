@@ -415,5 +415,12 @@ function firstValue(source, keys) {
 }
 
 function normalizeValue(value) {
-    return String(value || "").replace(/\r\n/g, "\n").trim();
+    if (value === undefined || value === null || value === "") return "";
+    if (typeof value === "boolean") return value ? "TRUE" : "FALSE";
+    if (typeof value === "number") return String(Number(value));
+    const text = String(value).replace(/\r\n/g, "\n").trim();
+    if (/^\d{4}-\d{2}-\d{2}(?:T.*)?$/.test(text)) return text.slice(0, 10);
+    if (/^(true|false)$/i.test(text)) return text.toUpperCase();
+    if (/^-?\d+(?:\.\d+)?$/.test(text)) return String(Number(text));
+    return text;
 }

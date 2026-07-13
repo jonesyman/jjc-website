@@ -833,6 +833,11 @@
             <div class="card">
               <div class="section-title"><h2 id="estimateFormTitle">Estimate Calculator</h2><span class="tiny muted">Uses Google Sheets rates</span></div>
 
+              <div class="form-row">
+                <div class="field"><label>Client</label><input id="estimateClientName" list="clientsDatalist" placeholder="Search client name..." onchange="selectEstimateClient()" oninput="selectEstimateClient(false)"></div>
+                <div class="field"><label>Selected Client ID</label><input id="estimateClientId" readonly></div>
+              </div>
+
               <label>Organization Type</label>
               <div class="radio-stack" style="margin-bottom:15px;">
                 <label class="radio-card"><input type="radio" name="orgType" value="for_profit" checked> Corporate / For-Profit</label>
@@ -1117,15 +1122,15 @@ Sanger, CA 93657"></textarea>
   </div>
 
   <script src="../assets/js/branding.js"></script>
-  <script src="../assets/js/googleSheets.js?v=4"></script>
+  <script src="../assets/js/googleSheets.js?v=5"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
   <script src="../assets/js/rates.js"></script>
-  <script src="../assets/js/estimates.js"></script>
+  <script src="../assets/js/estimates.js?v=2"></script>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.23";
+    const APP_VERSION = "2026.07.12.24";
 
     const K = {
       clients: "jjc_clients",
@@ -1471,6 +1476,16 @@ Sanger, CA 93657"></textarea>
       }
       document.getElementById("invClientName").value = selected.Organization || "";
       document.getElementById("invClientEmail").value = selected.Email || "";
+    }
+
+    function selectEstimateClient(requireExact = true) {
+      const selected = findClientByNameOrId(document.getElementById("estimateClientName").value);
+      if (!selected) {
+        if (requireExact) document.getElementById("estimateClientId").value = "";
+        return;
+      }
+      document.getElementById("estimateClientName").value = selected.Organization || "";
+      document.getElementById("estimateClientId").value = selected.ClientID || "";
     }
 
     function nextId(collection, prefix, field) {
@@ -1898,6 +1913,8 @@ Sanger, CA 93657"></textarea>
       if (!w) return toast("Workshop not found.");
       resetEstimateForm();
       pendingWorkshopEstimateId = id;
+      document.getElementById("estimateClientName").value = w.Organization || "";
+      document.getElementById("estimateClientId").value = w.ClientID || "";
       const orgType = w.Type === "Individual Debrief" ? "individual_debrief" : (["Nonprofit", "Government", "Church"].includes(w.Type) ? "non_profit" : "for_profit");
       document.querySelector(`input[name="orgType"][value="${orgType}"]`).checked = true;
       document.getElementById("participants").value = w.Participants || 12;
@@ -2318,6 +2335,8 @@ Sanger, CA 93657"></textarea>
       return normalizeEstimate({
         ...existing,
         id,
+        clientId: document.getElementById("estimateClientId").value.trim(),
+        clientName: document.getElementById("estimateClientName").value.trim(),
         name: document.getElementById("estimateName").value.trim() || "Estimate " + (estimates.length + 1),
         createdAt: previewOnly ? new Date().toISOString() : (existing.createdAt || new Date().toISOString()),
         status: existing.status || "Draft",
@@ -2383,7 +2402,8 @@ Sanger, CA 93657"></textarea>
 
     function previewEstimate() {
       const estimate = getEstimateFromForm({ previewOnly: true });
-      showDocumentPreview({ ...estimate, invoiceNo: estimate.id, issueDate: new Date().toISOString().slice(0, 10), dueDate: "", terms: "", clientName: estimate.name, clientEmail: "", profile: { ...profile } }, "Estimate");
+      const client = clients.find(item => item.ClientID === estimate.clientId);
+      showDocumentPreview({ ...estimate, invoiceNo: estimate.id, issueDate: new Date().toISOString().slice(0, 10), dueDate: "", terms: "", clientName: estimate.clientName || estimate.name, clientEmail: client?.Email || "", profile: { ...profile } }, "Estimate");
     }
 
     function editEstimate(id) {
@@ -2397,6 +2417,9 @@ Sanger, CA 93657"></textarea>
       document.getElementById("consultingDiscount").value = Number(e.consultingGross || 0) - Number(e.consultingNet || 0) || "";
       document.getElementById("prepDiscount").value = Number(e.prepGross || 0) - Number(e.prepNet || 0) || "";
       document.getElementById("assessmentDiscount").value = Number(e.assessmentGross || 0) - Number(e.assessmentNet || 0) || "";
+      const client = clients.find(item => item.ClientID === e.clientId);
+      document.getElementById("estimateClientName").value = e.clientName || client?.Organization || "";
+      document.getElementById("estimateClientId").value = e.clientId || "";
       document.getElementById("estimateName").value = e.name || "";
       recalc();
       showView("estimates");
@@ -2411,7 +2434,7 @@ Sanger, CA 93657"></textarea>
       document.querySelector('input[name="orgType"][value="for_profit"]').checked = true;
       document.getElementById("participants").value = 12;
       document.getElementById("hours").value = 3;
-      ["consultingDiscount", "prepDiscount", "assessmentDiscount", "estimateName"].forEach(id => document.getElementById(id).value = "");
+      ["estimateClientName", "estimateClientId", "consultingDiscount", "prepDiscount", "assessmentDiscount", "estimateName"].forEach(id => document.getElementById(id).value = "");
       recalc();
       reservedEstimateId = await reserveNumberOrFallback("estimate", nextId(estimates, "EST", "id"));
     }
@@ -2443,7 +2466,7 @@ Sanger, CA 93657"></textarea>
         el.className = "record-card";
         el.innerHTML = `
           <div class="record-title">${esc(e.name)}</div>
-          <div class="tiny muted">${esc(e.id)} • ${esc(e.orgType)}</div>${isArchived(e) ? '<span class="status-badge">Archived</span>' : ''}
+          <div class="tiny muted">${esc(e.id)} • ${esc(e.clientName || "No linked client")} • ${esc(e.orgType)}</div>${isArchived(e) ? '<span class="status-badge">Archived</span>' : ''}
           <div class="record-total">${JJC_money(e.total)}</div>
           <div class="actions">
             ${isArchived(e) ? `<button class="button secondary small-btn" onclick="setRecordArchived('estimate','${jsEsc(e.id)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('estimate','${jsEsc(e.id)}')">Delete Permanently</button>` : `
@@ -2469,7 +2492,8 @@ Sanger, CA 93657"></textarea>
     function previewSavedEstimate(id) {
       const e = estimates.find(x => x.id === id);
       if (!e) return;
-      showDocumentPreview({ ...e, invoiceNo: e.id, issueDate: String(e.createdAt || "").slice(0, 10), dueDate: "", terms: "", clientName: e.name, clientEmail: "", profile: { ...profile } }, "Estimate");
+      const client = clients.find(item => item.ClientID === e.clientId);
+      showDocumentPreview({ ...e, invoiceNo: e.id, issueDate: String(e.createdAt || "").slice(0, 10), dueDate: "", terms: "", clientName: e.clientName || client?.Organization || e.name, clientEmail: client?.Email || "", profile: { ...profile } }, "Estimate");
     }
 
     function convertEstimateToInvoice(estimateId) {
@@ -2478,8 +2502,9 @@ Sanger, CA 93657"></textarea>
       showView("invoices");
       resetInvoiceForm();
       document.getElementById("invNo").value = nextId(invoices, "INV", "invoiceNo");
-      document.getElementById("invClientName").value = estimate.name || "";
-      document.getElementById("invClientEmail").value = "";
+      const client = clients.find(item => item.ClientID === estimate.clientId);
+      document.getElementById("invClientName").value = estimate.clientName || client?.Organization || estimate.name || "";
+      document.getElementById("invClientEmail").value = client?.Email || "";
       document.getElementById("invConsultingDiscount").value = Number(estimate.consultingGross || 0) - Number(estimate.consultingNet || 0) || "";
       document.getElementById("invPrepDiscount").value = Number(estimate.prepGross || 0) - Number(estimate.prepNet || 0) || "";
       document.getElementById("invAssessmentDiscount").value = Number(estimate.assessmentGross || 0) - Number(estimate.assessmentNet || 0) || "";
@@ -3008,6 +3033,8 @@ Sanger, CA 93657"></textarea>
         prepNet: Number(e.prepNet || calc.prepNet || 0),
         assessmentNet: Number(e.assessmentNet || calc.assessmentNet || 0),
         id: e.id || nextId(estimates, "EST", "id"),
+        clientId: e.clientId || e.ClientID || "",
+        clientName: e.clientName || e.ClientName || "",
         name: e.name || "Estimate",
         isIndividual: orgType === "individual_debrief",
         pdfUrl: e.pdfUrl || "",
