@@ -89,9 +89,7 @@ body.public-design-preview {
   border-color: #364152;
   border-radius: 16px;
   box-shadow: 0 14px 36px rgba(0,0,0,.16);
-  transition: border-color .16s ease, box-shadow .16s ease;
 }
-.public-design-preview .card:hover { border-color: #405064; box-shadow: 0 15px 38px rgba(0,0,0,.17); }
 .public-design-preview .muted { color: #b8c0cc; }
 .public-design-preview .checklist li::before { color: #34c759; }
 .public-design-preview .mini-bar { width: 42px; height: 5px; background: #4f8fea; }

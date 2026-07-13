@@ -22,12 +22,17 @@
       const previewStyles = doc.createElement("link");
       previewStyles.id = "publicPreviewStyles";
       previewStyles.rel = "stylesheet";
-      previewStyles.href = "assets/css/site-preview.css?v=2";
+      previewStyles.href = "assets/css/site-preview.css?v=3";
       doc.head.appendChild(previewStyles);
       doc.body.classList.add("public-design-preview");
 
+      const geniusHeading = doc.querySelector("#working-genius h2");
+      if (geniusHeading) {
+        geniusHeading.textContent = "A simple way to understand what types of work energizes or drains people.";
+      }
+
       const nav = doc.querySelector("header nav");
-      if (nav) {
+      if (nav && !doc.querySelector(".preview-menu-toggle")) {
         nav.id = "publicPreviewNav";
         const toggle = doc.createElement("button");
         toggle.className = "preview-menu-toggle";

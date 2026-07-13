@@ -13,16 +13,18 @@
   <link rel="manifest" href="assets/images/site.webmanifest">
 
   <link rel="stylesheet" href="assets/css/site.css">
+  <link rel="stylesheet" href="assets/css/site-preview.css?v=3">
 </head>
 
-<body>
+<body class="public-design-preview">
   <header>
     <div class="container nav">
       <a href="#home" class="logo">
         <img data-brand-logo class="site-logo" src="assets/images/JJC_Logo.png" alt="Jeff Jones Consulting logo">
         <span style="font-size:16px; letter-spacing:0; color:white; text-transform:none;"><span data-brand-company>Jeff Jones Consulting</span><br><span class="logo-sub" data-brand-tagline>Working Genius Facilitation</span></span>
       </a>
-      <nav aria-label="Main navigation">
+      <button class="preview-menu-toggle" type="button" aria-expanded="false" aria-controls="publicPreviewNav"><span></span><span></span><span></span><span class="preview-menu-label">Menu</span></button>
+      <nav id="publicPreviewNav" aria-label="Main navigation">
         <ul>
           <li><a href="#about">About</a></li>
           <li><a href="#working-genius">Working Genius</a></li>
@@ -76,7 +78,7 @@
     <section id="working-genius" class="section">
       <div class="container">
         <p class="eyebrow">The Working Genius model</p>
-        <h2>A simple way to understand why work energizes or drains people.</h2>
+        <h2>A simple way to understand what types of work energizes or drains people.</h2>
         <p class="lead">The Working Genius model helps teams identify which parts of work bring energy and which parts create frustration.</p>
         <div class="genius-grid">
           <div class="card"><div class="mini-bar"></div><h3>Wonder</h3><p class="muted">Asks big-picture questions and sees potential.</p></div>
@@ -225,6 +227,21 @@
       document.getElementById(id).addEventListener("input", updatePublicEstimate);
       document.getElementById(id).addEventListener("change", updatePublicEstimate);
     });
+
+    const menuToggle = document.querySelector(".preview-menu-toggle");
+    const publicNav = document.getElementById("publicPreviewNav");
+    if (menuToggle && publicNav) {
+      menuToggle.addEventListener("click", () => {
+        const open = document.body.classList.toggle("preview-menu-open");
+        menuToggle.setAttribute("aria-expanded", String(open));
+        menuToggle.querySelector(".preview-menu-label").textContent = open ? "Close" : "Menu";
+      });
+      publicNav.querySelectorAll("a").forEach(link => link.addEventListener("click", () => {
+        document.body.classList.remove("preview-menu-open");
+        menuToggle.setAttribute("aria-expanded", "false");
+        menuToggle.querySelector(".preview-menu-label").textContent = "Menu";
+      }));
+    }
 
     window.addEventListener("load", async () => {
       JJC_applyBranding("public");
