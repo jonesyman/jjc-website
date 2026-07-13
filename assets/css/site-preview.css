@@ -89,6 +89,7 @@ body.public-design-preview {
   border-color: #364152;
   border-radius: 16px;
   box-shadow: 0 14px 36px rgba(0,0,0,.16);
+  transition: none;
 }
 .public-design-preview .muted { color: #b8c0cc; }
 .public-design-preview .checklist li::before { color: #34c759; }
@@ -124,6 +125,12 @@ body.public-design-preview {
 
 @media (max-width: 900px) {
   .public-design-preview .container { padding-inline: 22px; }
+  .public-design-preview .hero-grid,
+  .public-design-preview .grid-3,
+  .public-design-preview .grid-2,
+  .public-design-preview .genius-grid,
+  .public-design-preview .calculator,
+  .public-design-preview .rates-grid { grid-template-columns: 1fr; }
   .public-design-preview .nav { position: relative; min-height: 76px; flex-direction: row; align-items: center; }
   .preview-menu-toggle {
     display: grid;
