@@ -529,10 +529,31 @@ function generatePdfForRecord(type, idValue) {
 
   const settings = getSettings();
   const record = recordInfo.row;
+  const pdfRecord = normalizeRecordForPdf(type, record);
   const previousFileId = record.pdfFileId || "";
   const fileName = buildPdfFileName(config.prefix, idValue, config.nameFor(record));
   const folder = getOrCreatePdfFolder(config.folderName);
-  const html = buildDocumentHtml(type, record, settings);
+  if (type === "estimate") {
+    updateRowFields(config.sheetName, recordInfo.rowNumber, {
+      subtotal: pdfRecord.subtotal,
+      discounts: pdfRecord.discounts,
+      total: pdfRecord.total,
+      consultingGross: pdfRecord.consultingGross,
+      prepGross: pdfRecord.prepGross,
+      assessmentGross: pdfRecord.assessmentGross,
+      consultingNet: pdfRecord.consultingNet,
+      prepNet: pdfRecord.prepNet,
+      assessmentNet: pdfRecord.assessmentNet,
+      consultingDiscount: pdfRecord.consultingDiscount,
+      prepDiscount: pdfRecord.prepDiscount,
+      assessmentDiscount: pdfRecord.assessmentDiscount,
+      hourly: pdfRecord.hourly,
+      prepRate: pdfRecord.prepRate,
+      assessmentRate: pdfRecord.assessmentRate,
+      isIndividual: pdfRecord.isIndividual ? "TRUE" : "FALSE"
+    });
+  }
+  const html = buildDocumentHtml(type, pdfRecord, settings);
   const pdfBlob = HtmlService.createHtmlOutput(html).getBlob().getAs(MimeType.PDF).setName(fileName);
   const file = folder.createFile(pdfBlob);
 
@@ -830,6 +851,75 @@ function buildPdfFileName(prefix, idValue, name) {
 
 function sanitizeFileName(name) {
   return String(name || "Document.pdf").replace(/[\\/:*?\"<>|#%{}~&]/g, "-").replace(/\s+/g, " ").trim();
+}
+
+function normalizeRecordForPdf(type, record) {
+  if (type !== "estimate") return record;
+
+  const rates = getRates();
+  const orgType = String(record.orgType || "for_profit");
+  const isIndividual = orgType === "individual_debrief" || String(record.isIndividual || "").toUpperCase() === "TRUE";
+  const participants = isIndividual ? 1 : Math.max(1, Number(record.participants || 1));
+  const hours = isIndividual ? 1 : Math.max(1, Number(record.hours || 1));
+  const hourly = isIndividual ? Number(rates.IndividualDebrief || 100) : Number(orgType === "for_profit" ? (rates.CorporateHourly || 300) : (rates.NonprofitHourly || 100));
+  const prepRate = isIndividual ? 0 : Number(orgType === "for_profit" ? (rates.CorporatePrep || 100) : (rates.NonprofitPrep || 50));
+  const assessmentRate = isIndividual ? 0 : Number(orgType === "for_profit" ? (rates.CorporateAssessment || 25) : (rates.NonprofitAssessment || 20));
+  const consultingGross = numberOrCalculated(record.consultingGross, hourly * hours);
+  const prepGross = numberOrCalculated(record.prepGross, isIndividual ? 0 : Math.ceil(participants / 12) * prepRate);
+  const assessmentGross = numberOrCalculated(record.assessmentGross, isIndividual ? 0 : participants * assessmentRate);
+  const subtotal = numberOrCalculated(record.subtotal, consultingGross + prepGross + assessmentGross);
+
+  let consultingDiscount = Number(record.consultingDiscount || 0);
+  let prepDiscount = Number(record.prepDiscount || 0);
+  let assessmentDiscount = Number(record.assessmentDiscount || 0);
+  if (!consultingDiscount && hasPdfValue(record.consultingNet)) consultingDiscount = Math.max(0, consultingGross - Number(record.consultingNet));
+  if (!prepDiscount && hasPdfValue(record.prepNet)) prepDiscount = Math.max(0, prepGross - Number(record.prepNet));
+  if (!assessmentDiscount && hasPdfValue(record.assessmentNet)) assessmentDiscount = Math.max(0, assessmentGross - Number(record.assessmentNet));
+
+  const storedDiscount = Math.max(0, Number(record.discounts || 0));
+  if (!consultingDiscount && !prepDiscount && !assessmentDiscount && storedDiscount > 0) {
+    let remaining = storedDiscount;
+    consultingDiscount = Math.min(consultingGross, remaining);
+    remaining -= consultingDiscount;
+    prepDiscount = Math.min(prepGross, remaining);
+    remaining -= prepDiscount;
+    assessmentDiscount = Math.min(assessmentGross, remaining);
+  }
+
+  const discounts = consultingDiscount + prepDiscount + assessmentDiscount;
+  const calculatedTotal = Math.max(0, subtotal - discounts);
+  const total = hasPdfValue(record.total) ? Number(record.total) : calculatedTotal;
+
+  return {
+    ...record,
+    orgType: orgType,
+    participants: participants,
+    hours: hours,
+    hourly: hourly,
+    prepRate: prepRate,
+    assessmentRate: assessmentRate,
+    consultingGross: consultingGross,
+    prepGross: prepGross,
+    assessmentGross: assessmentGross,
+    consultingDiscount: consultingDiscount,
+    prepDiscount: prepDiscount,
+    assessmentDiscount: assessmentDiscount,
+    consultingNet: Math.max(0, consultingGross - consultingDiscount),
+    prepNet: Math.max(0, prepGross - prepDiscount),
+    assessmentNet: Math.max(0, assessmentGross - assessmentDiscount),
+    discounts: discounts,
+    subtotal: subtotal,
+    total: total,
+    isIndividual: isIndividual
+  };
+}
+
+function hasPdfValue(value) {
+  return value !== undefined && value !== null && value !== "";
+}
+
+function numberOrCalculated(value, calculated) {
+  return hasPdfValue(value) && Number(value) > 0 ? Number(value) : Number(calculated || 0);
 }
 
 function buildDocumentHtml(type, record, settings) {
