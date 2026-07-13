@@ -572,11 +572,22 @@
     }
 
     @media (orientation: landscape) and (min-width: 700px) and (max-width: 980px) {
-      #view-workshops .workspace { grid-template-columns:1fr; }
-      #view-workshops .form-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
-      #view-workshops .form-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
-      #view-workshops .workshop-filters { grid-template-columns:minmax(200px,1fr) minmax(170px,.7fr); align-items:center; }
-      #workshopsList { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .workspace { grid-template-columns:1fr; }
+      .form-row { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .form-row-3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .dashboard-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+      .dashboard-sections { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .list-grid, .assessment-results-grid, .analytics-results, .client-detail-records { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .client-detail-summary { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .team-view-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .genius-metrics { grid-template-columns:repeat(6,minmax(0,1fr)); }
+      .tutorial-intro { grid-template-columns:minmax(0,1.4fr) minmax(240px,.6fr); }
+      .practice-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .workshop-filters { grid-template-columns:minmax(200px,1fr) minmax(170px,.7fr); align-items:center; }
+      .assessment-filters { grid-template-columns:minmax(180px,1fr) repeat(2,minmax(140px,.65fr)); }
+      .analytics-filters { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .simple-list-filters { grid-template-columns:minmax(200px,1fr) auto auto; }
+      .send-dialog-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
   </style>
 </head>
@@ -1075,7 +1086,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.21";
+    const APP_VERSION = "2026.07.12.22";
 
     const K = {
       clients: "jjc_clients",
