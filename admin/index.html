@@ -1130,7 +1130,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.24";
+    const APP_VERSION = "2026.07.12.25";
 
     const K = {
       clients: "jjc_clients",
@@ -1513,7 +1513,6 @@ Sanger, CA 93657"></textarea>
       dirtyFormViews.delete("clients");
       document.getElementById("clientId").value = nextId(clients, "CLI", "ClientID");
       ["clientOrg", "clientContact", "clientEmail", "clientPhone", "clientNotes"].forEach(id => document.getElementById(id).value = "");
-      document.getElementById("clientId").value = await reserveNumberOrFallback("client", document.getElementById("clientId").value);
     }
 
     async function saveClient(button) {
@@ -1530,6 +1529,10 @@ Sanger, CA 93657"></textarea>
       const finishSave = beginSave(button, "Saving Client...");
       if (!finishSave) return;
       try {
+        if (!clients.some(client => client.ClientID === c.ClientID)) {
+          c.ClientID = await reserveNumberOrFallback("client", nextId(clients, "CLI", "ClientID"));
+          document.getElementById("clientId").value = c.ClientID;
+        }
         await Database.saveClient(c);
         clients = [c, ...clients.filter(x => x.ClientID !== c.ClientID)];
         saveLocal(K.clients, clients);
@@ -1766,7 +1769,6 @@ Sanger, CA 93657"></textarea>
       document.getElementById("workshopType").value = "Corporate";
       document.getElementById("workshopDeliveryFormat").value = "In Person";
       document.getElementById("workshopStatus").value = "Inquiry";
-      document.getElementById("workshopId").value = await reserveNumberOrFallback("workshop", document.getElementById("workshopId").value);
     }
 
     async function saveWorkshop(button) {
@@ -1795,6 +1797,10 @@ Sanger, CA 93657"></textarea>
       const finishSave = beginSave(button, "Saving Workshop...");
       if (!finishSave) return;
       try {
+        if (!workshops.some(workshop => workshop.WorkshopID === w.WorkshopID)) {
+          w.WorkshopID = await reserveNumberOrFallback("workshop", nextId(workshops, "WRK", "WorkshopID"));
+          document.getElementById("workshopId").value = w.WorkshopID;
+        }
         await Database.saveWorkshop(w);
         workshops = upsertPreservingOrder(workshops, w, "WorkshopID");
         saveLocal(K.workshops, workshops);
@@ -2436,7 +2442,6 @@ Sanger, CA 93657"></textarea>
       document.getElementById("hours").value = 3;
       ["estimateClientName", "estimateClientId", "consultingDiscount", "prepDiscount", "assessmentDiscount", "estimateName"].forEach(id => document.getElementById(id).value = "");
       recalc();
-      reservedEstimateId = await reserveNumberOrFallback("estimate", nextId(estimates, "EST", "id"));
     }
 
     async function generateEstimatePdf(id, button) {
@@ -2519,7 +2524,6 @@ Sanger, CA 93657"></textarea>
       document.getElementById("invNo").value = nextId(invoices, "INV", "invoiceNo");
       document.getElementById("invIssueDate").value = today.toISOString().slice(0, 10);
       document.getElementById("invDueDate").value = due.toISOString().slice(0, 10);
-      document.getElementById("invNo").value = await reserveNumberOrFallback("invoice", document.getElementById("invNo").value);
     }
 
     function updateInvoiceDueDateFromTerms() {
@@ -2670,7 +2674,7 @@ Sanger, CA 93657"></textarea>
     }
 
     async function saveInvoiceFromForm(button) {
-      if (!editingInvoiceNo && !document.getElementById("invNo").value.trim()) document.getElementById("invNo").value = await reserveNumberOrFallback("invoice", nextId(invoices, "INV", "invoiceNo"));
+      if (!editingInvoiceNo) document.getElementById("invNo").value = await reserveNumberOrFallback("invoice", nextId(invoices, "INV", "invoiceNo"));
       const invoice = getInvoiceFromForm();
       if (!invoice) return;
       const finishSave = beginSave(button, "Saving Invoice...");

@@ -73,8 +73,16 @@ function reserveRecordNumber(type) {
       const match = String(row[config.header] || "").match(pattern);
       return match ? Math.max(highest, Number(match[1])) : highest;
     }, 0);
+    // Numbers are now requested only when the user actually saves a new record.
+    // On first use after this release, reset the legacy page-view counter to the
+    // highest saved row. Keep the counter afterward to protect simultaneous saves.
     const properties = PropertiesService.getScriptProperties();
     const propertyKey = "NEXT_NUMBER_" + String(type).toUpperCase();
+    const migrationKey = "SAVE_ONLY_NUMBERING_V1_" + String(type).toUpperCase();
+    if (properties.getProperty(migrationKey) !== "TRUE") {
+      properties.setProperty(propertyKey, String(highestSaved));
+      properties.setProperty(migrationKey, "TRUE");
+    }
     const lastReserved = Number(properties.getProperty(propertyKey) || 0);
     const next = Math.max(highestSaved, lastReserved) + 1;
     properties.setProperty(propertyKey, String(next));
