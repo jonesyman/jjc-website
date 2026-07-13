@@ -10,7 +10,7 @@ const SHEET_NAMES = {
 const PDF_HEADERS = ["pdfUrl", "pdfFileId", "pdfGeneratedDate"];
 const EMAIL_HEADERS = ["sentDate", "firstSentDate", "lastSentDate", "sentTo", "sentCc", "sentSubject", "sendCount"];
 const WORKSHOP_HEADERS = ["WorkshopDate", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization"];
-const ESTIMATE_HEADERS = ["ClientID", "ClientName"];
+const ESTIMATE_HEADERS = ["ClientID", "ClientName", "ClientEmail", "consultingDiscount", "prepDiscount", "assessmentDiscount"];
 const ARCHIVE_HEADERS = ["archived", "archivedDate"];
 const INVOICE_LIFECYCLE_HEADERS = ["amountPaid", "balanceDue", "paidDate", "paymentMethod", "paymentReference", "voidReason"];
 const ASSESSMENT_IMPORT_HEADERS = ["AssessmentImportID", "WorkshopID", "GroupName", "OriginalFileName", "ParticipantCount", "ImportedDate", "UpdatedDate", "Active", "ImportStatus", "ValidationWarnings", "SourceType", "SourceVersion", "LeaderAssessmentResultID", "LeaderFirstName", "LeaderLastName", "LeaderSelectedDate", "LeaderUpdatedDate", "TeamPdfFileId", "TeamPdfUrl", "TeamPdfGeneratedDate"];
@@ -836,12 +836,13 @@ function buildDocumentHtml(type, record, settings) {
   const isInvoice = type === "invoice";
   const title = isInvoice ? "Invoice" : "Estimate";
   const number = isInvoice ? record.invoiceNo : record.id;
-  const clientName = isInvoice ? record.clientName : record.name;
+  const clientName = isInvoice ? record.clientName : (record.ClientName || record.clientName || record.name);
+  const clientEmail = record.ClientEmail || record.clientEmail || "";
   const issueDate = isInvoice ? record.issueDate : record.createdAt;
   const terms = isInvoice ? record.terms : "";
   const dueDate = isInvoice ? record.dueDate : "";
   const lines = buildServiceLines(record, isInvoice);
-  const paymentInstructions = record.paymentInstructions || settings.paymentInstructions || "";
+  const paymentInstructions = isInvoice ? (record.paymentInstructions || settings.paymentInstructions || "") : "";
   const invoiceFooter = record.invoiceFooter || settings.invoiceFooter || "";
 
   return `
@@ -850,25 +851,30 @@ function buildDocumentHtml(type, record, settings) {
 <head>
   <meta charset="utf-8">
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 34px; line-height: 1.45; }
-    .header { display: flex; justify-content: space-between; gap: 24px; border-bottom: 2px solid #e5e7eb; padding-bottom: 24px; }
+    @page { size: Letter portrait; margin: 0; }
+    * { box-sizing: border-box; }
+    html, body { width: 8.5in; min-height: 11in; margin: 0; }
+    body { display: flex; flex-direction: column; font-family: Arial, Helvetica, sans-serif; color: #111827; line-height: 1.45; padding: .5in; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .header { display: flex; justify-content: space-between; gap: 28px; border-bottom: 3px solid #263860; padding-bottom: 22px; margin-bottom: 26px; }
     .brand { display: flex; gap: 14px; align-items: flex-start; }
     .brand img { width: 72px; height: 72px; object-fit: contain; }
     .brand h2 { margin: 0 0 4px; color: #111827; }
     .muted { color: #64748b; font-size: 13px; white-space: pre-wrap; }
     .title { text-align: right; color: #263860; }
-    .title h1 { margin: 0 0 8px; font-size: 38px; text-transform: uppercase; letter-spacing: .04em; }
-    .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 30px 0; }
+    .title h1 { margin: 0 0 8px; font-size: 31px; }
+    .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 30px; }
     .label { color: #64748b; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th { text-align: left; color: #475569; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; padding: 10px 8px; }
-    td { border-bottom: 1px solid #e5e7eb; padding: 12px 8px; vertical-align: top; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 26px 0; font-size: 13px; }
+    th { text-align: left; color: #fff; background: #263860; font-size: 12px; text-transform: uppercase; padding: 11px; }
+    td { border-bottom: 1px solid #e5e7eb; padding: 11px; vertical-align: top; overflow-wrap: anywhere; }
+    th:first-child, td:first-child { width: 52%; }
     th:nth-child(n+2), td:nth-child(n+2) { text-align: right; }
     .totals { margin-left: auto; width: 280px; margin-top: 24px; }
     .line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
-    .grand { font-size: 20px; font-weight: 800; color: #263860; border-bottom: 0; padding-top: 14px; }
+    .grand { font-size: 18px; font-weight: 800; color: #263860; border-top: 3px solid #263860; border-bottom: 0; margin-top: 8px; padding-top: 12px; }
     .note { margin-top: 32px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; color: #475569; white-space: pre-wrap; font-size: 13px; }
-    .footer { border-top: 1px solid #e2e8f0; margin-top: 44px; padding-top: 18px; color: #64748b; text-align: center; font-size: 12px; white-space: pre-wrap; }
+    .footer { border-top: 1px solid #e2e8f0; margin-top: auto; padding-top: 18px; color: #64748b; text-align: center; font-size: 12px; white-space: pre-wrap; }
+    .header, .parties, tr, .totals, .note, .footer { break-inside: avoid; page-break-inside: avoid; }
   </style>
 </head>
 <body>
@@ -878,8 +884,6 @@ function buildDocumentHtml(type, record, settings) {
       <div>
         <h2>${escHtml(settings.businessName || "Jeff Jones Consulting")}</h2>
         <div class="muted">Working Genius Facilitation & Consulting</div>
-        <div class="muted" style="margin-top:8px;">${escHtml(settings.address || "")}</div>
-        <div class="muted">${escHtml(settings.email || "")}${settings.phone ? " • " + escHtml(settings.phone) : ""}</div>
       </div>
     </div>
     <div class="title">
@@ -893,11 +897,13 @@ function buildDocumentHtml(type, record, settings) {
     <div>
       <div class="label">Prepared By</div>
       <strong>${escHtml(settings.businessName || "Jeff Jones Consulting")}</strong>
+      <div class="muted" style="margin-top:6px;">${escHtml(settings.address || "")}</div>
+      <div class="muted">${escHtml(settings.email || "")}${settings.phone ? " • " + escHtml(settings.phone) : ""}</div>
     </div>
     <div>
       <div class="label">${isInvoice ? "Billed To" : "Prepared For"}</div>
       <strong>${escHtml(clientName || "-")}</strong>
-      <div class="muted">${escHtml(record.clientEmail || "")}</div>
+      <div class="muted">${escHtml(clientEmail)}</div>
     </div>
   </div>
   <table>
@@ -918,36 +924,36 @@ function buildDocumentHtml(type, record, settings) {
 function buildServiceLines(record, isInvoice) {
   if (String(record.isIndividual).toUpperCase() === "TRUE") {
     return [{
-      description: isInvoice ? "Individual Working Genius debrief" : "Individual debrief estimate",
+      description: "Working Genius individual debrief session",
       qty: 1,
       rate: record.consultingGross || record.total || 0,
-      amount: record.consultingNet || record.total || 0
+      amount: record.consultingGross || record.total || 0
     }];
   }
 
   const lines = [];
   if (Number(record.consultingGross || 0) || Number(record.consultingNet || 0)) {
     lines.push({
-      description: "Working Genius facilitation / consulting",
+      description: "Working Genius consulting / facilitation",
       qty: record.hours || 1,
       rate: record.hourly || 0,
-      amount: record.consultingNet || record.consultingGross || 0
+      amount: record.consultingGross || 0
     });
   }
   if (Number(record.prepGross || 0) || Number(record.prepNet || 0)) {
     lines.push({
-      description: "Preparation and planning",
+      description: "Comprehensive materials preparation fee",
       qty: Math.max(1, Math.ceil(Number(record.participants || 1) / 12)),
       rate: record.prepRate || 0,
-      amount: record.prepNet || record.prepGross || 0
+      amount: record.prepGross || 0
     });
   }
   if (Number(record.assessmentGross || 0) || Number(record.assessmentNet || 0)) {
     lines.push({
-      description: "Assessment / administration",
+      description: "Working Genius assessment administration fee",
       qty: record.participants || 1,
       rate: record.assessmentRate || 0,
-      amount: record.assessmentNet || record.assessmentGross || 0
+      amount: record.assessmentGross || 0
     });
   }
 

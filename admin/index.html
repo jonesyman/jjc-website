@@ -628,6 +628,29 @@
       .simple-list-filters { grid-template-columns:minmax(200px,1fr) auto auto; }
       .send-dialog-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
     }
+
+    .invoice-brand { display:flex; gap:14px; align-items:flex-start; }
+    .invoice-brand .invoice-logo-img { margin-bottom:0; flex:0 0 auto; }
+
+    /* Shared letter-size print contract. Kept last so phone/tablet screen rules
+       cannot override printable estimates, invoices, or team maps. */
+    @media print {
+      @page { size: Letter portrait; margin: 0; }
+      html, body { width:8.5in !important; min-height:11in !important; margin:0 !important; padding:0 !important; overflow:visible !important; background:#fff !important; }
+      .admin-shell, .dialog-backdrop, .print-toolbar, .no-print { display:none !important; }
+      .print-view { position:static !important; inset:auto !important; width:8.5in !important; min-height:11in !important; margin:0 !important; padding:0 !important; overflow:visible !important; background:#fff !important; backdrop-filter:none !important; }
+      .print-view.hidden { display:none !important; }
+      #printView .invoice-sheet { width:8.5in !important; max-width:none !important; min-height:11in !important; margin:0 !important; padding:.5in !important; box-sizing:border-box !important; box-shadow:none !important; font-family:Arial,Helvetica,sans-serif !important; color:#111827 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      #printView .invoice-header { flex-direction:row !important; gap:28px !important; margin-bottom:26px !important; padding-bottom:22px !important; }
+      #printView .invoice-meta { text-align:right !important; }
+      #printView .invoice-parties { grid-template-columns:1fr 1fr !important; gap:28px !important; margin-bottom:30px !important; }
+      #printView .invoice-table { display:table !important; width:100% !important; table-layout:fixed !important; overflow:visible !important; margin:26px 0 !important; font-size:13px !important; }
+      #printView .invoice-table th, #printView .invoice-table td { padding:11px !important; overflow-wrap:anywhere; }
+      #printView .invoice-table th:first-child, #printView .invoice-table td:first-child { width:52%; }
+      #printView .invoice-totals { width:280px !important; margin-left:auto !important; }
+      #printView .invoice-header, #printView .invoice-parties, #printView tr, #printView .invoice-totals, #printPaymentInstructions, #printInvoiceFooter { break-inside:avoid; page-break-inside:avoid; }
+      #teamMapPreview .team-map-sheet { width:8.5in !important; min-width:8.5in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; }
+    }
   </style>
 </head>
 
@@ -1077,10 +1100,12 @@ Sanger, CA 93657"></textarea>
     </div>
     <div class="invoice-sheet">
       <div class="invoice-header">
-        <div>
+        <div class="invoice-brand">
           <img data-brand-logo class="invoice-logo-img" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting logo">
-          <h2 style="color:#111827; margin:0;" id="printSenderName">Jeff Jones Consulting</h2>
-          <div style="color:#64748b; font-size:13px;">Working Genius Facilitation & Consulting</div>
+          <div>
+            <h2 style="color:#111827; margin:0;" id="printSenderName">Jeff Jones Consulting</h2>
+            <div style="color:#64748b; font-size:13px;">Working Genius Facilitation & Consulting</div>
+          </div>
         </div>
         <div class="invoice-meta">
           <h1 class="invoice-title" id="printDocumentTitle">Invoice</h1>
@@ -1098,7 +1123,7 @@ Sanger, CA 93657"></textarea>
           <div style="color:#475569; margin-top:6px;"><span id="printEmail"></span> • <span id="printPhone"></span></div>
         </div>
         <div>
-          <div class="invoice-label">Billed To</div>
+          <div class="invoice-label" id="printClientLabel">Billed To</div>
           <strong id="printClientName">-</strong>
           <div id="printClientEmail" style="color:#475569; margin-top:6px;">-</div>
         </div>
@@ -1126,11 +1151,11 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
   <script src="../assets/js/rates.js"></script>
-  <script src="../assets/js/estimates.js?v=2"></script>
+  <script src="../assets/js/estimates.js?v=3"></script>
   <script src="../assets/js/invoices.js"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.25";
+    const APP_VERSION = "2026.07.12.26";
 
     const K = {
       clients: "jjc_clients",
@@ -2338,11 +2363,13 @@ Sanger, CA 93657"></textarea>
       const c = recalc();
       const id = editingEstimateId || reservedEstimateId || nextId(estimates, "EST", "id");
       const existing = estimates.find(e => e.id === id) || {};
+      const selectedClient = clients.find(client => client.ClientID === document.getElementById("estimateClientId").value.trim());
       return normalizeEstimate({
         ...existing,
         id,
         clientId: document.getElementById("estimateClientId").value.trim(),
         clientName: document.getElementById("estimateClientName").value.trim(),
+        clientEmail: selectedClient?.Email || existing.clientEmail || "",
         name: document.getElementById("estimateName").value.trim() || "Estimate " + (estimates.length + 1),
         createdAt: previewOnly ? new Date().toISOString() : (existing.createdAt || new Date().toISOString()),
         status: existing.status || "Draft",
@@ -2420,9 +2447,9 @@ Sanger, CA 93657"></textarea>
       document.querySelector(`input[name="orgType"][value="${e.orgType || "for_profit"}"]`).checked = true;
       document.getElementById("participants").value = e.participants || 12;
       document.getElementById("hours").value = e.hours || 3;
-      document.getElementById("consultingDiscount").value = Number(e.consultingGross || 0) - Number(e.consultingNet || 0) || "";
-      document.getElementById("prepDiscount").value = Number(e.prepGross || 0) - Number(e.prepNet || 0) || "";
-      document.getElementById("assessmentDiscount").value = Number(e.assessmentGross || 0) - Number(e.assessmentNet || 0) || "";
+      document.getElementById("consultingDiscount").value = Number(e.consultingDiscount || 0) || "";
+      document.getElementById("prepDiscount").value = Number(e.prepDiscount || 0) || "";
+      document.getElementById("assessmentDiscount").value = Number(e.assessmentDiscount || 0) || "";
       const client = clients.find(item => item.ClientID === e.clientId);
       document.getElementById("estimateClientName").value = e.clientName || client?.Organization || "";
       document.getElementById("estimateClientId").value = e.clientId || "";
@@ -2498,7 +2525,7 @@ Sanger, CA 93657"></textarea>
       const e = estimates.find(x => x.id === id);
       if (!e) return;
       const client = clients.find(item => item.ClientID === e.clientId);
-      showDocumentPreview({ ...e, invoiceNo: e.id, issueDate: String(e.createdAt || "").slice(0, 10), dueDate: "", terms: "", clientName: e.clientName || client?.Organization || e.name, clientEmail: client?.Email || "", profile: { ...profile } }, "Estimate");
+      showDocumentPreview({ ...e, invoiceNo: e.id, issueDate: String(e.createdAt || "").slice(0, 10), dueDate: "", terms: "", clientName: e.clientName || client?.Organization || e.name, clientEmail: e.clientEmail || client?.Email || "", profile: { ...profile } }, "Estimate");
     }
 
     function convertEstimateToInvoice(estimateId) {
@@ -2937,6 +2964,7 @@ Sanger, CA 93657"></textarea>
       document.getElementById("printTerms").textContent = doc.terms || "";
       document.getElementById("printDueDateRow").style.display = type === "Invoice" ? "block" : "none";
       document.getElementById("printTermsRow").style.display = type === "Invoice" ? "block" : "none";
+      document.getElementById("printClientLabel").textContent = type === "Invoice" ? "Billed To" : "Prepared For";
       document.getElementById("printClientName").textContent = doc.clientName || doc.name || "-";
       document.getElementById("printClientEmail").textContent = doc.clientEmail || "-";
 
@@ -3013,12 +3041,38 @@ Sanger, CA 93657"></textarea>
       document.getElementById("rateIndividualDebrief").value = JJC_RATES.IndividualDebrief;
     }
 
+    function getEstimateLineDiscounts(e = {}, gross = {}) {
+      let consultingDiscount = Number(e.consultingDiscount || e.ConsultingDiscount || 0);
+      let prepDiscount = Number(e.prepDiscount || e.PrepDiscount || 0);
+      let assessmentDiscount = Number(e.assessmentDiscount || e.AssessmentDiscount || 0);
+      const hasStoredNet = key => e[key] !== undefined && e[key] !== null && e[key] !== "";
+      if (!consultingDiscount && hasStoredNet("consultingNet")) consultingDiscount = Math.max(0, Number(gross.consultingGross || 0) - Number(e.consultingNet || 0));
+      if (!prepDiscount && hasStoredNet("prepNet")) prepDiscount = Math.max(0, Number(gross.prepGross || 0) - Number(e.prepNet || 0));
+      if (!assessmentDiscount && hasStoredNet("assessmentNet")) assessmentDiscount = Math.max(0, Number(gross.assessmentGross || 0) - Number(e.assessmentNet || 0));
+      if (!consultingDiscount && !prepDiscount && !assessmentDiscount && Number(e.discounts || 0) > 0) {
+        let remaining = Number(e.discounts || 0);
+        consultingDiscount = Math.min(Number(gross.consultingGross || 0), remaining);
+        remaining -= consultingDiscount;
+        prepDiscount = Math.min(Number(gross.prepGross || 0), remaining);
+        remaining -= prepDiscount;
+        assessmentDiscount = Math.min(Number(gross.assessmentGross || 0), remaining);
+      }
+      return { consultingDiscount, prepDiscount, assessmentDiscount };
+    }
+
     function normalizeEstimate(e) {
       const orgType = e.orgType || "for_profit";
       const participants = Number(e.participants || 12);
       const hours = Number(e.hours || 3);
-      const discounts = Number(e.discounts || 0);
-      const calc = Rates.calculate({ orgType, participants, hours, discounts: {} });
+      const baseCalc = Rates.calculate({ orgType, participants, hours, discounts: {} });
+      const gross = {
+        consultingGross: e.consultingGross === undefined || e.consultingGross === "" ? baseCalc.consultingGross : Number(e.consultingGross),
+        prepGross: e.prepGross === undefined || e.prepGross === "" ? baseCalc.prepGross : Number(e.prepGross),
+        assessmentGross: e.assessmentGross === undefined || e.assessmentGross === "" ? baseCalc.assessmentGross : Number(e.assessmentGross)
+      };
+      const lineDiscounts = getEstimateLineDiscounts(e, gross);
+      const calc = Rates.calculate({ orgType, participants, hours, discounts: { consulting: lineDiscounts.consultingDiscount, prep: lineDiscounts.prepDiscount, assessment: lineDiscounts.assessmentDiscount } });
+      const discounts = lineDiscounts.consultingDiscount + lineDiscounts.prepDiscount + lineDiscounts.assessmentDiscount;
       const total = Number(e.total || calc.total || 0);
       const subtotal = Number(e.subtotal || calc.subtotal || (total + discounts));
       return {
@@ -3030,15 +3084,15 @@ Sanger, CA 93657"></textarea>
         discounts,
         subtotal,
         total,
-        consultingGross: Number(e.consultingGross || calc.consultingGross || 0),
-        prepGross: Number(e.prepGross || calc.prepGross || 0),
-        assessmentGross: Number(e.assessmentGross || calc.assessmentGross || 0),
-        consultingNet: Number(e.consultingNet || calc.consultingNet || 0),
-        prepNet: Number(e.prepNet || calc.prepNet || 0),
-        assessmentNet: Number(e.assessmentNet || calc.assessmentNet || 0),
+        ...gross,
+        ...lineDiscounts,
+        consultingNet: e.consultingNet === undefined || e.consultingNet === "" ? calc.consultingNet : Number(e.consultingNet),
+        prepNet: e.prepNet === undefined || e.prepNet === "" ? calc.prepNet : Number(e.prepNet),
+        assessmentNet: e.assessmentNet === undefined || e.assessmentNet === "" ? calc.assessmentNet : Number(e.assessmentNet),
         id: e.id || nextId(estimates, "EST", "id"),
         clientId: e.clientId || e.ClientID || "",
         clientName: e.clientName || e.ClientName || "",
+        clientEmail: e.clientEmail || e.ClientEmail || "",
         name: e.name || "Estimate",
         isIndividual: orgType === "individual_debrief",
         pdfUrl: e.pdfUrl || "",
