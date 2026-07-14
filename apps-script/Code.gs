@@ -125,6 +125,7 @@ function doPost(e) {
 
     if (action === "saveInvoice") {
       ensureHeaders(SHEET_NAMES.invoices, [
+        "ClientID",
         "status",
         "consultingDiscount",
         "prepDiscount",
@@ -534,7 +535,7 @@ function generatePdfForRecord(type, idValue) {
   const fileName = buildPdfFileName(config.prefix, idValue, config.nameFor(record));
   const folder = getOrCreatePdfFolder(config.folderName);
   if (type === "estimate" || type === "invoice") {
-    updateRowFields(config.sheetName, recordInfo.rowNumber, {
+    const itemizationFields = {
       orgType: pdfRecord.orgType,
       hours: pdfRecord.hours,
       participants: pdfRecord.participants,
@@ -554,7 +555,17 @@ function generatePdfForRecord(type, idValue) {
       prepRate: pdfRecord.prepRate,
       assessmentRate: pdfRecord.assessmentRate,
       isIndividual: pdfRecord.isIndividual ? "TRUE" : "FALSE"
-    });
+    };
+    if (type === "invoice") {
+      itemizationFields.ClientID = pdfRecord.clientId || pdfRecord.ClientID || "";
+      itemizationFields.clientName = pdfRecord.clientName || pdfRecord.ClientName || "";
+      itemizationFields.clientEmail = pdfRecord.clientEmail || pdfRecord.ClientEmail || "";
+    } else {
+      itemizationFields.ClientID = pdfRecord.clientId || pdfRecord.ClientID || "";
+      itemizationFields.ClientName = pdfRecord.clientName || pdfRecord.ClientName || "";
+      itemizationFields.ClientEmail = pdfRecord.clientEmail || pdfRecord.ClientEmail || "";
+    }
+    updateRowFields(config.sheetName, recordInfo.rowNumber, itemizationFields);
   }
   const html = buildDocumentHtml(type, pdfRecord, settings);
   const pdfBlob = HtmlService.createHtmlOutput(html).getBlob().getAs(MimeType.PDF).setName(fileName);
@@ -875,6 +886,19 @@ function normalizeRecordForPdf(type, record) {
   const discounts = hasPdfValue(record.discounts) ? Number(record.discounts) : consultingDiscount + prepDiscount + assessmentDiscount;
   const subtotal = numberOrCalculated(record.subtotal, normalizedSource.consultingGross + normalizedSource.prepGross + normalizedSource.assessmentGross);
   const total = hasPdfValue(record.total) ? Number(record.total) : Math.max(0, subtotal - discounts);
+  let clientId = record.clientId || record.ClientID || normalizedSource.clientId || normalizedSource.ClientID || "";
+  const candidateClientName = record.clientName || record.ClientName || normalizedSource.clientName || normalizedSource.ClientName || normalizedSource.name || "";
+  const candidateClientEmail = record.clientEmail || record.ClientEmail || normalizedSource.clientEmail || normalizedSource.ClientEmail || "";
+  let clientRecord = {};
+  if (clientId) {
+    const clientInfo = getRowById(SHEET_NAMES.clients, "ClientID", clientId);
+    if (clientInfo) clientRecord = clientInfo.row;
+  } else {
+    clientRecord = findClientRecordForPdf(candidateClientName, candidateClientEmail);
+    clientId = clientRecord.ClientID || "";
+  }
+  const clientName = candidateClientName || clientRecord.Organization || "";
+  const clientEmail = candidateClientEmail || clientRecord.Email || "";
 
   return {
     ...normalizedSource,
@@ -897,7 +921,13 @@ function normalizeRecordForPdf(type, record) {
     discounts: discounts,
     subtotal: subtotal,
     total: total,
-    isIndividual: normalizedSource.isIndividual
+    isIndividual: normalizedSource.isIndividual,
+    clientId: clientId,
+    ClientID: clientId,
+    clientName: clientName,
+    ClientName: clientName,
+    clientEmail: clientEmail,
+    ClientEmail: clientEmail
   };
 }
 
@@ -907,6 +937,15 @@ function mergeNonEmptyPdfRecords(base, override) {
     if (hasPdfValue(override[key])) merged[key] = override[key];
   });
   return merged;
+}
+
+function findClientRecordForPdf(name, email) {
+  const normalizedName = String(name || "").trim().toLowerCase();
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const clients = getRows(SHEET_NAMES.clients);
+  return clients.find(client => normalizedEmail && String(client.Email || "").trim().toLowerCase() === normalizedEmail)
+    || clients.find(client => normalizedName && String(client.Organization || "").trim().toLowerCase() === normalizedName)
+    || {};
 }
 
 function normalizeEstimateRecordForPdf(record) {
@@ -981,7 +1020,7 @@ function buildDocumentHtml(type, record, settings) {
   const isInvoice = type === "invoice";
   const title = isInvoice ? "Invoice" : "Estimate";
   const number = isInvoice ? record.invoiceNo : record.id;
-  const clientName = isInvoice ? record.clientName : (record.ClientName || record.clientName || record.name);
+  const clientName = isInvoice ? (record.clientName || record.ClientName || record.name) : (record.ClientName || record.clientName || record.name);
   const clientEmail = record.ClientEmail || record.clientEmail || "";
   const issueDate = isInvoice ? record.issueDate : record.createdAt;
   const terms = isInvoice ? record.terms : "";

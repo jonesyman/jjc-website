@@ -1152,10 +1152,10 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/assessments.js"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
-  <script src="../assets/js/invoices.js"></script>
+  <script src="../assets/js/invoices.js?v=2"></script>
 
   <script>
-    const APP_VERSION = "2026.07.12.26";
+    const APP_VERSION = "2026.07.13.01";
 
     const K = {
       clients: "jjc_clients",
@@ -2672,6 +2672,7 @@ Sanger, CA 93657"></textarea>
       const balanceDue = Math.max(0, Number(c.total || 0) - amountPaid);
       const preservedEstimateId = source?.estimateId || window.currentEstimateForInvoice?.id || "";
       const existing = editingInvoiceNo ? (invoices.find(inv => inv.invoiceNo === editingInvoiceNo) || {}) : {};
+      const selectedClient = findClientByNameOrId(clientName);
       return normalizeInvoice({
         ...existing,
         ...c,
@@ -2686,6 +2687,7 @@ Sanger, CA 93657"></textarea>
         paymentMethod: document.getElementById("invPaymentMethod").value,
         paymentReference: document.getElementById("invPaymentReference").value.trim(),
         voidReason: document.getElementById("invVoidReason").value.trim(),
+        clientId: selectedClient?.ClientID || existing.clientId || existing.ClientID || source?.clientId || source?.ClientID || "",
         clientName,
         clientEmail: document.getElementById("invClientEmail").value.trim(),
         issueDate: document.getElementById("invIssueDate").value,
@@ -2797,7 +2799,17 @@ Sanger, CA 93657"></textarea>
       if (!invoice) return toast("Invoice not found.");
       await withPdfButtonLoading(button, invoice.pdfUrl ? "Regenerating..." : "Generating...", async () => {
         await Database.generateInvoicePdf(invoiceNo);
-        invoices = mergePreservingOrder(invoices, (await Database.getInvoices()).map(normalizeInvoice), "invoiceNo");
+        const refreshedInvoices = (await Database.getInvoices()).map(normalizeInvoice).map(fresh => {
+          const existing = invoices.find(inv => inv.invoiceNo === fresh.invoiceNo) || {};
+          return normalizeInvoice({
+            ...fresh,
+            clientId: fresh.clientId || fresh.ClientID || existing.clientId || existing.ClientID || "",
+            ClientID: fresh.ClientID || fresh.clientId || existing.ClientID || existing.clientId || "",
+            clientName: fresh.clientName || fresh.ClientName || existing.clientName || existing.ClientName || "",
+            clientEmail: fresh.clientEmail || fresh.ClientEmail || existing.clientEmail || existing.ClientEmail || ""
+          });
+        });
+        invoices = mergePreservingOrder(invoices, refreshedInvoices, "invoiceNo");
         localStorage.setItem(K.invoices, JSON.stringify(invoices));
         renderInvoices();
         const updated = invoices.find(inv => inv.invoiceNo === invoiceNo);
@@ -3129,8 +3141,10 @@ Sanger, CA 93657"></textarea>
         ...merged,
         ...inv,
         invoiceNo: inv.invoiceNo || nextId(invoices, "INV", "invoiceNo"),
-        clientName: inv.clientName || inv.name || "",
-        clientEmail: inv.clientEmail || "",
+        clientId: inv.clientId || inv.ClientID || merged.clientId || merged.ClientID || "",
+        ClientID: inv.ClientID || inv.clientId || merged.ClientID || merged.clientId || "",
+        clientName: inv.clientName || inv.ClientName || merged.clientName || merged.ClientName || inv.name || "",
+        clientEmail: inv.clientEmail || inv.ClientEmail || merged.clientEmail || merged.ClientEmail || "",
         terms: inv.terms || "Net 30",
         status: lifecycleStatus === "Cancelled" ? "Canceled" : lifecycleStatus,
         amountPaid,

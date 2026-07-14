@@ -10,6 +10,7 @@ window.Invoices = {
 return {
   invoiceNo: invoice.invoiceNo,
   estimateId: invoice.estimateId || "",
+  ClientID: invoice.clientId || invoice.ClientID || "",
   clientName: invoice.clientName || "",
   clientEmail: invoice.clientEmail || "",
   terms: invoice.terms || "Net 30",
