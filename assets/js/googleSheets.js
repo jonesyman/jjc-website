@@ -172,6 +172,45 @@ saveSettings(data) {
         return this.get("getAllActiveAssessmentResults");
     },
 
+    getAssessmentWorkspace() {
+        return this.get("getAssessmentWorkspace");
+    },
+
+    async saveAssessmentGroup(data) {
+        await this.postNoCors("saveAssessmentGroup", data);
+        for (let attempt = 1; attempt <= 5; attempt++) {
+            await this.wait(attempt * 450);
+            const workspace = await this.getAssessmentWorkspace();
+            const saved = workspace?.groups?.find(group => String(group.GroupID) === String(data.groupId || group.GroupID) && String(group.GroupName) === String(data.groupName));
+            if (saved) return workspace;
+        }
+        throw new Error("Google Sheets did not confirm the assessment group.");
+    },
+
+    async deleteAssessmentGroup(groupId) {
+        await this.postNoCors("deleteAssessmentGroup", { groupId });
+        for (let attempt = 1; attempt <= 5; attempt++) {
+            await this.wait(attempt * 450);
+            const workspace = await this.getAssessmentWorkspace();
+            if (!workspace?.groups?.some(group => String(group.GroupID) === String(groupId))) return workspace;
+        }
+        throw new Error("Google Sheets did not confirm group removal.");
+    },
+
+    async resolveAssessmentDuplicate(data) {
+        await this.postNoCors("resolveAssessmentDuplicate", data);
+        for (let attempt = 1; attempt <= 5; attempt++) {
+            await this.wait(attempt * 450);
+            const workspace = await this.getAssessmentWorkspace();
+            const remains = workspace?.duplicates?.some(item => {
+                const ids = [String(item.person1?.PersonID), String(item.person2?.PersonID)];
+                return ids.includes(String(data.personId1)) && ids.includes(String(data.personId2));
+            });
+            if (!remains) return workspace;
+        }
+        throw new Error("Google Sheets did not confirm the duplicate decision.");
+    },
+
     getAssessmentImportHistory(workshopId) {
         return this.get("getAssessmentImportHistory", { workshopId });
     },

@@ -371,6 +371,16 @@
 
     .assessment-results-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-height:55vh; overflow:auto; }
     .assessment-result-card { border:1px solid rgba(148,163,184,.16); border-radius:14px; padding:12px; background:rgba(15,23,42,.55); }
+    .library-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-bottom:16px; }
+    .assessment-library-grid { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:16px; align-items:start; }
+    .member-picker { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+    .group-member-list { display:grid; gap:8px; margin:12px 0; }
+    .group-member-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:center; padding:10px 12px; border:1px solid rgba(148,163,184,.15); border-radius:12px; background:rgba(15,23,42,.45); }
+    .group-member-row input[type="radio"] { width:18px; height:18px; }
+    .duplicate-list { display:grid; gap:12px; }
+    .duplicate-card { padding:14px; border:1px solid rgba(255,176,32,.32); border-radius:14px; background:rgba(255,176,32,.06); }
+    .duplicate-people { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:10px 0; }
+    .person-summary { padding:10px; border:1px solid rgba(148,163,184,.14); border-radius:10px; background:rgba(15,23,42,.5); }
     .assessment-messages { margin:12px 0; display:grid; gap:6px; }
     .assessment-error { color:#fecaca; }
     .assessment-warning { color:#fde68a; }
@@ -473,12 +483,14 @@
       .client-detail-records,
       .assessment-results-grid,
       .team-view-grid,
+      .assessment-library-grid,
       .form-row,
       .form-row-3,
       .workshop-filters, .assessment-filters, .analytics-filters {
         grid-template-columns: 1fr;
       }
       .genius-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .library-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .tutorial-intro, .practice-grid { grid-template-columns:1fr; }
 
       .admin-content {
@@ -570,6 +582,7 @@
       .list-filter-panel:not(.open) .list-filter-controls { display:none; }
       .simple-list-filters { grid-template-columns:1fr; }
       .analytics-results { grid-template-columns:1fr; }
+      .duplicate-people { grid-template-columns:1fr; }
       .assessment-dialog { height:100dvh; max-height:100dvh; border-radius:0; border-left:0; border-right:0; padding:14px; }
       .assessment-dialog-backdrop { padding:0; }
       .assessment-dialog > .section-title:first-child { position:sticky; top:-14px; z-index:4; background:#232F3E; padding:14px 0 12px; }
@@ -596,6 +609,8 @@
         grid-template-columns: 1fr;
       }
       .genius-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .library-metrics { grid-template-columns:1fr; }
+      .member-picker { grid-template-columns:1fr; }
       .record-card .actions, .mobile-action-panel { grid-template-columns:1fr; }
       .tutorial-body { padding:0 14px 14px; }
       .tutorial-step summary { padding:14px; }
@@ -617,6 +632,7 @@
       .dashboard-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
       .dashboard-sections { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .list-grid, .assessment-results-grid, .analytics-results, .client-detail-records { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .assessment-library-grid { grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); }
       .client-detail-summary { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .team-view-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .genius-metrics { grid-template-columns:repeat(6,minmax(0,1fr)); }
@@ -670,6 +686,7 @@
         <button data-view-btn="clients">👥 Clients</button>
         <button data-view-btn="estimates">📝 Estimates</button>
         <button data-view-btn="workshops">📅 Workshops</button>
+        <button data-view-btn="assessment-library">🧩 Assessments & Groups</button>
         <button data-view-btn="invoices">💵 Invoices</button>
         <button data-view-btn="assessments">📊 Assessment Analytics</button>
         <button data-view-btn="tutorial">📖 Tutorial & Best Practices</button>
@@ -677,7 +694,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.13.02</strong><br>
+        Version <strong id="appVersionLabel">2026.07.13.03</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -770,6 +787,52 @@
           </div>
         </section>
 
+        <!-- ASSESSMENTS & GROUPS -->
+        <section id="view-assessment-library" class="view">
+          <div class="library-metrics">
+            <div class="metric"><div class="metric-label">Unique People</div><div id="libraryPeopleCount" class="metric-value">0</div><div class="metric-note">Canonical assessment records</div></div>
+            <div class="metric"><div class="metric-label">Saved Groups</div><div id="libraryGroupCount" class="metric-value">0</div><div class="metric-note">Reusable teams and collections</div></div>
+            <div class="metric"><div class="metric-label">Needs Review</div><div id="libraryDuplicateCount" class="metric-value">0</div><div class="metric-note">Possible duplicate names</div></div>
+          </div>
+          <div id="assessmentLibraryLoading" class="card muted small">Loading assessment library...</div>
+          <div id="assessmentLibraryContent" class="hidden">
+            <div class="assessment-library-grid">
+              <div class="card">
+                <div class="section-title"><div><h2>People & Assessments</h2><p class="tiny muted">One assessment record per person, reused across workshops and groups</p></div><button class="button secondary small-btn" onclick="loadAssessmentLibrary(true)">Refresh</button></div>
+                <input id="libraryPersonSearch" placeholder="Search people or Genius types..." oninput="renderAssessmentPeople()">
+                <div id="libraryPeopleList" class="list-grid" style="margin-top:12px;"></div>
+                <p id="libraryPeopleEmpty" class="muted small hidden">No assessment records match this search.</p>
+              </div>
+              <div class="card">
+                <div class="section-title"><div><h2>Group Builder</h2><p class="tiny muted">Create a family, department, former-employees list, or any reusable team</p></div><button class="button ghost small-btn" onclick="resetAssessmentGroupForm()">New</button></div>
+                <input id="assessmentGroupId" type="hidden">
+                <div class="form-row">
+                  <div class="field"><label>Group Name</label><input id="assessmentGroupName" placeholder="FPU Former Employees"></div>
+                  <div class="field"><label>Client (optional)</label><select id="assessmentGroupClient" onchange="selectAssessmentGroupClient()"><option value="">No linked client</option></select></div>
+                </div>
+                <div class="field"><label>Description / Notes</label><textarea id="assessmentGroupDescription" rows="3" placeholder="What this group represents..."></textarea></div>
+                <div class="field"><label>Add an individual</label><div class="member-picker"><select id="assessmentGroupPerson"><option value="">Choose a person...</option></select><button class="button secondary small-btn" onclick="addPersonToAssessmentGroup()">Add Person</button></div></div>
+                <div class="field"><label>Add everyone from a workshop</label><div class="member-picker"><select id="assessmentGroupWorkshop"><option value="">Choose a workshop...</option></select><button class="button secondary small-btn" onclick="addWorkshopToAssessmentGroup()">Add Workshop</button></div><div class="tiny muted">People are copied into this group by reference. Later workshop changes will not alter the saved group.</div></div>
+                <div class="field"><label>Add everyone from a saved group</label><div class="member-picker"><select id="assessmentGroupSourceGroup"><option value="">Choose a saved group...</option></select><button class="button secondary small-btn" onclick="addSavedGroupToAssessmentGroup()">Add Group</button></div><div class="tiny muted">This copies the current member references without nesting the groups.</div></div>
+                <div class="section-title"><h3>Group Members</h3><span id="assessmentGroupMemberCount" class="tiny muted">0 people</span></div>
+                <div id="assessmentGroupMembers" class="group-member-list"></div>
+                <p id="assessmentGroupMembersEmpty" class="muted small">Add a person or workshop to begin. Choose one member as the leader before generating a Team Map.</p>
+                <div class="actions"><button class="button" onclick="saveAssessmentGroup(this)">Save Group</button><button class="button secondary" onclick="resetAssessmentGroupForm()">Clear</button></div>
+              </div>
+            </div>
+            <div class="card" style="margin-top:16px;">
+              <div class="section-title"><div><h2>Saved Groups</h2><p class="tiny muted">Groups do not require a workshop or date</p></div><span id="assessmentGroupMatchCount" class="tiny muted"></span></div>
+              <div id="assessmentGroupsList" class="list-grid"></div>
+              <p id="assessmentGroupsEmpty" class="muted small hidden">No custom groups yet.</p>
+            </div>
+            <div class="card" style="margin-top:16px;">
+              <div class="section-title"><div><h2>Possible Duplicates</h2><p class="tiny muted">Shown when the same normalized name has conflicting assessment data</p></div><span id="assessmentDuplicateMatchCount" class="tiny muted"></span></div>
+              <div id="assessmentDuplicateList" class="duplicate-list"></div>
+              <p id="assessmentDuplicatesEmpty" class="muted small hidden">No possible duplicates need review.</p>
+            </div>
+          </div>
+        </section>
+
         <!-- ASSESSMENT ANALYTICS -->
         <section id="view-assessments" class="view">
           <div class="card">
@@ -785,7 +848,7 @@
                 <select id="analyticsGenius" onchange="renderAssessmentAnalytics()"><option value="">All Geniuses</option><option>Wonder</option><option>Invention</option><option>Discernment</option><option>Galvanizing</option><option>Enablement</option><option>Tenacity</option></select>
                 <button class="button ghost small-btn" onclick="clearAnalyticsFilters()">Clear Filters</button>
               </div></div>
-              <div class="client-detail-summary"><div class="metric"><div class="metric-label">People Served</div><div id="analyticsPeopleCount" class="metric-value">0</div><div class="metric-note">Filtered assessment records</div></div><div class="metric"><div class="metric-label">Workshops</div><div id="analyticsWorkshopCount" class="metric-value">0</div><div class="metric-note">Represented in this view</div></div><div class="metric"><div class="metric-label">Genius Selections</div><div id="analyticsGeniusCount" class="metric-value">0</div><div class="metric-note">Two per person</div></div></div>
+              <div class="client-detail-summary"><div class="metric"><div class="metric-label">People Served</div><div id="analyticsPeopleCount" class="metric-value">0</div><div class="metric-note">Unique people in this view</div></div><div class="metric"><div class="metric-label">Workshops</div><div id="analyticsWorkshopCount" class="metric-value">0</div><div class="metric-note">Represented in this view</div></div><div class="metric"><div class="metric-label">Genius Selections</div><div id="analyticsGeniusCount" class="metric-value">0</div><div class="metric-note">Two per person</div></div></div>
               <div id="analyticsGeniusMetrics" class="genius-metrics"></div>
               <div class="section-title"><h3>Individual Assessments</h3><span id="analyticsMatchCount" class="tiny muted"></span></div>
               <div id="analyticsResults" class="analytics-results"></div>
@@ -808,10 +871,11 @@
                 <div class="field"><label>Organization</label><input id="workshopOrg"></div>
               </div>
               <div class="form-row-3">
-                <div class="field"><label>Workshop Date</label><input id="workshopDate" type="date"></div>
+                <div class="field"><label>Workshop Date (optional)</label><input id="workshopDate" type="date"></div>
                 <div class="field"><label>Type</label><select id="workshopType"><option>Corporate</option><option>Nonprofit</option><option>Government</option><option>Church</option><option>Individual Debrief</option></select></div>
                 <div class="field"><label>Status</label><select id="workshopStatus"><option>Inquiry</option><option>Proposed</option><option>Scheduled</option><option>Completed</option><option>Canceled</option><option>Follow-up Needed</option></select></div>
               </div>
+              <div class="field"><label>Date Description (optional)</label><input id="workshopDateDescription" placeholder="For example: Spring 2019 or date unknown"><div class="tiny muted">Use this for historical workshops when the exact date is unavailable.</div></div>
               <div class="form-row-3">
                 <div class="field"><label>Participants</label><input id="workshopParticipants" type="number" inputmode="numeric" min="1" value="12"></div>
                 <div class="field"><label>Start Time</label><input id="workshopStartTime" type="time"></div>
@@ -955,7 +1019,7 @@
         <section id="view-tutorial" class="view">
           <div class="tutorial-intro">
             <div class="card"><div class="section-title"><div><h2>Tutorial & Best Practices</h2><p class="muted small">The recommended order for managing a client engagement from setup through follow-up.</p></div></div><p>Use this workflow for a clean record trail. Each step includes a shortcut to the correct admin area.</p><div class="actions" style="justify-content:flex-start;"><button class="button" onclick="showView('clients')">Start with a Client</button><button class="button secondary" onclick="showView('dashboard')">Return to Dashboard</button></div></div>
-            <div class="metric"><div class="metric-label">Recommended Workflow</div><div class="metric-value">10 Steps</div><div class="metric-note">Client → estimate → workshop → billing → assessments → follow-up</div></div>
+            <div class="metric"><div class="metric-label">Recommended Workflow</div><div class="metric-value">11 Steps</div><div class="metric-note">Client → estimate → workshop → billing → assessments → groups → follow-up</div></div>
           </div>
 
           <div class="card">
@@ -964,13 +1028,14 @@
               <details class="tutorial-step" open><summary><span class="tutorial-number">1</span><span>Confirm settings and rates</span></summary><div class="tutorial-body">Before preparing financial documents, confirm your business information, payment instructions, invoice footer, and loaded rates.<ul><li>Profile information appears on estimates and invoices.</li><li>Rates are maintained in Google Sheets and displayed here for verification.</li></ul><button class="button secondary small-btn" onclick="showView('settings')">Open Settings</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">2</span><span>Create the client record</span></summary><div class="tutorial-body">Create one client record for the organization before creating related work.<ul><li>Use the organization’s consistent official name.</li><li>Save the primary contact, email, phone, and useful relationship notes.</li><li>Reuse the existing client instead of creating duplicates.</li></ul><button class="button secondary small-btn" onclick="showView('clients')">Open Clients</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">3</span><span>Prepare and send the estimate</span></summary><div class="tutorial-body">Prepare the estimate before scheduling the workshop. Review the expected participant count, hours, preparation, assessment fees, and discounts before sending.<ul><li>Preview the estimate before delivery.</li><li>Update the saved estimate instead of creating a second copy for revisions.</li><li>Wait for acceptance before confirming the workshop date.</li></ul><button class="button secondary small-btn" onclick="showView('estimates')">Open Estimates</button></div></details>
-              <details class="tutorial-step"><summary><span class="tutorial-number">4</span><span>Create and schedule the workshop</span></summary><div class="tutorial-body">After the estimate is accepted, select the saved client and enter the confirmed workshop date, type, participant estimate, delivery format, contact details, and status.<ul><li>Link the accepted estimate to the workshop.</li><li>Keep the workshop status current from Scheduled through Completed.</li><li>Use Follow-up Date and Follow-up Needed when another action is required.</li></ul><button class="button secondary small-btn" onclick="showView('workshops')">Open Workshops</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">4</span><span>Create and schedule the workshop</span></summary><div class="tutorial-body">After the estimate is accepted, select the saved client and enter the confirmed workshop date, type, participant estimate, delivery format, contact details, and status.<ul><li>Link the accepted estimate to the workshop.</li><li>For historical workshops, use a descriptive timeframe or leave the date unknown.</li><li>Keep the workshop status current from Scheduled through Completed.</li></ul><button class="button secondary small-btn" onclick="showView('workshops')">Open Workshops</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">5</span><span>Create and manage the invoice</span></summary><div class="tutorial-body">Create the invoice from the accepted estimate, then verify issue date, due date, recipient, totals, and payment instructions.<ul><li>Record partial payments as they arrive.</li><li>Mark the invoice Paid only when the balance is satisfied.</li><li>Use Void or Canceled instead of deleting a legitimate financial record.</li></ul><button class="button secondary small-btn" onclick="showView('invoices')">Open Invoices</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">6</span><span>Import and validate assessment results</span></summary><div class="tutorial-body">From the workshop, choose Assessment Results and upload the official Individual Results workbook.<ul><li>Review validation messages and participant previews before importing.</li><li>Use Merge for additions or corrections that should preserve omitted people.</li><li>Use Replace only when the uploaded workbook should become the complete active roster.</li></ul><button class="button secondary small-btn" onclick="showView('workshops')">Find Workshop Assessments</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">7</span><span>Select the leader and review the Team View</span></summary><div class="tutorial-body">Choose and save the team leader, then review all six Team View cards. The leader is intentionally represented twice in Genius and Frustration lists to reflect leadership influence; the person’s stored result is not duplicated.</div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">8</span><span>Preview and save the Team Map</span></summary><div class="tutorial-body">Preview the Team Map, choose the preferred name format, and check all six Genius and Frustration sections.<ul><li>Use Print / Save as PDF to store the map locally.</li><li>Team Map PDFs are not stored in Google Sheets or Google Drive by the app.</li></ul></div></details>
-              <details class="tutorial-step"><summary><span class="tutorial-number">9</span><span>Review Assessment Analytics</span></summary><div class="tutorial-body">Use the analytics page to review total people served and Genius distribution. Filter by client, workshop, dates, Genius, or participant search; all dashboard counts and percentages update with the filtered list.<ul><li>Each person has two Geniuses, so the six percentages normally total approximately 200%.</li><li>Removed and replaced assessment imports are excluded.</li></ul><button class="button secondary small-btn" onclick="showView('assessments')">Open Assessment Analytics</button></div></details>
-              <details class="tutorial-step"><summary><span class="tutorial-number">10</span><span>Complete follow-up and maintain records</span></summary><div class="tutorial-body">Update the workshop status, follow-up date, invoice status, and notes after the engagement.<ul><li>Archive inactive business records to reduce clutter while preserving history.</li><li>Use permanent deletion only for genuine mistakes or test records.</li><li>Assessment removal leaves the workshop and financial documents intact and retains inactive import history.</li></ul><button class="button secondary small-btn" onclick="showView('dashboard')">Review Dashboard</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">9</span><span>Create reusable groups</span></summary><div class="tutorial-body">Use Assessments & Groups to combine individuals or a complete workshop roster without duplicating anyone’s assessment.<ul><li>Groups do not require a workshop or date.</li><li>Choose a group-specific leader before previewing its Team Map.</li><li>Review possible duplicate names when the imported assessment data conflicts.</li></ul><button class="button secondary small-btn" onclick="showView('assessment-library')">Open Assessments & Groups</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">10</span><span>Review Assessment Analytics</span></summary><div class="tutorial-body">Use the analytics page to review unique people served and Genius distribution. Filter by client, workshop, dates, Genius, or participant search; all dashboard counts and percentages update with the filtered list.<ul><li>A person appearing in multiple workshops counts once within the filtered view.</li><li>Each person has two Geniuses, so the six percentages normally total approximately 200%.</li></ul><button class="button secondary small-btn" onclick="showView('assessments')">Open Assessment Analytics</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">11</span><span>Complete follow-up and maintain records</span></summary><div class="tutorial-body">Update the workshop status, follow-up date, invoice status, and notes after the engagement.<ul><li>Archive inactive business records to reduce clutter while preserving history.</li><li>Use permanent deletion only for genuine mistakes or test records.</li><li>Assessment removal leaves the workshop and financial documents intact and retains inactive import history.</li></ul><button class="button secondary small-btn" onclick="showView('dashboard')">Review Dashboard</button></div></details>
             </div>
           </div>
 
@@ -1086,7 +1151,7 @@ Sanger, CA 93657"></textarea>
 
   <!-- PRINT VIEW -->
   <div id="teamMapPreview" class="print-view hidden">
-    <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="closeTeamMapPreview(); document.getElementById('assessmentLeader').focus()">Change Leader</button><button class="button small-btn" onclick="window.print()">Print / Save as PDF</button></div></div>
+    <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="changeTeamMapLeader()">Change Leader</button><button class="button small-btn" onclick="window.print()">Print / Save as PDF</button></div></div>
     <div id="teamMapSheet" class="team-map-sheet"></div>
   </div>
 
@@ -1147,15 +1212,16 @@ Sanger, CA 93657"></textarea>
   </div>
 
   <script src="../assets/js/branding.js"></script>
-  <script src="../assets/js/googleSheets.js?v=5"></script>
+  <script src="../assets/js/googleSheets.js?v=6"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
+  <script src="../assets/js/assessmentLibrary.js?v=1"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
   <script src="../assets/js/invoices.js?v=2"></script>
 
   <script>
-    const APP_VERSION = "2026.07.13.02";
+    const APP_VERSION = "2026.07.13.03";
 
     const K = {
       clients: "jjc_clients",
@@ -1175,6 +1241,7 @@ Sanger, CA 93657"></textarea>
     let assessmentAnalyticsResults = [];
     let assessmentAnalyticsLoaded = false;
     let assessmentComparisonData = null;
+    let teamMapContext = null;
     let estimates = [];
     let invoices = [];
     let settings = {};
@@ -1365,11 +1432,12 @@ Sanger, CA 93657"></textarea>
       document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
       document.getElementById("view-" + view).classList.add("active");
       document.querySelectorAll("[data-view-btn]").forEach(btn => btn.classList.toggle("active", btn.dataset.viewBtn === view));
-      const viewTitles = { assessments: "Assessment Analytics", tutorial: "Tutorial & Best Practices" };
+      const viewTitles = { assessments: "Assessment Analytics", "assessment-library": "Assessments & Groups", tutorial: "Tutorial & Best Practices" };
       document.getElementById("pageTitle").textContent = viewTitles[view] || view.charAt(0).toUpperCase() + view.slice(1);
       closeSidebar();
       location.hash = view;
       if (view === "assessments") loadAssessmentAnalytics();
+      if (view === "assessment-library") loadAssessmentLibrary();
     }
 
     document.querySelectorAll("[data-view-btn]").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.viewBtn)));
@@ -1787,7 +1855,7 @@ Sanger, CA 93657"></textarea>
     async function resetWorkshopForm() {
       dirtyFormViews.delete("workshops");
       document.getElementById("workshopId").value = nextId(workshops, "WRK", "WorkshopID");
-      ["workshopClientName", "workshopClientId", "workshopOrg", "workshopEstimateId", "workshopInvoiceId", "workshopLocation", "workshopNotes", "workshopStartTime", "workshopEndTime", "workshopPrimaryContact", "workshopContactEmail"].forEach(id => document.getElementById(id).value = "");
+      ["workshopClientName", "workshopClientId", "workshopOrg", "workshopEstimateId", "workshopInvoiceId", "workshopLocation", "workshopNotes", "workshopStartTime", "workshopEndTime", "workshopPrimaryContact", "workshopContactEmail", "workshopDateDescription"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("workshopDate").value = "";
       document.getElementById("workshopFollowUpDate").value = "";
       document.getElementById("workshopParticipants").value = 12;
@@ -1803,6 +1871,7 @@ Sanger, CA 93657"></textarea>
         ClientID: document.getElementById("workshopClientId").value.trim(),
         Organization: document.getElementById("workshopOrg").value.trim(),
         WorkshopDate: document.getElementById("workshopDate").value,
+        DateDescription: document.getElementById("workshopDateDescription").value.trim(),
         Type: document.getElementById("workshopType").value,
         Status: document.getElementById("workshopStatus").value,
         Participants: document.getElementById("workshopParticipants").value,
@@ -1871,7 +1940,8 @@ Sanger, CA 93657"></textarea>
         const financial = workshopFinancialStatus(w);
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${formatDate(w.WorkshopDate)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
+        const workshopWhen = w.WorkshopDate ? formatDate(w.WorkshopDate) : (w.DateDescription || "Date not recorded");
+        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
         wrap.appendChild(el);
       });
       prepareMobileActionMenus(wrap);
@@ -1913,6 +1983,7 @@ Sanger, CA 93657"></textarea>
       document.getElementById("workshopClientId").value = w.ClientID || client?.ClientID || "";
       document.getElementById("workshopOrg").value = w.Organization || client?.Organization || "";
       document.getElementById("workshopDate").value = normalizeDateInput(w.WorkshopDate);
+      document.getElementById("workshopDateDescription").value = w.DateDescription || "";
       document.getElementById("workshopType").value = w.Type || "Corporate";
       document.getElementById("workshopStatus").value = normalizeWorkshopStatus(w.Status);
       document.getElementById("workshopParticipants").value = w.Participants || 12;
@@ -2040,8 +2111,14 @@ Sanger, CA 93657"></textarea>
     function renderAssessmentAnalytics() {
       if (!assessmentAnalyticsLoaded) return;
       const types = [{ name:"Wonder", abbr:"W" },{ name:"Invention", abbr:"I" },{ name:"Discernment", abbr:"D" },{ name:"Galvanizing", abbr:"G" },{ name:"Enablement", abbr:"E" },{ name:"Tenacity", abbr:"T" }];
-      const rows = filteredAssessmentAnalytics().sort((a,b) => `${a.LastName}|${a.FirstName}`.localeCompare(`${b.LastName}|${b.FirstName}`));
-      const workshopCount = new Set(rows.map(row => String(row.WorkshopID))).size;
+      const filteredRows = filteredAssessmentAnalytics();
+      const workshopCount = new Set(filteredRows.map(row => String(row.WorkshopID))).size;
+      const uniquePeople = new Map();
+      filteredRows.forEach(row => {
+        const key = String(row.PersonID || row.AssessmentResultID);
+        if (!uniquePeople.has(key)) uniquePeople.set(key, row);
+      });
+      const rows = Array.from(uniquePeople.values()).sort((a,b) => `${a.LastName}|${a.FirstName}`.localeCompare(`${b.LastName}|${b.FirstName}`));
       document.getElementById("analyticsPeopleCount").textContent = rows.length;
       document.getElementById("analyticsWorkshopCount").textContent = workshopCount;
       document.getElementById("analyticsGeniusCount").textContent = rows.length * 2;
@@ -2067,6 +2144,7 @@ Sanger, CA 93657"></textarea>
     async function openAssessmentDialog(workshopId) {
       const workshop = workshops.find(w => w.WorkshopID === workshopId);
       if (!workshop) return toast("Workshop not found.");
+      teamMapContext = null;
       assessmentReturnFocus = document.activeElement;
       assessmentWorkshopId = workshopId;
       assessmentPreviewData = null;
@@ -2131,6 +2209,8 @@ Sanger, CA 93657"></textarea>
           previousTotal: currentAssessmentData?.results?.length || 0, groupNameBefore: currentAssessmentData?.import?.GroupName || "",
           leaderBefore: currentAssessmentData?.import ? `${currentAssessmentData.import.LeaderFirstName || ""} ${currentAssessmentData.import.LeaderLastName || ""}`.trim() : ""
         });
+        assessmentLibraryLoaded = false;
+        assessmentAnalyticsLoaded = false;
         renderSavedAssessment(assessment);
         toast("Assessment results imported.");
       } catch (err) {
@@ -2284,6 +2364,15 @@ Sanger, CA 93657"></textarea>
       previewReturnFocus = null;
     }
 
+    function changeTeamMapLeader() {
+      const context = teamMapContext;
+      closeTeamMapPreview();
+      if (context?.groupId) {
+        showView("assessment-library");
+        editAssessmentGroup(context.groupId);
+      } else document.getElementById("assessmentLeader").focus();
+    }
+
     function teamMapDisplayName(person, mode) {
       if (mode === "full") return `${person.firstName} ${person.lastName}`.trim();
       const initial = String(person.lastName || "").trim().charAt(0);
@@ -2295,12 +2384,16 @@ Sanger, CA 93657"></textarea>
       const team = Assessments.deriveTeamView(currentAssessmentData.results, currentAssessmentData.import.LeaderAssessmentResultID);
       const mode = document.getElementById("teamMapNameMode").value;
       const workshop = workshops.find(w => w.WorkshopID === assessmentWorkshopId) || {};
+      const mapTitle = teamMapContext?.title || workshop.Organization || currentAssessmentData.import.GroupName || "Team";
+      const mapIdentifier = teamMapContext?.identifier || assessmentWorkshopId;
+      const mapDate = teamMapContext?.dateLabel || (workshop.WorkshopDate ? formatDate(workshop.WorkshopDate) : (workshop.DateDescription || ""));
+      const mapSubtitle = teamMapContext?.organization || currentAssessmentData.import.GroupName || "";
       const longestList = Math.max(...team.cards.flatMap(card => [card.geniusWeighted.length, card.frustrationWeighted.length]));
       const densityClass = longestList > 20 ? "team-map-very-dense" : longestList > 12 ? "team-map-dense" : "";
       const generated = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
       const mapRows = team.cards.map(card => teamMapPanel(card, team.leader, mode)).join("");
       document.getElementById("teamMapSheet").className = `team-map-sheet ${densityClass}`;
-      document.getElementById("teamMapSheet").innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Working Genius Team Map</h1><div style="font-weight:900;">${esc(workshop.Organization || currentAssessmentData.import.GroupName || "Team")}</div></div></div><div class="team-map-meta">${esc(assessmentWorkshopId)}<br>${workshop.WorkshopDate ? formatDate(workshop.WorkshopDate) : ""}<br>${esc(currentAssessmentData.import.GroupName || "")}</div></div><div class="team-map-grid">${mapRows}</div><div class="team-map-footer"><div><strong>Jeff Jones Consulting</strong><br>Generated ${generated}</div><div>The selected team leader is represented twice in Genius and Frustration areas to reflect the leader's influence on the team environment.</div></div>`;
+      document.getElementById("teamMapSheet").innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Working Genius Team Map</h1><div style="font-weight:900;">${esc(mapTitle)}</div></div></div><div class="team-map-meta">${esc(mapIdentifier)}<br>${esc(mapDate)}<br>${esc(mapSubtitle)}</div></div><div class="team-map-grid">${mapRows}</div><div class="team-map-footer"><div><strong>Jeff Jones Consulting</strong><br>Generated ${generated}</div><div>The selected team leader is represented twice in Genius and Frustration areas to reflect the leader's influence on the team environment.</div></div>`;
     }
 
     function teamMapPanel(card, leader, mode) {
