@@ -9,13 +9,17 @@ const SHEET_NAMES = {
 
 const PDF_HEADERS = ["pdfUrl", "pdfFileId", "pdfGeneratedDate"];
 const EMAIL_HEADERS = ["sentDate", "firstSentDate", "lastSentDate", "sentTo", "sentCc", "sentSubject", "sendCount"];
-const WORKSHOP_HEADERS = ["WorkshopDate", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization"];
+const WORKSHOP_HEADERS = ["WorkshopDate", "DateDescription", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization"];
 const ESTIMATE_HEADERS = ["ClientID", "ClientName", "ClientEmail", "consultingDiscount", "prepDiscount", "assessmentDiscount"];
 const ARCHIVE_HEADERS = ["archived", "archivedDate"];
 const INVOICE_LIFECYCLE_HEADERS = ["amountPaid", "balanceDue", "paidDate", "paymentMethod", "paymentReference", "voidReason"];
 const ASSESSMENT_IMPORT_HEADERS = ["AssessmentImportID", "WorkshopID", "GroupName", "OriginalFileName", "ParticipantCount", "ImportedDate", "UpdatedDate", "Active", "ImportStatus", "ValidationWarnings", "SourceType", "SourceVersion", "LeaderAssessmentResultID", "LeaderFirstName", "LeaderLastName", "LeaderSelectedDate", "LeaderUpdatedDate", "TeamPdfFileId", "TeamPdfUrl", "TeamPdfGeneratedDate"];
-const ASSESSMENT_RESULT_HEADERS = ["AssessmentResultID", "AssessmentImportID", "WorkshopID", "FirstName", "LastName", "DisplayName", "GroupName", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "SortOrder", "ImportedDate", "UpdatedDate", "Active"];
+const ASSESSMENT_RESULT_HEADERS = ["AssessmentResultID", "AssessmentImportID", "WorkshopID", "PersonID", "FirstName", "LastName", "DisplayName", "GroupName", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "SortOrder", "ImportedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_HISTORY_HEADERS = ["AssessmentImportEventID", "AssessmentImportID", "WorkshopID", "UploadMode", "OriginalFileName", "UploadedDate", "UploadedParticipantCount", "NewParticipantCount", "UpdatedParticipantCount", "UnchangedParticipantCount", "DuplicateIgnoredCount", "ConflictCount", "PreviousTotalCount", "FinalTotalCount", "GroupNameBefore", "GroupNameAfter", "LeaderBefore", "LeaderAfter", "Notes"];
+const ASSESSMENT_PERSON_HEADERS = ["PersonID", "FirstName", "LastName", "DisplayName", "NameKey", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "CreatedDate", "UpdatedDate", "Active"];
+const ASSESSMENT_GROUP_HEADERS = ["GroupID", "GroupName", "ClientID", "Organization", "Description", "CreatedDate", "UpdatedDate", "Active"];
+const ASSESSMENT_GROUP_MEMBER_HEADERS = ["GroupMemberID", "GroupID", "PersonID", "IsLeader", "AddedDate", "UpdatedDate", "Active"];
+const ASSESSMENT_DUPLICATE_HEADERS = ["DuplicateReviewID", "PersonID1", "PersonID2", "Status", "ResolutionDate", "Notes"];
 const PDF_ROOT_FOLDER = "Jeff Jones Consulting PDFs";
 const PDF_ESTIMATE_FOLDER = "Estimates";
 const PDF_INVOICE_FOLDER = "Invoices";
@@ -42,6 +46,7 @@ function doGet(e) {
     if (action === "reserveNumber") return jsonResponse(reserveRecordNumber(e.parameter.type));
     if (action === "getWorkshopAssessment") return jsonResponse(getWorkshopAssessment(e.parameter.workshopId));
     if (action === "getAllActiveAssessmentResults") return jsonResponse(getAllActiveAssessmentResults());
+    if (action === "getAssessmentWorkspace") return jsonResponse(getAssessmentWorkspace());
     if (action === "getAssessmentImportHistory") return jsonResponse(getRows("AssessmentImportHistory").filter(row => String(row.WorkshopID) === String(e.parameter.workshopId || "")));
     if (action === "generateEstimatePdf") return jsonResponse(generatePdfForRecord("estimate", e.parameter.id));
     if (action === "generateInvoicePdf") return jsonResponse(generatePdfForRecord("invoice", e.parameter.invoiceNo));
@@ -160,6 +165,10 @@ function doPost(e) {
       return jsonResponse(deactivateWorkshopAssessment(body.data || {}));
     }
 
+    if (action === "saveAssessmentGroup") return jsonResponse(saveAssessmentGroup(body.data || {}));
+    if (action === "deleteAssessmentGroup") return jsonResponse(deleteAssessmentGroup(body.data || {}));
+    if (action === "resolveAssessmentDuplicate") return jsonResponse(resolveAssessmentDuplicate(body.data || {}));
+
     if (action === "deleteWorkshop") {
       deleteRowById(SHEET_NAMES.workshops, "WorkshopID", (body.data || {}).id);
       return jsonResponse({ success: true });
@@ -200,6 +209,7 @@ function getWorkshopAssessment(workshopId) {
 }
 
 function getAllActiveAssessmentResults() {
+  ensureCanonicalAssessmentData();
   const imports = getRows("AssessmentImports").filter(row => String(row.Active).toLowerCase() !== "false");
   const importsById = {};
   imports.forEach(row => { importsById[String(row.AssessmentImportID)] = row; });
@@ -212,6 +222,187 @@ function getAllActiveAssessmentResults() {
         AssessmentGroupName: source.GroupName || row.GroupName || ""
       });
     });
+}
+
+function assessmentFingerprint(row) {
+  const pair = (a, b) => [String(a || "").trim(), String(b || "").trim()].sort().join("|");
+  return [pair(row.Genius1 || row.genius1, row.Genius2 || row.genius2), pair(row.Competency1 || row.competency1, row.Competency2 || row.competency2), pair(row.Frustration1 || row.frustration1, row.Frustration2 || row.frustration2)].join("||");
+}
+
+function isActiveAssessmentRow(row) {
+  return String(row.Active).toLowerCase() !== "false";
+}
+
+function personFromAssessmentResult(row, personId, now) {
+  return {
+    PersonID: personId,
+    FirstName: row.FirstName,
+    LastName: row.LastName,
+    DisplayName: row.DisplayName || (String(row.FirstName || "") + " " + String(row.LastName || "")).trim(),
+    NameKey: assessmentNameKey(row.FirstName, row.LastName),
+    Genius1: row.Genius1,
+    Genius2: row.Genius2,
+    Competency1: row.Competency1,
+    Competency2: row.Competency2,
+    Frustration1: row.Frustration1,
+    Frustration2: row.Frustration2,
+    CreatedDate: now,
+    UpdatedDate: now,
+    Active: true
+  };
+}
+
+function ensureCanonicalAssessmentData() {
+  ensureSheetWithHeaders("AssessmentPeople", ASSESSMENT_PERSON_HEADERS);
+  ensureSheetWithHeaders("AssessmentGroups", ASSESSMENT_GROUP_HEADERS);
+  ensureSheetWithHeaders("AssessmentGroupMembers", ASSESSMENT_GROUP_MEMBER_HEADERS);
+  ensureSheetWithHeaders("AssessmentDuplicateReviews", ASSESSMENT_DUPLICATE_HEADERS);
+  ensureSheetWithHeaders("AssessmentResults", ASSESSMENT_RESULT_HEADERS);
+
+  const people = getRows("AssessmentPeople").filter(isActiveAssessmentRow);
+  const peopleById = {};
+  const peopleByIdentity = {};
+  people.forEach(person => {
+    peopleById[String(person.PersonID)] = person;
+    const identity = String(person.NameKey || assessmentNameKey(person.FirstName, person.LastName)) + "|" + assessmentFingerprint(person);
+    if (!peopleByIdentity[identity]) peopleByIdentity[identity] = person;
+  });
+
+  const activeImportIds = {};
+  getRows("AssessmentImports").filter(isActiveAssessmentRow).forEach(row => { activeImportIds[String(row.AssessmentImportID)] = true; });
+  const results = getRows("AssessmentResults").filter(row => isActiveAssessmentRow(row) && activeImportIds[String(row.AssessmentImportID)]);
+  const now = new Date().toISOString();
+  results.forEach(result => {
+    const existingId = String(result.PersonID || "").trim();
+    if (existingId && peopleById[existingId]) return;
+    const identity = assessmentNameKey(result.FirstName, result.LastName) + "|" + assessmentFingerprint(result);
+    let person = peopleByIdentity[identity];
+    if (!person) {
+      const personId = "PER-" + Utilities.getUuid();
+      person = personFromAssessmentResult(result, personId, now);
+      appendRow("AssessmentPeople", person);
+      people.push(person);
+      peopleById[personId] = person;
+      peopleByIdentity[identity] = person;
+    }
+    const resultInfo = getRowById("AssessmentResults", "AssessmentResultID", result.AssessmentResultID);
+    if (resultInfo) updateRowFields("AssessmentResults", resultInfo.rowNumber, { PersonID: person.PersonID, UpdatedDate: result.UpdatedDate || now });
+  });
+}
+
+function getAssessmentWorkspace() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try { ensureCanonicalAssessmentData(); } finally { lock.releaseLock(); }
+  const people = getRows("AssessmentPeople").filter(isActiveAssessmentRow);
+  const groups = getRows("AssessmentGroups").filter(isActiveAssessmentRow);
+  const memberships = getRows("AssessmentGroupMembers").filter(isActiveAssessmentRow);
+  const activeImportIds = {};
+  getRows("AssessmentImports").filter(isActiveAssessmentRow).forEach(row => { activeImportIds[String(row.AssessmentImportID)] = true; });
+  const workshopMembers = getRows("AssessmentResults")
+    .filter(row => isActiveAssessmentRow(row) && activeImportIds[String(row.AssessmentImportID)] && row.PersonID)
+    .map(row => ({ WorkshopID: row.WorkshopID, PersonID: row.PersonID, AssessmentResultID: row.AssessmentResultID }));
+
+  const resolvedPairs = {};
+  getRows("AssessmentDuplicateReviews").forEach(row => {
+    if (String(row.Status) === "Different") resolvedPairs[[String(row.PersonID1), String(row.PersonID2)].sort().join("|")] = true;
+  });
+  const byName = {};
+  people.forEach(person => {
+    const key = String(person.NameKey || assessmentNameKey(person.FirstName, person.LastName));
+    if (!byName[key]) byName[key] = [];
+    byName[key].push(person);
+  });
+  const duplicates = [];
+  Object.keys(byName).forEach(key => {
+    const matches = byName[key];
+    for (let i = 0; i < matches.length; i++) for (let j = i + 1; j < matches.length; j++) {
+      const pairKey = [String(matches[i].PersonID), String(matches[j].PersonID)].sort().join("|");
+      if (!resolvedPairs[pairKey]) duplicates.push({ person1: matches[i], person2: matches[j] });
+    }
+  });
+  return { people: people, groups: groups, memberships: memberships, workshopMembers: workshopMembers, duplicates: duplicates };
+}
+
+function saveAssessmentGroup(data) {
+  const name = String(data.groupName || "").trim();
+  if (!name) throw new Error("Group name is required.");
+  ensureSheetWithHeaders("AssessmentGroups", ASSESSMENT_GROUP_HEADERS);
+  ensureSheetWithHeaders("AssessmentGroupMembers", ASSESSMENT_GROUP_MEMBER_HEADERS);
+  ensureCanonicalAssessmentData();
+  const now = new Date().toISOString();
+  let groupId = String(data.groupId || "").trim();
+  let groupInfo = groupId ? getRowById("AssessmentGroups", "GroupID", groupId) : null;
+  if (!groupInfo) {
+    groupId = groupId || ("GRP-" + Utilities.getUuid());
+    appendRow("AssessmentGroups", { GroupID: groupId, GroupName: name, ClientID: data.clientId || "", Organization: data.organization || "", Description: data.description || "", CreatedDate: now, UpdatedDate: now, Active: true });
+  } else {
+    updateRowFields("AssessmentGroups", groupInfo.rowNumber, { GroupName: name, ClientID: data.clientId || "", Organization: data.organization || "", Description: data.description || "", UpdatedDate: now, Active: true });
+  }
+
+  const validPeople = {};
+  getRows("AssessmentPeople").filter(isActiveAssessmentRow).forEach(person => { validPeople[String(person.PersonID)] = true; });
+  const memberIds = Array.from(new Set((data.personIds || []).map(String).filter(id => validPeople[id])));
+  const leaderId = memberIds.indexOf(String(data.leaderPersonId || "")) >= 0 ? String(data.leaderPersonId) : "";
+  getRows("AssessmentGroupMembers").filter(row => String(row.GroupID) === groupId && isActiveAssessmentRow(row)).forEach(row => {
+    const info = getRowById("AssessmentGroupMembers", "GroupMemberID", row.GroupMemberID);
+    if (info) updateRowFields("AssessmentGroupMembers", info.rowNumber, { Active: false, UpdatedDate: now });
+  });
+  memberIds.forEach(personId => appendRow("AssessmentGroupMembers", { GroupMemberID: "GMB-" + Utilities.getUuid(), GroupID: groupId, PersonID: personId, IsLeader: personId === leaderId, AddedDate: now, UpdatedDate: now, Active: true }));
+  return { success: true, groupId: groupId };
+}
+
+function deleteAssessmentGroup(data) {
+  const groupId = String(data.groupId || "").trim();
+  const groupInfo = getRowById("AssessmentGroups", "GroupID", groupId);
+  if (!groupInfo) throw new Error("Group not found.");
+  const now = new Date().toISOString();
+  updateRowFields("AssessmentGroups", groupInfo.rowNumber, { Active: false, UpdatedDate: now });
+  getRows("AssessmentGroupMembers").filter(row => String(row.GroupID) === groupId && isActiveAssessmentRow(row)).forEach(row => {
+    const info = getRowById("AssessmentGroupMembers", "GroupMemberID", row.GroupMemberID);
+    if (info) updateRowFields("AssessmentGroupMembers", info.rowNumber, { Active: false, UpdatedDate: now });
+  });
+  return { success: true, groupId: groupId };
+}
+
+function resolveAssessmentDuplicate(data) {
+  ensureCanonicalAssessmentData();
+  const firstId = String(data.personId1 || "").trim();
+  const secondId = String(data.personId2 || "").trim();
+  if (!firstId || !secondId || firstId === secondId) throw new Error("Two different people are required.");
+  const first = getRowById("AssessmentPeople", "PersonID", firstId);
+  const second = getRowById("AssessmentPeople", "PersonID", secondId);
+  if (!first || !second) throw new Error("A duplicate candidate no longer exists.");
+  const now = new Date().toISOString();
+  const action = String(data.resolution || "");
+  if (action === "different") {
+    appendRow("AssessmentDuplicateReviews", { DuplicateReviewID: "DUP-" + Utilities.getUuid(), PersonID1: firstId, PersonID2: secondId, Status: "Different", ResolutionDate: now, Notes: "Confirmed as different people" });
+    return { success: true };
+  }
+  const keepId = String(data.keepPersonId || "");
+  const mergeId = keepId === firstId ? secondId : keepId === secondId ? firstId : "";
+  if (!mergeId) throw new Error("Choose which assessment record to keep.");
+  getRows("AssessmentResults").filter(row => String(row.PersonID) === mergeId).forEach(row => {
+    const info = getRowById("AssessmentResults", "AssessmentResultID", row.AssessmentResultID);
+    if (info) updateRowFields("AssessmentResults", info.rowNumber, { PersonID: keepId, UpdatedDate: now });
+  });
+  const keepGroups = {};
+  getRows("AssessmentGroupMembers").filter(row => isActiveAssessmentRow(row) && String(row.PersonID) === keepId).forEach(row => { keepGroups[String(row.GroupID)] = row; });
+  getRows("AssessmentGroupMembers").filter(row => isActiveAssessmentRow(row) && String(row.PersonID) === mergeId).forEach(row => {
+    const info = getRowById("AssessmentGroupMembers", "GroupMemberID", row.GroupMemberID);
+    if (!info) return;
+    if (keepGroups[String(row.GroupID)]) {
+      if (String(row.IsLeader).toLowerCase() === "true") {
+        const keepInfo = getRowById("AssessmentGroupMembers", "GroupMemberID", keepGroups[String(row.GroupID)].GroupMemberID);
+        if (keepInfo) updateRowFields("AssessmentGroupMembers", keepInfo.rowNumber, { IsLeader: true, UpdatedDate: now });
+      }
+      updateRowFields("AssessmentGroupMembers", info.rowNumber, { Active: false, UpdatedDate: now });
+    } else updateRowFields("AssessmentGroupMembers", info.rowNumber, { PersonID: keepId, UpdatedDate: now });
+  });
+  const mergeInfo = getRowById("AssessmentPeople", "PersonID", mergeId);
+  updateRowFields("AssessmentPeople", mergeInfo.rowNumber, { Active: false, UpdatedDate: now });
+  appendRow("AssessmentDuplicateReviews", { DuplicateReviewID: "DUP-" + Utilities.getUuid(), PersonID1: firstId, PersonID2: secondId, Status: "Merged", ResolutionDate: now, Notes: "Kept " + keepId });
+  return { success: true, personId: keepId };
 }
 
 function saveWorkshopAssessment(data) {
@@ -276,6 +467,7 @@ function saveWorkshopAssessment(data) {
       }
       throw writeError;
     }
+    ensureCanonicalAssessmentData();
     return { success: true, workshopId: workshopId, assessmentImportId: importId, participantCount: participants.length };
   } finally {
     lock.releaseLock();
@@ -302,7 +494,7 @@ function mergeWorkshopAssessment(existing, data) {
       if (!changed) unchanged++;
       else {
         const info = getRowById("AssessmentResults", "AssessmentResultID", current.AssessmentResultID);
-        updateRowFields("AssessmentResults", info.rowNumber, { FirstName: participant.firstName, LastName: participant.lastName, DisplayName: participant.firstName + " " + participant.lastName, GroupName: participant.groupName || current.GroupName || "", Genius1: participant.genius1, Genius2: participant.genius2, Competency1: participant.competency1, Competency2: participant.competency2, Frustration1: participant.frustration1, Frustration2: participant.frustration2, UpdatedDate: now });
+        updateRowFields("AssessmentResults", info.rowNumber, { PersonID: "", FirstName: participant.firstName, LastName: participant.lastName, DisplayName: participant.firstName + " " + participant.lastName, GroupName: participant.groupName || current.GroupName || "", Genius1: participant.genius1, Genius2: participant.genius2, Competency1: participant.competency1, Competency2: participant.competency2, Frustration1: participant.frustration1, Frustration2: participant.frustration2, UpdatedDate: now });
         updated++;
       }
     }
@@ -311,6 +503,7 @@ function mergeWorkshopAssessment(existing, data) {
   const finalTotal = existing.results.length + added;
   updateRowFields("AssessmentImports", importInfo.rowNumber, { OriginalFileName: data.fileName || existing.import.OriginalFileName, ParticipantCount: finalTotal, UpdatedDate: now, ImportStatus: "Merged", ValidationWarnings: JSON.stringify(data.warnings || []), TeamPdfFileId: "", TeamPdfUrl: "", TeamPdfGeneratedDate: "" });
   appendAssessmentHistory({ importId: existing.import.AssessmentImportID, workshopId: existing.import.WorkshopID, mode: "Merge", fileName: data.fileName, uploaded: data.participants.length, added: added, updated: updated, unchanged: unchanged, previous: existing.results.length, finalTotal: finalTotal, groupBefore: existing.import.GroupName, groupAfter: existing.import.GroupName, leaderBefore: existing.import.LeaderFirstName + " " + existing.import.LeaderLastName, leaderAfter: existing.import.LeaderFirstName + " " + existing.import.LeaderLastName });
+  ensureCanonicalAssessmentData();
   return getWorkshopAssessment(existing.import.WorkshopID);
 }
 
