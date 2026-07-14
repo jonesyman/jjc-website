@@ -1,0 +1,72 @@
+# Changelog
+
+Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
+
+## 2026.07.13.03 — 2026-07-13
+
+- Added the canonical People & Assessments library.
+- Added reusable groups assembled from people, workshop rosters, or saved groups.
+- Added group-specific leaders and Team Map previews.
+- Added possible-duplicate review and merge decisions.
+- Updated analytics to count canonical people once in the filtered view.
+- Added optional workshop dates and descriptive historical timeframes.
+- Expanded Tutorial & Best Practices for reusable groups.
+
+## 2026.07.13.02 — 2026-07-13
+
+- Reordered the admin navigation to follow the consulting workflow.
+
+## 2026.07.13.01 — 2026-07-13
+
+- Preserved invoice client identity and saved-card labels during PDF regeneration.
+- Restored the client name in generated invoices while retaining client email.
+
+## 2026.07.12.26 — 2026-07-12
+
+- Unified estimate discounts, previews, printing, and generated PDF itemization.
+- Reconstructed missing itemization for legacy estimates and linked invoices.
+- Aligned generated invoice PDFs with itemized previews.
+
+## 2026.07.12.25 — 2026-07-12
+
+- Applied the approved Working Genius-inspired design to the public homepage.
+- Reduced hover movement on informational cards.
+- Fixed public mobile stacking.
+
+## 2026.07.12.23 — 2026-07-12
+
+- Refreshed the private admin visual design with the dark-blue palette and restrained motion.
+- Linked estimates to saved clients and improved save verification.
+
+## 2026.07.12.22 — 2026-07-12
+
+- Generalized distinct mobile landscape layouts across the admin application.
+
+## 2026.07.12.21 — 2026-07-12
+
+- Completed mobile assessment dialogs, Team Map preview behavior, and production polish.
+- Refined mobile forms, filters, lists, action menus, and workshop orientations.
+
+## 2026.07.12.14 — 2026-07-12
+
+- Added the Assessment Analytics dashboard with Genius distribution and filters.
+
+## 2026.07.12.13 — 2026-07-12
+
+- Completed assessment management, import history, and removal tools.
+
+## 2026.07.12.11 — 2026-07-12
+
+- Added printable Team Maps and refined their layout, role colors, and leader treatment.
+
+## 2026.07.12.6 — 2026-07-12
+
+- Added the assessment import foundation, workbook validation, Team View, and merge/replace workflows.
+
+## 2026.07.11.1 — 2026-07-11
+
+- Added workshop management and began the modern operational admin workflow.
+
+## Earlier foundation
+
+- Established the public website, private admin console, Google Sheets integration, verified writes, record numbering, Drive PDF generation, Zoho delivery, client details, archives, safeguards, dashboard metrics, financial lifecycle management, and settings/rates.
