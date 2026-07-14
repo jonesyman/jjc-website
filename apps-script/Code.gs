@@ -533,8 +533,11 @@ function generatePdfForRecord(type, idValue) {
   const previousFileId = record.pdfFileId || "";
   const fileName = buildPdfFileName(config.prefix, idValue, config.nameFor(record));
   const folder = getOrCreatePdfFolder(config.folderName);
-  if (type === "estimate") {
+  if (type === "estimate" || type === "invoice") {
     updateRowFields(config.sheetName, recordInfo.rowNumber, {
+      orgType: pdfRecord.orgType,
+      hours: pdfRecord.hours,
+      participants: pdfRecord.participants,
       subtotal: pdfRecord.subtotal,
       discounts: pdfRecord.discounts,
       total: pdfRecord.total,
@@ -854,7 +857,59 @@ function sanitizeFileName(name) {
 }
 
 function normalizeRecordForPdf(type, record) {
-  if (type !== "estimate") return record;
+  if (type === "estimate") return normalizeEstimateRecordForPdf(record);
+  if (type !== "invoice") return record;
+
+  let estimateRecord = {};
+  if (record.estimateId) {
+    const estimateInfo = getRowById(SHEET_NAMES.estimates, "id", record.estimateId);
+    if (estimateInfo) estimateRecord = estimateInfo.row;
+  }
+
+  const source = mergeNonEmptyPdfRecords(estimateRecord, record);
+  const normalizedSource = normalizeEstimateRecordForPdf(source);
+  const invoiceHasLineDiscounts = [record.consultingDiscount, record.prepDiscount, record.assessmentDiscount].some(hasPdfValue);
+  const consultingDiscount = invoiceHasLineDiscounts ? Number(record.consultingDiscount || 0) : normalizedSource.consultingDiscount;
+  const prepDiscount = invoiceHasLineDiscounts ? Number(record.prepDiscount || 0) : normalizedSource.prepDiscount;
+  const assessmentDiscount = invoiceHasLineDiscounts ? Number(record.assessmentDiscount || 0) : normalizedSource.assessmentDiscount;
+  const discounts = hasPdfValue(record.discounts) ? Number(record.discounts) : consultingDiscount + prepDiscount + assessmentDiscount;
+  const subtotal = numberOrCalculated(record.subtotal, normalizedSource.consultingGross + normalizedSource.prepGross + normalizedSource.assessmentGross);
+  const total = hasPdfValue(record.total) ? Number(record.total) : Math.max(0, subtotal - discounts);
+
+  return {
+    ...normalizedSource,
+    ...record,
+    orgType: normalizedSource.orgType,
+    participants: normalizedSource.participants,
+    hours: normalizedSource.hours,
+    hourly: normalizedSource.hourly,
+    prepRate: normalizedSource.prepRate,
+    assessmentRate: normalizedSource.assessmentRate,
+    consultingGross: normalizedSource.consultingGross,
+    prepGross: normalizedSource.prepGross,
+    assessmentGross: normalizedSource.assessmentGross,
+    consultingDiscount: consultingDiscount,
+    prepDiscount: prepDiscount,
+    assessmentDiscount: assessmentDiscount,
+    consultingNet: Math.max(0, normalizedSource.consultingGross - consultingDiscount),
+    prepNet: Math.max(0, normalizedSource.prepGross - prepDiscount),
+    assessmentNet: Math.max(0, normalizedSource.assessmentGross - assessmentDiscount),
+    discounts: discounts,
+    subtotal: subtotal,
+    total: total,
+    isIndividual: normalizedSource.isIndividual
+  };
+}
+
+function mergeNonEmptyPdfRecords(base, override) {
+  const merged = { ...(base || {}) };
+  Object.keys(override || {}).forEach(key => {
+    if (hasPdfValue(override[key])) merged[key] = override[key];
+  });
+  return merged;
+}
+
+function normalizeEstimateRecordForPdf(record) {
 
   const rates = getRates();
   const orgType = String(record.orgType || "for_profit");
