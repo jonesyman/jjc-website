@@ -23,13 +23,11 @@ This roadmap records product capabilities rather than relying solely on historic
 - Canonical assessment people, reusable groups, duplicate review, and group Team Maps.
 - Ad hoc individual assessment entry with drag/tap card assignment and analytics inclusion.
 - Exact-token workshop save confirmation that refreshes the visible list after Sheets persistence.
+- Complete scrollable assessment-import previews without a participant display cap.
 
 ## Current release boundary
 
-Version `2026.07.14.02` adds all 15 Genius pairing metrics and reliable workshop save confirmation. It requires both:
-
-1. A new Google Apps Script deployment containing the updated `Code.gs`.
-2. The corresponding static-site commit on the deployed Git branch.
+Version `2026.07.14.03` makes the full assessment roster reviewable before import. It requires the corresponding static-site commit on the deployed Git branch; no Apps Script change is required beyond the prior `2026.07.14.02` deployment.
 
 See `CURRENT_STATE.md` before continuing.
 

@@ -6,13 +6,15 @@ Last updated: 2026-07-14
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.14.02`
-- Latest feature: 15-pairing Assessment Analytics and reliable workshop save confirmation
+- Current application version: `2026.07.14.03`
+- Latest fix: complete, scrollable assessment import previews
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Removed the preview-only `slice(0, 8)` cap so every participant about to be imported is rendered.
+- Added a bounded, keyboard-focusable participant preview scroller and viewport-safe assessment dialog overflow.
 - Added all 15 named Genius pairing cards with count and percentage values that follow the current analytics filters.
 - Made Genius pair order interchangeable, so combinations such as WI and IW share one result.
 - Replaced workshop all-field save verification with an exact `SaveToken`, preventing Sheets time/date formatting from blocking the local refresh.
@@ -53,6 +55,7 @@ Cloudflare may reject a build if its build token was deleted or rolled. In that 
 - Confirm card assignment works by drag on desktop and by tap in mobile portrait and landscape.
 - Confirm all 15 pairing cards render, total to the filtered people count, and update with filters.
 - Save a workshop containing start/end times and confirm the list refreshes immediately without reloading the page.
+- Preview an assessment workbook with more than eight participants and scroll through the complete roster before importing.
 - Review any possible duplicates before relying on unique-person totals.
 - Build a custom group, set its leader, and print-preview its Team Map.
 - Test the new area on mobile portrait and landscape.

@@ -34,4 +34,4 @@ Update both visible version locations in `admin/index.html` with every applicati
 - The sidebar version label.
 - The `APP_VERSION` constant.
 
-The current version is `2026.07.14.02`.
+The current version is `2026.07.14.03`.

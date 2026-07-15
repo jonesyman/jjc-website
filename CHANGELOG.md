@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.14.03 — 2026-07-14
+
+- Removed the eight-participant cap from assessment workbook previews.
+- Made the complete pre-import participant roster available in a bounded scrolling area.
+- Kept the assessment dialog within the viewport on desktop, portrait mobile, and landscape mobile.
+- Added keyboard focus and instructions to the complete participant review list.
+
 ## 2026.07.14.02 — 2026-07-14
 
 - Added count and percentage cards for all 15 Working Genius pairings.
