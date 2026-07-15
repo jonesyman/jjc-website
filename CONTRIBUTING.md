@@ -9,6 +9,7 @@
 
 ## Development principles
 
+- Every change to `admin/index.html` or admin-facing JavaScript/CSS must include a documentation update in the same change set. At minimum, update `docs/CURRENT_STATE.md`; update `CHANGELOG.md` for user-visible behavior, and update the architecture, data model, project context, or roadmap whenever that subject is affected.
 - Keep the interface understandable to a non-technical owner.
 - Prefer additive, backward-compatible sheet changes.
 - Preserve historical data and stable record IDs.

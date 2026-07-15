@@ -48,6 +48,7 @@ Cloudflare may reject a build if its build token was deleted or rolled. In that 
 
 ## Known design decisions
 
+- Every future admin-facing change must include a corresponding documentation update in the same change set.
 - Google Sheets remains the source of truth; localStorage is a cache/fallback.
 - Assessment emails are unavailable and must not be required.
 - Matching uses normalized names and assessment fingerprints.
