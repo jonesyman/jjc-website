@@ -4,6 +4,22 @@ let assessmentLibraryState = null;
 let assessmentLibraryLoaded = false;
 let assessmentGroupDraftMembers = [];
 let assessmentGroupLeaderId = "";
+const adHocAssessmentTypes = [
+  { name: "Wonder", abbreviation: "W" },
+  { name: "Invention", abbreviation: "I" },
+  { name: "Discernment", abbreviation: "D" },
+  { name: "Galvanizing", abbreviation: "G" },
+  { name: "Enablement", abbreviation: "E" },
+  { name: "Tenacity", abbreviation: "T" }
+];
+const adHocAssessmentRoles = [
+  { key: "genius", label: "Genius" },
+  { key: "competency", label: "Competency" },
+  { key: "frustration", label: "Frustration" }
+];
+let adHocAssessmentAssignments = { genius: [], competency: [], frustration: [] };
+let adHocSelectedType = "";
+let adHocAssessmentReturnFocus = null;
 
 async function loadAssessmentLibrary(force = false) {
   if (assessmentLibraryLoaded && !force) return renderAssessmentLibrary();
@@ -43,6 +59,123 @@ function assessmentPersonName(person) {
 
 function assessmentPersonById(personId) {
   return assessmentLibraryPeople().find(person => String(person.PersonID) === String(personId));
+}
+
+function openAdHocAssessmentDialog() {
+  adHocAssessmentReturnFocus = document.activeElement;
+  document.getElementById("adHocFirstName").value = "";
+  document.getElementById("adHocLastName").value = "";
+  clearAdHocAssessmentAssignments();
+  document.getElementById("adHocAssessmentBackdrop").classList.add("open");
+  setTimeout(() => document.getElementById("adHocFirstName").focus(), 0);
+}
+
+function closeAdHocAssessmentDialog() {
+  document.getElementById("adHocAssessmentBackdrop").classList.remove("open");
+  if (adHocAssessmentReturnFocus && typeof adHocAssessmentReturnFocus.focus === "function") adHocAssessmentReturnFocus.focus();
+  adHocAssessmentReturnFocus = null;
+}
+
+function clearAdHocAssessmentAssignments() {
+  adHocAssessmentAssignments = { genius: [], competency: [], frustration: [] };
+  adHocSelectedType = "";
+  renderAdHocAssessmentPicker();
+}
+
+function adHocRoleForType(typeName) {
+  return adHocAssessmentRoles.find(role => adHocAssessmentAssignments[role.key].includes(typeName))?.key || "";
+}
+
+function selectAdHocAssessmentType(typeName) {
+  adHocSelectedType = adHocSelectedType === typeName ? "" : typeName;
+  renderAdHocAssessmentPicker();
+}
+
+function assignAdHocAssessmentType(typeName, roleKey) {
+  if (!adHocAssessmentTypes.some(type => type.name === typeName) || !adHocAssessmentAssignments[roleKey]) return;
+  const currentRole = adHocRoleForType(typeName);
+  if (currentRole === roleKey) {
+    adHocSelectedType = "";
+    return renderAdHocAssessmentPicker();
+  }
+  if (adHocAssessmentAssignments[roleKey].length >= 2) return toast(`${adHocAssessmentRoles.find(role => role.key === roleKey).label} already has two cards.`);
+  adHocAssessmentRoles.forEach(role => { adHocAssessmentAssignments[role.key] = adHocAssessmentAssignments[role.key].filter(value => value !== typeName); });
+  adHocAssessmentAssignments[roleKey].push(typeName);
+  adHocSelectedType = "";
+  renderAdHocAssessmentPicker();
+}
+
+function chooseAdHocAssessmentRole(roleKey) {
+  if (!adHocSelectedType) return toast("Select a Working Genius card first.");
+  assignAdHocAssessmentType(adHocSelectedType, roleKey);
+}
+
+function startAdHocAssessmentDrag(event, typeName) {
+  adHocSelectedType = typeName;
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", typeName);
+}
+
+function dropAdHocAssessmentType(event, roleKey) {
+  event.preventDefault();
+  const typeName = event.dataTransfer.getData("text/plain") || adHocSelectedType;
+  assignAdHocAssessmentType(typeName, roleKey);
+}
+
+function renderAdHocAssessmentPicker() {
+  const cards = document.getElementById("adHocAssessmentCards");
+  const zones = document.getElementById("adHocAssessmentZones");
+  if (!cards || !zones) return;
+  cards.innerHTML = adHocAssessmentTypes.map(type => {
+    const roleKey = adHocRoleForType(type.name);
+    const roleLabel = adHocAssessmentRoles.find(role => role.key === roleKey)?.label || "Not assigned";
+    return `<button type="button" class="ad-hoc-type-card${adHocSelectedType === type.name ? " selected" : ""}${roleKey ? ` assigned-${roleKey}` : ""}" draggable="true" aria-pressed="${adHocSelectedType === type.name}" onclick="selectAdHocAssessmentType('${type.name}')" ondragstart="startAdHocAssessmentDrag(event,'${type.name}')"><span class="ad-hoc-type-abbr">${type.abbreviation}</span><span class="ad-hoc-type-copy"><strong>${type.name}</strong><span class="ad-hoc-type-status">${roleLabel}</span></span></button>`;
+  }).join("");
+  zones.innerHTML = adHocAssessmentRoles.map(role => {
+    const values = adHocAssessmentAssignments[role.key];
+    return `<button type="button" class="ad-hoc-zone ${role.key}" onclick="chooseAdHocAssessmentRole('${role.key}')" ondragover="event.preventDefault()" ondrop="dropAdHocAssessmentType(event,'${role.key}')"><span class="ad-hoc-zone-title">${role.label}</span><span class="ad-hoc-zone-count">${values.length} of 2 assigned</span><span class="ad-hoc-zone-values">${values.length ? values.map(value => `<span class="ad-hoc-zone-value">${value}</span>`).join("") : '<span class="tiny muted">Drop or tap to assign</span>'}</span></button>`;
+  }).join("");
+  const assignedCount = adHocAssessmentRoles.reduce((total, role) => total + adHocAssessmentAssignments[role.key].length, 0);
+  const hint = document.getElementById("adHocSelectionHint");
+  if (hint) hint.textContent = adHocSelectedType ? `${adHocSelectedType} selected. Choose its category.` : `${assignedCount} of 6 cards assigned.`;
+}
+
+function normalizedAdHocName(value) {
+  return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+async function saveAdHocAssessment(button) {
+  const firstName = document.getElementById("adHocFirstName").value.trim();
+  const lastName = document.getElementById("adHocLastName").value.trim();
+  if (!firstName) return focusRequiredField("adHocFirstName", "First name is required.");
+  if (!lastName) return focusRequiredField("adHocLastName", "Last name is required.");
+  if (adHocAssessmentRoles.some(role => adHocAssessmentAssignments[role.key].length !== 2)) return toast("Assign exactly two cards to each category.");
+  const fingerprint = role => adHocAssessmentAssignments[role].slice().sort().join("|");
+  const existing = assessmentLibraryPeople().find(person => normalizedAdHocName(person.FirstName) === normalizedAdHocName(firstName) && normalizedAdHocName(person.LastName) === normalizedAdHocName(lastName) && [person.Genius1, person.Genius2].sort().join("|") === fingerprint("genius") && [person.Competency1, person.Competency2].sort().join("|") === fingerprint("competency") && [person.Frustration1, person.Frustration2].sort().join("|") === fingerprint("frustration"));
+  if (existing) return toast("That person and assessment are already in the library.");
+  const finish = beginSave(button, "Saving Assessment...");
+  if (!finish) return;
+  try {
+    const personId = `PER-${crypto.randomUUID()}`;
+    assessmentLibraryState = await Database.saveAdHocAssessment({
+      personId,
+      firstName,
+      lastName,
+      genius1: adHocAssessmentAssignments.genius[0],
+      genius2: adHocAssessmentAssignments.genius[1],
+      competency1: adHocAssessmentAssignments.competency[0],
+      competency2: adHocAssessmentAssignments.competency[1],
+      frustration1: adHocAssessmentAssignments.frustration[0],
+      frustration2: adHocAssessmentAssignments.frustration[1]
+    });
+    assessmentLibraryLoaded = true;
+    assessmentAnalyticsLoaded = false;
+    renderAssessmentLibrary();
+    closeAdHocAssessmentDialog();
+    toast("Individual assessment saved.");
+  } catch (error) {
+    toast(error.message || "Unable to save the assessment.");
+  } finally { finish(); }
 }
 
 function renderAssessmentLibrary() {
@@ -96,7 +229,7 @@ function renderAssessmentPeople() {
   assessmentLibraryMemberships().forEach(item => { groupCounts[String(item.PersonID)] = (groupCounts[String(item.PersonID)] || 0) + 1; });
   const people = assessmentLibraryPeople().filter(person => !query || `${assessmentPersonName(person)} ${person.Genius1} ${person.Genius2} ${person.Competency1} ${person.Competency2} ${person.Frustration1} ${person.Frustration2}`.toLowerCase().includes(query)).sort((a, b) => `${a.LastName}|${a.FirstName}`.localeCompare(`${b.LastName}|${b.FirstName}`));
   const list = document.getElementById("libraryPeopleList");
-  list.innerHTML = people.map(person => `<article class="record-card"><div class="record-title">${esc(assessmentPersonName(person))}</div><div class="small"><strong>Genius:</strong> <span class="team-genius-label">${esc(person.Genius1)}, ${esc(person.Genius2)}</span></div><div class="small"><strong>Competency:</strong> ${esc(person.Competency1)}, ${esc(person.Competency2)}</div><div class="small"><strong>Frustration:</strong> <span class="team-frustration-label">${esc(person.Frustration1)}, ${esc(person.Frustration2)}</span></div><div class="tiny muted">${workshopCounts[String(person.PersonID)]?.size || 0} workshop${workshopCounts[String(person.PersonID)]?.size === 1 ? "" : "s"} • ${groupCounts[String(person.PersonID)] || 0} custom group${groupCounts[String(person.PersonID)] === 1 ? "" : "s"}</div><div class="actions"><button class="button secondary small-btn" onclick="addPersonIdToAssessmentGroup('${jsEsc(person.PersonID)}')">Add to Current Group</button></div></article>`).join("");
+  list.innerHTML = people.map(person => `<article class="record-card"><div class="record-title">${esc(assessmentPersonName(person))}</div><div class="small"><strong>Genius:</strong> <span class="team-genius-label">${esc(person.Genius1)}, ${esc(person.Genius2)}</span></div><div class="small"><strong>Competency:</strong> <span class="team-competency-label">${esc(person.Competency1)}, ${esc(person.Competency2)}</span></div><div class="small"><strong>Frustration:</strong> <span class="team-frustration-label">${esc(person.Frustration1)}, ${esc(person.Frustration2)}</span></div><div class="tiny muted">${workshopCounts[String(person.PersonID)]?.size || 0} workshop${workshopCounts[String(person.PersonID)]?.size === 1 ? "" : "s"} • ${groupCounts[String(person.PersonID)] || 0} custom group${groupCounts[String(person.PersonID)] === 1 ? "" : "s"}</div><div class="actions"><button class="button secondary small-btn" onclick="addPersonIdToAssessmentGroup('${jsEsc(person.PersonID)}')">Add to Current Group</button></div></article>`).join("");
   document.getElementById("libraryPeopleEmpty").classList.toggle("hidden", people.length > 0);
   prepareMobileActionMenus(list);
 }
@@ -265,7 +398,7 @@ async function deleteAssessmentGroup(groupId) {
 }
 
 function duplicatePersonSummary(person) {
-  return `<div class="person-summary"><strong>${esc(assessmentPersonName(person))}</strong><div class="small"><span class="team-genius-label">Genius: ${esc(person.Genius1)}, ${esc(person.Genius2)}</span></div><div class="small">Competency: ${esc(person.Competency1)}, ${esc(person.Competency2)}</div><div class="small"><span class="team-frustration-label">Frustration: ${esc(person.Frustration1)}, ${esc(person.Frustration2)}</span></div></div>`;
+  return `<div class="person-summary"><strong>${esc(assessmentPersonName(person))}</strong><div class="small"><span class="team-genius-label">Genius: ${esc(person.Genius1)}, ${esc(person.Genius2)}</span></div><div class="small"><span class="team-competency-label">Competency: ${esc(person.Competency1)}, ${esc(person.Competency2)}</span></div><div class="small"><span class="team-frustration-label">Frustration: ${esc(person.Frustration1)}, ${esc(person.Frustration2)}</span></div></div>`;
 }
 
 function renderAssessmentDuplicates() {

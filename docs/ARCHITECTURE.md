@@ -40,7 +40,7 @@ Supporting modules include:
 - `estimates.js` — estimate normalization and local persistence helpers.
 - `invoices.js` — invoice normalization and local persistence helpers.
 - `assessments.js` — workbook parsing, validation, comparison, and Team View derivation.
-- `assessmentLibrary.js` — canonical people, reusable groups, duplicate review, and group Team Map preparation.
+- `assessmentLibrary.js` — canonical people, ad hoc card-based assessment entry, reusable groups, duplicate review, and group Team Map preparation.
 - `xlsx.full.min.js` — local workbook parsing dependency.
 
 The admin console caches core lists in `localStorage` so the most recently loaded data remains available if Sheets cannot be reached. Google Sheets remains the source of truth.
@@ -52,7 +52,7 @@ The admin console caches core lists in `localStorage` so the most recently loade
 - GET actions return JSON and handle reads, numbering, PDF generation, and email actions.
 - POST requests use `text/plain;charset=utf-8` with `mode: no-cors` to avoid browser preflight issues.
 - Because no-cors POST responses are opaque, the frontend confirms writes by polling a corresponding GET action.
-- Script locks protect critical numbering and assessment-import operations.
+- Script locks protect critical numbering, assessment-import, and independent-assessment save operations.
 - Missing assessment-library tabs and columns are created lazily on first use.
 
 The deployed web-app URL is configured in `assets/js/googleSheets.js`. If the Apps Script deployment URL changes, update it there.

@@ -21,10 +21,11 @@ This roadmap records product capabilities rather than relying solely on historic
 - Dark Working Genius-inspired visual refresh.
 - Mobile portrait/landscape layouts, compact filters, and expandable record actions.
 - Canonical assessment people, reusable groups, duplicate review, and group Team Maps.
+- Ad hoc individual assessment entry with drag/tap card assignment and analytics inclusion.
 
 ## Current release boundary
 
-Version `2026.07.13.03` implements the assessment library and reusable groups. It requires both:
+Version `2026.07.14.01` adds independent assessment entry to the assessment library. It requires both:
 
 1. A new Google Apps Script deployment containing the updated `Code.gs`.
 2. The corresponding static-site commit on the deployed Git branch.
@@ -39,6 +40,8 @@ See `CURRENT_STATE.md` before continuing.
 - Confirm the created sheet tabs and `PersonID` links.
 - Review possible duplicate names before building production groups.
 - Create a real custom group from a workshop plus an additional individual.
+- Save an independent assessment using both desktop drag-and-drop and mobile tap assignment.
+- Confirm the independent person appears in analytics without increasing the workshop count.
 - Select its leader and verify Team View/Team Map output.
 - Confirm analytics totals count a person once when they appear in multiple workshops.
 

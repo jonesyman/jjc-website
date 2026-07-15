@@ -16,7 +16,7 @@ const INVOICE_LIFECYCLE_HEADERS = ["amountPaid", "balanceDue", "paidDate", "paym
 const ASSESSMENT_IMPORT_HEADERS = ["AssessmentImportID", "WorkshopID", "GroupName", "OriginalFileName", "ParticipantCount", "ImportedDate", "UpdatedDate", "Active", "ImportStatus", "ValidationWarnings", "SourceType", "SourceVersion", "LeaderAssessmentResultID", "LeaderFirstName", "LeaderLastName", "LeaderSelectedDate", "LeaderUpdatedDate", "TeamPdfFileId", "TeamPdfUrl", "TeamPdfGeneratedDate"];
 const ASSESSMENT_RESULT_HEADERS = ["AssessmentResultID", "AssessmentImportID", "WorkshopID", "PersonID", "FirstName", "LastName", "DisplayName", "GroupName", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "SortOrder", "ImportedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_HISTORY_HEADERS = ["AssessmentImportEventID", "AssessmentImportID", "WorkshopID", "UploadMode", "OriginalFileName", "UploadedDate", "UploadedParticipantCount", "NewParticipantCount", "UpdatedParticipantCount", "UnchangedParticipantCount", "DuplicateIgnoredCount", "ConflictCount", "PreviousTotalCount", "FinalTotalCount", "GroupNameBefore", "GroupNameAfter", "LeaderBefore", "LeaderAfter", "Notes"];
-const ASSESSMENT_PERSON_HEADERS = ["PersonID", "FirstName", "LastName", "DisplayName", "NameKey", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "CreatedDate", "UpdatedDate", "Active"];
+const ASSESSMENT_PERSON_HEADERS = ["PersonID", "FirstName", "LastName", "DisplayName", "NameKey", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "CreatedDate", "UpdatedDate", "Active", "SourceType"];
 const ASSESSMENT_GROUP_HEADERS = ["GroupID", "GroupName", "ClientID", "Organization", "Description", "CreatedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_GROUP_MEMBER_HEADERS = ["GroupMemberID", "GroupID", "PersonID", "IsLeader", "AddedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_DUPLICATE_HEADERS = ["DuplicateReviewID", "PersonID1", "PersonID2", "Status", "ResolutionDate", "Notes"];
@@ -166,6 +166,7 @@ function doPost(e) {
     }
 
     if (action === "saveAssessmentGroup") return jsonResponse(saveAssessmentGroup(body.data || {}));
+    if (action === "saveAdHocAssessment") return jsonResponse(saveAdHocAssessment(body.data || {}));
     if (action === "deleteAssessmentGroup") return jsonResponse(deleteAssessmentGroup(body.data || {}));
     if (action === "resolveAssessmentDuplicate") return jsonResponse(resolveAssessmentDuplicate(body.data || {}));
 
@@ -213,15 +214,27 @@ function getAllActiveAssessmentResults() {
   const imports = getRows("AssessmentImports").filter(row => String(row.Active).toLowerCase() !== "false");
   const importsById = {};
   imports.forEach(row => { importsById[String(row.AssessmentImportID)] = row; });
-  return getRows("AssessmentResults")
+  const representedPeople = {};
+  const results = getRows("AssessmentResults")
     .filter(row => String(row.Active).toLowerCase() !== "false" && importsById[String(row.AssessmentImportID)])
     .map(row => {
+      if (row.PersonID) representedPeople[String(row.PersonID)] = true;
       const source = importsById[String(row.AssessmentImportID)];
       return Object.assign({}, row, {
         AssessmentImportedDate: source.ImportedDate || row.ImportedDate || "",
         AssessmentGroupName: source.GroupName || row.GroupName || ""
       });
     });
+  getRows("AssessmentPeople").filter(isActiveAssessmentRow).forEach(person => {
+    if (representedPeople[String(person.PersonID)] || String(person.SourceType) !== "AdHoc") return;
+    results.push(Object.assign({}, person, {
+      AssessmentResultID: person.PersonID,
+      WorkshopID: "",
+      AssessmentGroupName: "Independent assessment",
+      AssessmentImportedDate: person.CreatedDate || ""
+    }));
+  });
+  return results;
 }
 
 function assessmentFingerprint(row) {
@@ -248,7 +261,8 @@ function personFromAssessmentResult(row, personId, now) {
     Frustration2: row.Frustration2,
     CreatedDate: now,
     UpdatedDate: now,
-    Active: true
+    Active: true,
+    SourceType: "WorkshopImport"
   };
 }
 
@@ -322,6 +336,52 @@ function getAssessmentWorkspace() {
     }
   });
   return { people: people, groups: groups, memberships: memberships, workshopMembers: workshopMembers, duplicates: duplicates };
+}
+
+function saveAdHocAssessment(data) {
+  const firstName = String(data.firstName || "").trim();
+  const lastName = String(data.lastName || "").trim();
+  if (!firstName || !lastName) throw new Error("First and last name are required.");
+  const validTypes = ["Wonder", "Invention", "Discernment", "Galvanizing", "Enablement", "Tenacity"];
+  const values = [data.genius1, data.genius2, data.competency1, data.competency2, data.frustration1, data.frustration2].map(value => String(value || "").trim());
+  if (values.some(value => validTypes.indexOf(value) === -1) || new Set(values).size !== 6) throw new Error("Assign all six Working Genius types exactly once.");
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    ensureCanonicalAssessmentData();
+    const candidate = {
+      Genius1: values[0], Genius2: values[1],
+      Competency1: values[2], Competency2: values[3],
+      Frustration1: values[4], Frustration2: values[5]
+    };
+    const nameKey = assessmentNameKey(firstName, lastName);
+    const fingerprint = assessmentFingerprint(candidate);
+    const identical = getRows("AssessmentPeople").filter(isActiveAssessmentRow).find(person => String(person.NameKey || assessmentNameKey(person.FirstName, person.LastName)) === nameKey && assessmentFingerprint(person) === fingerprint);
+    if (identical) throw new Error("That person and assessment are already in the library.");
+    const personId = String(data.personId || "").trim() || ("PER-" + Utilities.getUuid());
+    if (getRowById("AssessmentPeople", "PersonID", personId)) throw new Error("That assessment record already exists.");
+    const now = new Date().toISOString();
+    appendRow("AssessmentPeople", {
+      PersonID: personId,
+      FirstName: firstName,
+      LastName: lastName,
+      DisplayName: firstName + " " + lastName,
+      NameKey: nameKey,
+      Genius1: values[0],
+      Genius2: values[1],
+      Competency1: values[2],
+      Competency2: values[3],
+      Frustration1: values[4],
+      Frustration2: values[5],
+      CreatedDate: now,
+      UpdatedDate: now,
+      Active: true,
+      SourceType: "AdHoc"
+    });
+    return { success: true, personId: personId };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function saveAssessmentGroup(data) {

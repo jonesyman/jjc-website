@@ -390,9 +390,37 @@
     .team-view-abbr { display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:#1d4ed8; color:white; font-weight:900; }
     .team-view-list { margin:7px 0 12px; padding-left:18px; }
     .team-genius-label { color:#86efac; font-weight:850; }
+    .team-competency-label { color:#f4d06f; font-weight:850; }
     .team-frustration-label { color:#fca5a5; font-weight:850; }
     .team-genius-list { color:#bbf7d0; }
     .team-frustration-list { color:#fecaca; }
+    .ad-hoc-dialog { width:min(820px,100%); }
+    .ad-hoc-dialog textarea { min-height:0; }
+    .ad-hoc-card-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:10px 0 16px; }
+    .ad-hoc-type-card { position:relative; display:flex; align-items:center; gap:10px; width:100%; padding:12px; border:1px solid #4b596a; border-radius:14px; background:#1E2936; color:#F8FAFC; text-align:left; cursor:grab; transition:border-color .16s ease,background-color .16s ease,transform .16s ease; }
+    .ad-hoc-type-card:hover { border-color:#4F8FEA; transform:translateY(-1px); }
+    .ad-hoc-type-card:active { cursor:grabbing; }
+    .ad-hoc-type-card.selected { outline:2px solid #4F8FEA; outline-offset:2px; }
+    .ad-hoc-type-card.assigned-genius { border-color:#34C759; background:rgba(52,199,89,.10); }
+    .ad-hoc-type-card.assigned-competency { border-color:#f4d06f; background:rgba(244,208,111,.10); }
+    .ad-hoc-type-card.assigned-frustration { border-color:#FF5A5F; background:rgba(255,90,95,.10); }
+    .ad-hoc-type-abbr { display:grid; place-items:center; width:38px; height:38px; flex:0 0 38px; border-radius:50%; background:#263860; color:#F8FAFC; font-weight:700; }
+    .ad-hoc-type-copy { min-width:0; }
+    .ad-hoc-type-copy strong { display:block; }
+    .ad-hoc-type-status { display:block; margin-top:3px; color:#8C96A6; font-size:11px; }
+    .ad-hoc-zones { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .ad-hoc-zone { min-height:128px; padding:13px; border:1px dashed #526174; border-radius:14px; background:#1E2936; color:#F8FAFC; text-align:left; cursor:pointer; transition:border-color .16s ease,background-color .16s ease; }
+    .ad-hoc-zone:hover,.ad-hoc-zone:focus-visible { border-style:solid; }
+    .ad-hoc-zone.genius { border-color:rgba(52,199,89,.70); }
+    .ad-hoc-zone.competency { border-color:rgba(244,208,111,.78); }
+    .ad-hoc-zone.frustration { border-color:rgba(255,90,95,.70); }
+    .ad-hoc-zone-title { display:block; font-weight:700; }
+    .ad-hoc-zone.genius .ad-hoc-zone-title { color:#34C759; }
+    .ad-hoc-zone.competency .ad-hoc-zone-title { color:#f4d06f; }
+    .ad-hoc-zone.frustration .ad-hoc-zone-title { color:#FF5A5F; }
+    .ad-hoc-zone-count { display:block; margin:3px 0 9px; color:#8C96A6; font-size:11px; }
+    .ad-hoc-zone-values { display:flex; flex-wrap:wrap; gap:6px; }
+    .ad-hoc-zone-value { padding:5px 8px; border-radius:999px; background:#263860; color:#F8FAFC; font-size:11px; font-weight:600; }
     .team-map-sheet { width:min(8.5in,100%); min-height:11in; margin:0 auto; background:#fff; color:#172033; padding:.42in .48in .34in; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .team-map-header { display:flex; justify-content:space-between; align-items:center; gap:20px; border-bottom:4px solid #243f72; padding-bottom:12px; margin-bottom:14px; }
     .team-map-logo { width:62px; height:62px; object-fit:contain; }
@@ -442,6 +470,7 @@
     .team-view-card,.genius-metric { background:linear-gradient(180deg,#263646,#232F3E); }
     .team-view-abbr,.genius-metric-abbr { background:#4F8FEA; }
     .team-genius-label,.team-genius-list,.genius-metric-percent { color:#34C759; }
+    .team-competency-label { color:#f4d06f; }
     .team-frustration-label,.team-frustration-list,.assessment-error { color:#FF5A5F; }
     .assessment-warning { color:#FFB020; }
     .view.active { animation:viewFade .18s ease-out; }
@@ -583,6 +612,9 @@
       .simple-list-filters { grid-template-columns:1fr; }
       .analytics-results { grid-template-columns:1fr; }
       .duplicate-people { grid-template-columns:1fr; }
+      .ad-hoc-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .ad-hoc-zones { grid-template-columns:1fr; }
+      .ad-hoc-zone { min-height:92px; }
       .assessment-dialog { height:100dvh; max-height:100dvh; border-radius:0; border-left:0; border-right:0; padding:14px; }
       .assessment-dialog-backdrop { padding:0; }
       .assessment-dialog > .section-title:first-child { position:sticky; top:-14px; z-index:4; background:#232F3E; padding:14px 0 12px; }
@@ -617,6 +649,7 @@
       .admin-topbar .tiny { display:none; }
       .workspace .card > .actions { grid-template-columns:1fr; }
       .assessment-action-bar { grid-template-columns:1fr; }
+      .ad-hoc-card-grid { grid-template-columns:1fr; }
     }
 
     @media (max-height: 600px) and (max-width: 980px) {
@@ -643,6 +676,7 @@
       .analytics-filters { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .simple-list-filters { grid-template-columns:minmax(200px,1fr) auto auto; }
       .send-dialog-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .ad-hoc-card-grid,.ad-hoc-zones { grid-template-columns:repeat(3,minmax(0,1fr)); }
     }
 
     .invoice-brand { display:flex; gap:14px; align-items:flex-start; }
@@ -798,7 +832,7 @@
           <div id="assessmentLibraryContent" class="hidden">
             <div class="assessment-library-grid">
               <div class="card">
-                <div class="section-title"><div><h2>People & Assessments</h2><p class="tiny muted">One assessment record per person, reused across workshops and groups</p></div><button class="button secondary small-btn" onclick="loadAssessmentLibrary(true)">Refresh</button></div>
+                <div class="section-title"><div><h2>People & Assessments</h2><p class="tiny muted">One assessment record per person, reused across workshops and groups</p></div><div class="actions" style="margin:0;"><button class="button small-btn" onclick="openAdHocAssessmentDialog()">Add Individual</button><button class="button secondary small-btn" onclick="loadAssessmentLibrary(true)">Refresh</button></div></div>
                 <input id="libraryPersonSearch" placeholder="Search people or Genius types..." oninput="renderAssessmentPeople()">
                 <div id="libraryPeopleList" class="list-grid" style="margin-top:12px;"></div>
                 <p id="libraryPeopleEmpty" class="muted small hidden">No assessment records match this search.</p>
@@ -836,7 +870,7 @@
         <!-- ASSESSMENT ANALYTICS -->
         <section id="view-assessments" class="view">
           <div class="card">
-            <div class="section-title"><div><h2>Assessment Analytics</h2><p class="tiny muted">Live statistics from active assessment imports</p></div><button class="button secondary small-btn" onclick="loadAssessmentAnalytics(true)">Refresh</button></div>
+            <div class="section-title"><div><h2>Assessment Analytics</h2><p class="tiny muted">Live statistics from workshop imports and independent assessments</p></div><button class="button secondary small-btn" onclick="loadAssessmentAnalytics(true)">Refresh</button></div>
             <div id="assessmentAnalyticsLoading" class="muted small">Loading assessment results...</div>
             <div id="assessmentAnalyticsContent" class="hidden">
               <div class="list-filter-panel"><button class="button secondary small-btn list-filter-toggle" onclick="toggleListFilters(this)">Analytics Filters</button><div class="list-filter-controls analytics-filters">
@@ -1033,7 +1067,7 @@
               <details class="tutorial-step"><summary><span class="tutorial-number">6</span><span>Import and validate assessment results</span></summary><div class="tutorial-body">From the workshop, choose Assessment Results and upload the official Individual Results workbook.<ul><li>Review validation messages and participant previews before importing.</li><li>Use Merge for additions or corrections that should preserve omitted people.</li><li>Use Replace only when the uploaded workbook should become the complete active roster.</li></ul><button class="button secondary small-btn" onclick="showView('workshops')">Find Workshop Assessments</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">7</span><span>Select the leader and review the Team View</span></summary><div class="tutorial-body">Choose and save the team leader, then review all six Team View cards. The leader is intentionally represented twice in Genius and Frustration lists to reflect leadership influence; the person’s stored result is not duplicated.</div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">8</span><span>Preview and save the Team Map</span></summary><div class="tutorial-body">Preview the Team Map, choose the preferred name format, and check all six Genius and Frustration sections.<ul><li>Use Print / Save as PDF to store the map locally.</li><li>Team Map PDFs are not stored in Google Sheets or Google Drive by the app.</li></ul></div></details>
-              <details class="tutorial-step"><summary><span class="tutorial-number">9</span><span>Create reusable groups</span></summary><div class="tutorial-body">Use Assessments & Groups to combine individuals or a complete workshop roster without duplicating anyone’s assessment.<ul><li>Groups do not require a workshop or date.</li><li>Choose a group-specific leader before previewing its Team Map.</li><li>Review possible duplicate names when the imported assessment data conflicts.</li></ul><button class="button secondary small-btn" onclick="showView('assessment-library')">Open Assessments & Groups</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">9</span><span>Add individuals and create reusable groups</span></summary><div class="tutorial-body">Use Assessments & Groups to add an individual result received outside a workshop, or combine individuals and complete workshop rosters without duplicating anyone’s assessment.<ul><li>For an ad hoc result, enter the person’s name and assign all six cards to Genius, Competency, or Frustration.</li><li>Groups do not require a workshop or date.</li><li>Choose a group-specific leader before previewing its Team Map.</li><li>Review possible duplicate names when assessment data conflicts.</li></ul><button class="button secondary small-btn" onclick="showView('assessment-library')">Open Assessments & Groups</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">10</span><span>Review Assessment Analytics</span></summary><div class="tutorial-body">Use the analytics page to review unique people served and Genius distribution. Filter by client, workshop, dates, Genius, or participant search; all dashboard counts and percentages update with the filtered list.<ul><li>A person appearing in multiple workshops counts once within the filtered view.</li><li>Each person has two Geniuses, so the six percentages normally total approximately 200%.</li></ul><button class="button secondary small-btn" onclick="showView('assessments')">Open Assessment Analytics</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">11</span><span>Complete follow-up and maintain records</span></summary><div class="tutorial-body">Update the workshop status, follow-up date, invoice status, and notes after the engagement.<ul><li>Archive inactive business records to reduce clutter while preserving history.</li><li>Use permanent deletion only for genuine mistakes or test records.</li><li>Assessment removal leaves the workshop and financial documents intact and retains inactive import history.</li></ul><button class="button secondary small-btn" onclick="showView('dashboard')">Review Dashboard</button></div></details>
             </div>
@@ -1129,6 +1163,20 @@ Sanger, CA 93657"></textarea>
     </div>
   </div>
 
+  <div id="adHocAssessmentBackdrop" class="dialog-backdrop no-print">
+    <div class="send-dialog ad-hoc-dialog" role="dialog" aria-modal="true" aria-labelledby="adHocAssessmentTitle">
+      <div class="section-title"><div><h2 id="adHocAssessmentTitle">Add Individual Assessment</h2><p class="tiny muted">Enter the name, then drag each card to a category. On a phone, tap a card and then tap its category.</p></div><button class="button ghost small-btn" onclick="closeAdHocAssessmentDialog()">Close</button></div>
+      <div class="form-row">
+        <div class="field"><label for="adHocFirstName">First Name</label><input id="adHocFirstName" autocomplete="given-name"></div>
+        <div class="field"><label for="adHocLastName">Last Name</label><input id="adHocLastName" autocomplete="family-name"></div>
+      </div>
+      <div class="section-title" style="margin-top:8px;"><div><h3>Six Working Genius Cards</h3><p id="adHocSelectionHint" class="tiny muted" aria-live="polite">Select a card, then choose Genius, Competency, or Frustration.</p></div><button class="button ghost small-btn" onclick="clearAdHocAssessmentAssignments()">Clear Selections</button></div>
+      <div id="adHocAssessmentCards" class="ad-hoc-card-grid"></div>
+      <div id="adHocAssessmentZones" class="ad-hoc-zones"></div>
+      <div class="send-dialog-actions"><button class="button secondary" onclick="closeAdHocAssessmentDialog()">Cancel</button><button id="saveAdHocAssessmentButton" class="button" onclick="saveAdHocAssessment(this)">Save Assessment</button></div>
+    </div>
+  </div>
+
   <div id="sendDialogBackdrop" class="dialog-backdrop no-print">
     <div class="send-dialog" role="dialog" aria-modal="true" aria-labelledby="sendDialogTitle">
       <div class="section-title">
@@ -1215,13 +1263,13 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/googleSheets.js?v=6"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
-  <script src="../assets/js/assessmentLibrary.js?v=1"></script>
+  <script src="../assets/js/assessmentLibrary.js?v=2"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
   <script src="../assets/js/invoices.js?v=2"></script>
 
   <script>
-    const APP_VERSION = "2026.07.13.03";
+    const APP_VERSION = "2026.07.14.01";
 
     const K = {
       clients: "jjc_clients",
@@ -2112,7 +2160,7 @@ Sanger, CA 93657"></textarea>
       if (!assessmentAnalyticsLoaded) return;
       const types = [{ name:"Wonder", abbr:"W" },{ name:"Invention", abbr:"I" },{ name:"Discernment", abbr:"D" },{ name:"Galvanizing", abbr:"G" },{ name:"Enablement", abbr:"E" },{ name:"Tenacity", abbr:"T" }];
       const filteredRows = filteredAssessmentAnalytics();
-      const workshopCount = new Set(filteredRows.map(row => String(row.WorkshopID))).size;
+      const workshopCount = new Set(filteredRows.map(row => String(row.WorkshopID || "")).filter(Boolean)).size;
       const uniquePeople = new Map();
       filteredRows.forEach(row => {
         const key = String(row.PersonID || row.AssessmentResultID);
@@ -2128,7 +2176,7 @@ Sanger, CA 93657"></textarea>
         const percent = rows.length ? Math.round((count / rows.length) * 100) : 0;
         return `<article class="genius-metric"><div class="genius-metric-head"><span class="genius-metric-abbr">${type.abbr}</span><span>${type.name}</span></div><div class="genius-metric-value">${count}</div><div class="genius-metric-percent">${percent}% of people</div></article>`;
       }).join("");
-      document.getElementById("analyticsResults").innerHTML = rows.map(row => `<article class="assessment-result-card"><div class="record-title">${esc(row.FirstName)} ${esc(row.LastName)}</div><div class="tiny muted">${esc(row.organization)} • ${esc(row.WorkshopID)}${row.workshopDate ? " • " + esc(formatDate(row.workshopDate)) : ""}</div><div class="small"><strong>Genius:</strong> <span class="team-genius-label">${esc(row.Genius1)}, ${esc(row.Genius2)}</span></div><div class="small"><strong>Competency:</strong> ${esc(row.Competency1)}, ${esc(row.Competency2)}</div><div class="small"><strong>Frustration:</strong> <span class="team-frustration-label">${esc(row.Frustration1)}, ${esc(row.Frustration2)}</span></div><div class="actions"><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(row.WorkshopID)}')">Open Workshop Assessment</button></div></article>`).join("");
+      document.getElementById("analyticsResults").innerHTML = rows.map(row => `<article class="assessment-result-card"><div class="record-title">${esc(row.FirstName)} ${esc(row.LastName)}</div><div class="tiny muted">${row.WorkshopID ? `${esc(row.organization)} • ${esc(row.WorkshopID)}${row.workshopDate ? " • " + esc(formatDate(row.workshopDate)) : ""}` : "Independent assessment"}</div><div class="small"><strong>Genius:</strong> <span class="team-genius-label">${esc(row.Genius1)}, ${esc(row.Genius2)}</span></div><div class="small"><strong>Competency:</strong> <span class="team-competency-label">${esc(row.Competency1)}, ${esc(row.Competency2)}</span></div><div class="small"><strong>Frustration:</strong> <span class="team-frustration-label">${esc(row.Frustration1)}, ${esc(row.Frustration2)}</span></div>${row.WorkshopID ? `<div class="actions"><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(row.WorkshopID)}')">Open Workshop Assessment</button></div>` : ""}</article>`).join("");
       document.getElementById("analyticsEmpty").classList.toggle("hidden", rows.length > 0);
     }
 
@@ -3318,6 +3366,7 @@ Sanger, CA 93657"></textarea>
       if (event.key !== "Escape") return;
       if (!document.getElementById("teamMapPreview").classList.contains("hidden")) return closeTeamMapPreview();
       if (!document.getElementById("printView").classList.contains("hidden")) return closePrintView();
+      if (document.getElementById("adHocAssessmentBackdrop").classList.contains("open")) return closeAdHocAssessmentDialog();
       if (document.getElementById("sendDialogBackdrop").classList.contains("open")) return closeSendDialog();
       if (document.getElementById("assessmentDialogBackdrop").classList.contains("open")) return closeAssessmentDialog();
       if (document.getElementById("sidebar").classList.contains("open")) closeSidebar();

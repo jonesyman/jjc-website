@@ -18,7 +18,7 @@ The normal engagement sequence is:
 6. Upload the official Working Genius Individual Results workbook from the workshop.
 7. Validate results, select the leader, and review the Team View.
 8. Preview and locally print/save the Team Map.
-9. Build reusable assessment groups when a team does not map one-to-one to a workshop.
+9. Add independent individual assessments when needed and build reusable groups when a team does not map one-to-one to a workshop.
 10. Review unique-person assessment analytics.
 11. Complete follow-up and maintain the records.
 
@@ -31,6 +31,7 @@ The admin sidebar currently follows this order:
 - The official portal export does not contain email addresses.
 - A person normally takes the assessment only once.
 - Workshop uploads remain the normal way assessment results enter the application.
+- Individual results received outside a workshop may be entered directly by assigning the six Working Genius cards to Genius, Competency, and Frustration.
 - One canonical person/assessment may be referenced by multiple workshops and custom groups.
 - Custom groups do not need a workshop or date. Examples include families, departments, leadership teams, and former employees.
 - A group can copy members from an individual search, a workshop roster, or another saved group.

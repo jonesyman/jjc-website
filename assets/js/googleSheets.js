@@ -176,6 +176,16 @@ saveSettings(data) {
         return this.get("getAssessmentWorkspace");
     },
 
+    async saveAdHocAssessment(data) {
+        await this.postNoCors("saveAdHocAssessment", data);
+        for (let attempt = 1; attempt <= 5; attempt++) {
+            await this.wait(attempt * 450);
+            const workspace = await this.getAssessmentWorkspace();
+            if (workspace?.people?.some(person => String(person.PersonID) === String(data.personId))) return workspace;
+        }
+        throw new Error("Google Sheets did not confirm the individual assessment.");
+    },
+
     async saveAssessmentGroup(data) {
         await this.postNoCors("saveAssessmentGroup", data);
         for (let attempt = 1; attempt <= 5; attempt++) {

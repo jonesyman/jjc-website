@@ -2,6 +2,14 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.14.01 — 2026-07-14
+
+- Added ad hoc individual assessment entry in People & Assessments.
+- Added drag-and-drop and tap-based assignment of all six Working Genius cards.
+- Added soft amber Competency styling alongside green Genius and red Frustration styling.
+- Included independent assessments in Assessment Analytics without inventing workshop records.
+- Preserved canonical matching and possible-duplicate review for ad hoc entries.
+
 ## 2026.07.13.03 — 2026-07-13
 
 - Added the canonical People & Assessments library.

@@ -95,13 +95,15 @@ Fields:
 
 ### AssessmentPeople
 
-Canonical one-assessment-per-person record.
+Canonical one-assessment-per-person record. A person may originate from a workshop import or from direct ad hoc entry; direct entries do not create an `AssessmentImport`, `AssessmentResult`, or fictional workshop.
 
 Fields:
 
-`PersonID`, `FirstName`, `LastName`, `DisplayName`, `NameKey`, `Genius1`, `Genius2`, `Competency1`, `Competency2`, `Frustration1`, `Frustration2`, `CreatedDate`, `UpdatedDate`, `Active`.
+`PersonID`, `FirstName`, `LastName`, `DisplayName`, `NameKey`, `Genius1`, `Genius2`, `Competency1`, `Competency2`, `Frustration1`, `Frustration2`, `CreatedDate`, `UpdatedDate`, `Active`, `SourceType`.
 
 Because official exports contain no email, identity matching uses normalized first/last names plus the complete six-placement assessment fingerprint.
+
+The `saveAdHocAssessment` action validates that all six types appear exactly once, stores the canonical person under a UUID-backed `PER-` ID with `SourceType` set to `AdHoc`, and leaves workshop relationships empty until the person is legitimately part of an imported workshop. Backfilled workshop people use `WorkshopImport`; the source marker keeps deactivated workshop imports from being misclassified as independent assessments in analytics.
 
 - Same normalized name and same fingerprint: automatically reuse the person.
 - Same normalized name and conflicting fingerprint: retain separate candidates and show a possible-duplicate review.

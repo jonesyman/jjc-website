@@ -6,13 +6,17 @@ Last updated: 2026-07-14
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.13.03`
-- Latest feature commit at the time of this handoff: `236dae7` — Add assessment library and reusable groups
+- Current application version: `2026.07.14.01`
+- Latest feature: ad hoc individual assessment entry with card-based role assignment
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Added **Add Individual** to People & Assessments for results received outside a workshop.
+- Added drag-and-drop plus mobile-friendly tap assignment for the six cards, with exactly two required in each role.
+- Added soft amber Competency styling in people, duplicate-review, and analytics cards.
+- Included independent canonical people in Assessment Analytics while keeping workshop counts accurate.
 - Added **Assessments & Groups** to the admin sidebar.
 - Added a canonical one-assessment-per-person library.
 - Added custom groups assembled from individuals, workshop rosters, or saved groups.
@@ -42,6 +46,8 @@ Cloudflare may reject a build if its build token was deleted or rolled. In that 
 - Confirm `AssessmentResults` gained and populated `PersonID` without losing prior rows.
 - Confirm workshop uploads still import, merge, replace, and select leaders normally.
 - Confirm a person shared by multiple workshops appears once in the people library and analytics.
+- Add an independent assessment, refresh the library, and confirm it appears in analytics without a workshop.
+- Confirm card assignment works by drag on desktop and by tap in mobile portrait and landscape.
 - Review any possible duplicates before relying on unique-person totals.
 - Build a custom group, set its leader, and print-preview its Team Map.
 - Test the new area on mobile portrait and landscape.
