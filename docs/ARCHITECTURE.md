@@ -51,7 +51,7 @@ The admin console caches core lists in `localStorage` so the most recently loade
 
 - GET actions return JSON and handle reads, numbering, PDF generation, and email actions.
 - POST requests use `text/plain;charset=utf-8` with `mode: no-cors` to avoid browser preflight issues.
-- Because no-cors POST responses are opaque, the frontend confirms writes by polling a corresponding GET action.
+- Because no-cors POST responses are opaque, the frontend confirms writes by polling a corresponding GET action. Workshop saves carry a unique `SaveToken` so confirmation verifies the exact write without comparing Sheet-formatted time/date cells.
 - Script locks protect critical numbering, assessment-import, and independent-assessment save operations.
 - Missing assessment-library tabs and columns are created lazily on first use.
 

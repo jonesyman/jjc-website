@@ -156,8 +156,10 @@ saveSettings(data) {
         return this.get("workshops");
     },
 
-    saveWorkshop(data) {
-        return this.post("saveWorkshop", data);
+    async saveWorkshop(data) {
+        const payload = { ...data, SaveToken: `WSV-${crypto.randomUUID()}` };
+        await this.post("saveWorkshop", payload);
+        return data;
     },
 
     deleteWorkshop(id) {
@@ -331,7 +333,7 @@ window.Database.writeVerification = {
     saveWorkshop: {
         readAction: "workshops",
         verify(rows, data) {
-            return hasVerifiedRow(rows, data, ["id", "workshopId", "WorkshopID"]);
+            return hasVerifiedToken(rows, data, ["id", "workshopId", "WorkshopID"], "SaveToken");
         }
     },
     deleteWorkshop: {
@@ -409,6 +411,14 @@ function hasVerifiedRow(rows, data, keys) {
     if (!row) return false;
 
     return rowMatchesData(row, data);
+}
+
+function hasVerifiedToken(rows, data, keys, tokenKey) {
+    if (!Array.isArray(rows) || !data || !data[tokenKey]) return false;
+    const expected = firstValue(data, keys);
+    if (!expected) return false;
+    const row = rows.find(candidate => String(firstValue(candidate, keys) || "") === String(expected));
+    return !!row && String(row[tokenKey] || "") === String(data[tokenKey]);
 }
 
 function hasPdfMetadata(rows, data, keys) {

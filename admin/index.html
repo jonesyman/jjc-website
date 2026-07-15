@@ -323,6 +323,13 @@
     .genius-metric-abbr { display:grid; place-items:center; width:31px; height:31px; border-radius:50%; background:#1d4ed8; color:#fff; font-weight:900; }
     .genius-metric-value { font-size:27px; font-weight:900; line-height:1; }
     .genius-metric-percent { color:#86efac; font-size:14px; font-weight:850; margin-top:6px; }
+    .pairing-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:12px 0 18px; }
+    .pairing-metric { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:12px; align-items:center; border:1px solid rgba(79,143,234,.24); border-radius:16px; padding:14px; background:linear-gradient(180deg,#263646,#232F3E); }
+    .pairing-metric-code { display:grid; place-items:center; min-width:58px; min-height:38px; padding:5px 8px; border-radius:10px; background:#263860; color:#F8FAFC; font-weight:700; font-size:12px; }
+    .pairing-metric-name { color:#F8FAFC; font-weight:650; line-height:1.3; }
+    .pairing-metric-values { text-align:right; white-space:nowrap; }
+    .pairing-metric-count { display:block; color:#F8FAFC; font-size:24px; font-weight:700; line-height:1; }
+    .pairing-metric-percent { display:block; margin-top:5px; color:#8fb9f4; font-size:11px; font-weight:650; }
     .analytics-results { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
     .tutorial-intro { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(240px,.6fr); gap:18px; align-items:start; margin-bottom:18px; }
     .tutorial-flow { display:grid; gap:12px; }
@@ -519,6 +526,7 @@
         grid-template-columns: 1fr;
       }
       .genius-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .pairing-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .library-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .tutorial-intro, .practice-grid { grid-template-columns:1fr; }
 
@@ -611,6 +619,7 @@
       .list-filter-panel:not(.open) .list-filter-controls { display:none; }
       .simple-list-filters { grid-template-columns:1fr; }
       .analytics-results { grid-template-columns:1fr; }
+      .pairing-metrics { grid-template-columns:1fr; }
       .duplicate-people { grid-template-columns:1fr; }
       .ad-hoc-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .ad-hoc-zones { grid-template-columns:1fr; }
@@ -669,6 +678,7 @@
       .client-detail-summary { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .team-view-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .genius-metrics { grid-template-columns:repeat(6,minmax(0,1fr)); }
+      .pairing-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .tutorial-intro { grid-template-columns:minmax(0,1.4fr) minmax(240px,.6fr); }
       .practice-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .workshop-filters { grid-template-columns:minmax(200px,1fr) minmax(170px,.7fr); align-items:center; }
@@ -883,7 +893,10 @@
                 <button class="button ghost small-btn" onclick="clearAnalyticsFilters()">Clear Filters</button>
               </div></div>
               <div class="client-detail-summary"><div class="metric"><div class="metric-label">People Served</div><div id="analyticsPeopleCount" class="metric-value">0</div><div class="metric-note">Unique people in this view</div></div><div class="metric"><div class="metric-label">Workshops</div><div id="analyticsWorkshopCount" class="metric-value">0</div><div class="metric-note">Represented in this view</div></div><div class="metric"><div class="metric-label">Genius Selections</div><div id="analyticsGeniusCount" class="metric-value">0</div><div class="metric-note">Two per person</div></div></div>
+              <div class="section-title"><div><h3>Individual Genius Distribution</h3><p class="tiny muted">Count and percentage of people with each Genius in the filtered list</p></div></div>
               <div id="analyticsGeniusMetrics" class="genius-metrics"></div>
+              <div class="section-title"><div><h3>Genius Pairing Distribution</h3><p class="tiny muted">Each person counts once. Pair order is treated as the same combination.</p></div><span id="analyticsPairingTotal" class="tiny muted"></span></div>
+              <div id="analyticsPairingMetrics" class="pairing-metrics"></div>
               <div class="section-title"><h3>Individual Assessments</h3><span id="analyticsMatchCount" class="tiny muted"></span></div>
               <div id="analyticsResults" class="analytics-results"></div>
               <p id="analyticsEmpty" class="muted small hidden">No assessment results match these filters.</p>
@@ -1068,7 +1081,7 @@
               <details class="tutorial-step"><summary><span class="tutorial-number">7</span><span>Select the leader and review the Team View</span></summary><div class="tutorial-body">Choose and save the team leader, then review all six Team View cards. The leader is intentionally represented twice in Genius and Frustration lists to reflect leadership influence; the person’s stored result is not duplicated.</div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">8</span><span>Preview and save the Team Map</span></summary><div class="tutorial-body">Preview the Team Map, choose the preferred name format, and check all six Genius and Frustration sections.<ul><li>Use Print / Save as PDF to store the map locally.</li><li>Team Map PDFs are not stored in Google Sheets or Google Drive by the app.</li></ul></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">9</span><span>Add individuals and create reusable groups</span></summary><div class="tutorial-body">Use Assessments & Groups to add an individual result received outside a workshop, or combine individuals and complete workshop rosters without duplicating anyone’s assessment.<ul><li>For an ad hoc result, enter the person’s name and assign all six cards to Genius, Competency, or Frustration.</li><li>Groups do not require a workshop or date.</li><li>Choose a group-specific leader before previewing its Team Map.</li><li>Review possible duplicate names when assessment data conflicts.</li></ul><button class="button secondary small-btn" onclick="showView('assessment-library')">Open Assessments & Groups</button></div></details>
-              <details class="tutorial-step"><summary><span class="tutorial-number">10</span><span>Review Assessment Analytics</span></summary><div class="tutorial-body">Use the analytics page to review unique people served and Genius distribution. Filter by client, workshop, dates, Genius, or participant search; all dashboard counts and percentages update with the filtered list.<ul><li>A person appearing in multiple workshops counts once within the filtered view.</li><li>Each person has two Geniuses, so the six percentages normally total approximately 200%.</li></ul><button class="button secondary small-btn" onclick="showView('assessments')">Open Assessment Analytics</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">10</span><span>Review Assessment Analytics</span></summary><div class="tutorial-body">Use the analytics page to review unique people served, individual Genius distribution, and all 15 Genius pairings. Filter by client, workshop, dates, Genius, or participant search; every count and percentage updates with the filtered list.<ul><li>A person appearing in multiple workshops counts once within the filtered view.</li><li>Each person has two Geniuses, so the six individual percentages normally total approximately 200%.</li><li>Each person has one pairing, and reversed order such as WI and IW is counted together.</li></ul><button class="button secondary small-btn" onclick="showView('assessments')">Open Assessment Analytics</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">11</span><span>Complete follow-up and maintain records</span></summary><div class="tutorial-body">Update the workshop status, follow-up date, invoice status, and notes after the engagement.<ul><li>Archive inactive business records to reduce clutter while preserving history.</li><li>Use permanent deletion only for genuine mistakes or test records.</li><li>Assessment removal leaves the workshop and financial documents intact and retains inactive import history.</li></ul><button class="button secondary small-btn" onclick="showView('dashboard')">Review Dashboard</button></div></details>
             </div>
           </div>
@@ -1260,7 +1273,7 @@ Sanger, CA 93657"></textarea>
   </div>
 
   <script src="../assets/js/branding.js"></script>
-  <script src="../assets/js/googleSheets.js?v=6"></script>
+  <script src="../assets/js/googleSheets.js?v=7"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
   <script src="../assets/js/assessmentLibrary.js?v=2"></script>
@@ -1269,7 +1282,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js?v=2"></script>
 
   <script>
-    const APP_VERSION = "2026.07.14.01";
+    const APP_VERSION = "2026.07.14.02";
 
     const K = {
       clients: "jjc_clients",
@@ -2159,6 +2172,23 @@ Sanger, CA 93657"></textarea>
     function renderAssessmentAnalytics() {
       if (!assessmentAnalyticsLoaded) return;
       const types = [{ name:"Wonder", abbr:"W" },{ name:"Invention", abbr:"I" },{ name:"Discernment", abbr:"D" },{ name:"Galvanizing", abbr:"G" },{ name:"Enablement", abbr:"E" },{ name:"Tenacity", abbr:"T" }];
+      const pairings = [
+        { name:"The Creative Dreamer", code:"WI | IW", types:["Wonder","Invention"] },
+        { name:"The Contemplative Counselor", code:"WD | DW", types:["Wonder","Discernment"] },
+        { name:"The Philosophical Motivator", code:"WG | GW", types:["Wonder","Galvanizing"] },
+        { name:"The Idealistic Supporter", code:"WE | EW", types:["Wonder","Enablement"] },
+        { name:"The Careful Implementer", code:"WT | TW", types:["Wonder","Tenacity"] },
+        { name:"The Discriminating Ideator", code:"ID | DI", types:["Invention","Discernment"] },
+        { name:"The Evangelizing Innovator", code:"IG | GI", types:["Invention","Galvanizing"] },
+        { name:"The Adaptable Designer", code:"IE | EI", types:["Invention","Enablement"] },
+        { name:"The Methodical Architect", code:"IT | TI", types:["Invention","Tenacity"] },
+        { name:"The Intuitive Activator", code:"DG | GD", types:["Discernment","Galvanizing"] },
+        { name:"The Insightful Collaborator", code:"DE | ED", types:["Discernment","Enablement"] },
+        { name:"The Judicious Accomplisher", code:"DT | TD", types:["Discernment","Tenacity"] },
+        { name:"The Enthusiastic Encourager", code:"GE | EG", types:["Galvanizing","Enablement"] },
+        { name:"The Assertive Driver", code:"GT | TG", types:["Galvanizing","Tenacity"] },
+        { name:"The Loyal Finisher", code:"ET | TE", types:["Enablement","Tenacity"] }
+      ];
       const filteredRows = filteredAssessmentAnalytics();
       const workshopCount = new Set(filteredRows.map(row => String(row.WorkshopID || "")).filter(Boolean)).size;
       const uniquePeople = new Map();
@@ -2175,6 +2205,12 @@ Sanger, CA 93657"></textarea>
         const count = rows.filter(row => row.Genius1 === type.name || row.Genius2 === type.name).length;
         const percent = rows.length ? Math.round((count / rows.length) * 100) : 0;
         return `<article class="genius-metric"><div class="genius-metric-head"><span class="genius-metric-abbr">${type.abbr}</span><span>${type.name}</span></div><div class="genius-metric-value">${count}</div><div class="genius-metric-percent">${percent}% of people</div></article>`;
+      }).join("");
+      document.getElementById("analyticsPairingTotal").textContent = `${rows.length} ${rows.length === 1 ? "pairing" : "pairings"}`;
+      document.getElementById("analyticsPairingMetrics").innerHTML = pairings.map(pairing => {
+        const count = rows.filter(row => pairing.types.includes(row.Genius1) && pairing.types.includes(row.Genius2)).length;
+        const percent = rows.length ? Math.round((count / rows.length) * 100) : 0;
+        return `<article class="pairing-metric"><span class="pairing-metric-code">${pairing.code}</span><span class="pairing-metric-name">${pairing.name}</span><span class="pairing-metric-values"><span class="pairing-metric-count">${count}</span><span class="pairing-metric-percent">${percent}% of people</span></span></article>`;
       }).join("");
       document.getElementById("analyticsResults").innerHTML = rows.map(row => `<article class="assessment-result-card"><div class="record-title">${esc(row.FirstName)} ${esc(row.LastName)}</div><div class="tiny muted">${row.WorkshopID ? `${esc(row.organization)} • ${esc(row.WorkshopID)}${row.workshopDate ? " • " + esc(formatDate(row.workshopDate)) : ""}` : "Independent assessment"}</div><div class="small"><strong>Genius:</strong> <span class="team-genius-label">${esc(row.Genius1)}, ${esc(row.Genius2)}</span></div><div class="small"><strong>Competency:</strong> <span class="team-competency-label">${esc(row.Competency1)}, ${esc(row.Competency2)}</span></div><div class="small"><strong>Frustration:</strong> <span class="team-frustration-label">${esc(row.Frustration1)}, ${esc(row.Frustration2)}</span></div>${row.WorkshopID ? `<div class="actions"><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(row.WorkshopID)}')">Open Workshop Assessment</button></div>` : ""}</article>`).join("");
       document.getElementById("analyticsEmpty").classList.toggle("hidden", rows.length > 0);

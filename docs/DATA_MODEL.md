@@ -37,9 +37,11 @@ Primary key: `WorkshopID`.
 
 Managed fields added by the current application:
 
-`WorkshopDate`, `DateDescription`, `StartTime`, `EndTime`, `Location`, `DeliveryFormat`, `Participants`, `PrimaryContact`, `ContactEmail`, `Notes`, `EstimateID`, `InvoiceID`, `FollowUpDate`, `Status`, `Type`, `ClientID`, `Organization`, plus archive metadata.
+`WorkshopDate`, `DateDescription`, `StartTime`, `EndTime`, `Location`, `DeliveryFormat`, `Participants`, `PrimaryContact`, `ContactEmail`, `Notes`, `EstimateID`, `InvoiceID`, `FollowUpDate`, `Status`, `Type`, `ClientID`, `Organization`, `SaveToken`, plus archive metadata.
 
 `WorkshopDate` is optional. `DateDescription` supports values such as “Spring 2019” or “date unknown.”
+
+`SaveToken` is a UUID-backed internal confirmation value. It changes on each workshop save and allows the no-cors frontend to verify the exact persisted write without relying on Google Sheets time/date serialization.
 
 ### Invoices
 

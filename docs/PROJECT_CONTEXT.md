@@ -19,7 +19,7 @@ The normal engagement sequence is:
 7. Validate results, select the leader, and review the Team View.
 8. Preview and locally print/save the Team Map.
 9. Add independent individual assessments when needed and build reusable groups when a team does not map one-to-one to a workshop.
-10. Review unique-person assessment analytics.
+10. Review unique-person, individual-Genius, and 15-pairing assessment analytics.
 11. Complete follow-up and maintain the records.
 
 The admin sidebar currently follows this order:
@@ -33,6 +33,7 @@ The admin sidebar currently follows this order:
 - Workshop uploads remain the normal way assessment results enter the application.
 - Individual results received outside a workshop may be entered directly by assigning the six Working Genius cards to Genius, Competency, and Frustration.
 - One canonical person/assessment may be referenced by multiple workshops and custom groups.
+- Analytics treats the two Genius positions as an unordered pairing; WI and IW are the same named pairing.
 - Custom groups do not need a workshop or date. Examples include families, departments, leadership teams, and former employees.
 - A group can copy members from an individual search, a workshop roster, or another saved group.
 - Adding another group copies its current person references; groups are not nested.

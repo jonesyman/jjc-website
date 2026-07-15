@@ -2,6 +2,14 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.14.02 — 2026-07-14
+
+- Added count and percentage cards for all 15 Working Genius pairings.
+- Treated reversed Genius order, such as WI and IW, as the same pairing.
+- Made pairing metrics respond to every Assessment Analytics filter.
+- Fixed workshop save confirmation so Sheet-formatted time and date values no longer block the visible page refresh.
+- Added an exact per-save token to confirm each workshop write safely.
+
 ## 2026.07.14.01 — 2026-07-14
 
 - Added ad hoc individual assessment entry in People & Assessments.

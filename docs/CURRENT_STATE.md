@@ -6,13 +6,16 @@ Last updated: 2026-07-14
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.14.01`
-- Latest feature: ad hoc individual assessment entry with card-based role assignment
+- Current application version: `2026.07.14.02`
+- Latest feature: 15-pairing Assessment Analytics and reliable workshop save confirmation
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Added all 15 named Genius pairing cards with count and percentage values that follow the current analytics filters.
+- Made Genius pair order interchangeable, so combinations such as WI and IW share one result.
+- Replaced workshop all-field save verification with an exact `SaveToken`, preventing Sheets time/date formatting from blocking the local refresh.
 - Added **Add Individual** to People & Assessments for results received outside a workshop.
 - Added drag-and-drop plus mobile-friendly tap assignment for the six cards, with exactly two required in each role.
 - Added soft amber Competency styling in people, duplicate-review, and analytics cards.
@@ -48,6 +51,8 @@ Cloudflare may reject a build if its build token was deleted or rolled. In that 
 - Confirm a person shared by multiple workshops appears once in the people library and analytics.
 - Add an independent assessment, refresh the library, and confirm it appears in analytics without a workshop.
 - Confirm card assignment works by drag on desktop and by tap in mobile portrait and landscape.
+- Confirm all 15 pairing cards render, total to the filtered people count, and update with filters.
+- Save a workshop containing start/end times and confirm the list refreshes immediately without reloading the page.
 - Review any possible duplicates before relying on unique-person totals.
 - Build a custom group, set its leader, and print-preview its Team Map.
 - Test the new area on mobile portrait and landscape.

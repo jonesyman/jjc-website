@@ -9,7 +9,7 @@ const SHEET_NAMES = {
 
 const PDF_HEADERS = ["pdfUrl", "pdfFileId", "pdfGeneratedDate"];
 const EMAIL_HEADERS = ["sentDate", "firstSentDate", "lastSentDate", "sentTo", "sentCc", "sentSubject", "sendCount"];
-const WORKSHOP_HEADERS = ["WorkshopDate", "DateDescription", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization"];
+const WORKSHOP_HEADERS = ["WorkshopDate", "DateDescription", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization", "SaveToken"];
 const ESTIMATE_HEADERS = ["ClientID", "ClientName", "ClientEmail", "consultingDiscount", "prepDiscount", "assessmentDiscount"];
 const ARCHIVE_HEADERS = ["archived", "archivedDate"];
 const INVOICE_LIFECYCLE_HEADERS = ["amountPaid", "balanceDue", "paidDate", "paymentMethod", "paymentReference", "voidReason"];

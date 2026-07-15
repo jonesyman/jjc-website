@@ -16,16 +16,17 @@ This roadmap records product capabilities rather than relying solely on historic
 - Record numbering allocated only during actual saves.
 - Assessment workbook validation, preview, import, merge, replace, history, and removal.
 - Team View, leader weighting, and printable local Team Maps.
-- Assessment Analytics with filter-responsive Genius counts and unique-person totals.
+- Assessment Analytics with filter-responsive individual Genius counts, all 15 named pairings, and unique-person totals.
 - Tutorial and Best Practices page.
 - Dark Working Genius-inspired visual refresh.
 - Mobile portrait/landscape layouts, compact filters, and expandable record actions.
 - Canonical assessment people, reusable groups, duplicate review, and group Team Maps.
 - Ad hoc individual assessment entry with drag/tap card assignment and analytics inclusion.
+- Exact-token workshop save confirmation that refreshes the visible list after Sheets persistence.
 
 ## Current release boundary
 
-Version `2026.07.14.01` adds independent assessment entry to the assessment library. It requires both:
+Version `2026.07.14.02` adds all 15 Genius pairing metrics and reliable workshop save confirmation. It requires both:
 
 1. A new Google Apps Script deployment containing the updated `Code.gs`.
 2. The corresponding static-site commit on the deployed Git branch.
@@ -44,6 +45,8 @@ See `CURRENT_STATE.md` before continuing.
 - Confirm the independent person appears in analytics without increasing the workshop count.
 - Select its leader and verify Team View/Team Map output.
 - Confirm analytics totals count a person once when they appear in multiple workshops.
+- Confirm reversed Genius order lands in the same pairing and pairing counts follow every analytics filter.
+- Save a workshop with time values and confirm the page updates without a manual refresh.
 
 ### Near-term polish
 
