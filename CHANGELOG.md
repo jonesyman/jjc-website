@@ -2,6 +2,14 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.15.01 — 2026-07-15
+
+- Made all six individual Genius cards and all 15 Genius pairing cards clickable.
+- Added a filter-aware drill-down dialog whose names come from the same deduplicated rows as each visible count.
+- Added organization, workshop, date, pairing, independent-assessment, and active-filter context to drill-down results.
+- Added zero-count empty states, keyboard focus management, Escape handling, focus trapping, and focus return.
+- Verified desktop, 375px phone, and 768px tablet behavior without changing analytics counts, percentages, filters, or data sources.
+
 ## 2026.07.14.03 — 2026-07-14
 
 - Removed the eight-participant cap from assessment workbook previews.

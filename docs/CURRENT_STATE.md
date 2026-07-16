@@ -1,18 +1,21 @@
 # Current State and Handoff
 
-Last updated: 2026-07-14
+Last updated: 2026-07-15
 
 ## Repository state
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.14.03`
-- Latest fix: complete, scrollable assessment import previews
+- Current application version: `2026.07.15.01`
+- Latest feature: filter-aware Assessment Analytics card drill-downs
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Made every individual Genius and Genius pairing metric a mouse-, touch-, and keyboard-accessible button.
+- Added a responsive analytics detail dialog using the exact filtered, deduplicated rows behind each card count.
+- Added active-filter context, person details, reverse-order pairing support, clear zero-count results, focus trapping, Escape close, and focus return.
 - Removed the preview-only `slice(0, 8)` cap so every participant about to be imported is rendered.
 - Added a bounded, keyboard-focusable participant preview scroller and viewport-safe assessment dialog overflow.
 - Added all 15 named Genius pairing cards with count and percentage values that follow the current analytics filters.
@@ -54,6 +57,8 @@ Cloudflare may reject a build if its build token was deleted or rolled. In that 
 - Add an independent assessment, refresh the library, and confirm it appears in analytics without a workshop.
 - Confirm card assignment works by drag on desktop and by tap in mobile portrait and landscape.
 - Confirm all 15 pairing cards render, total to the filtered people count, and update with filters.
+- Open every Genius card and representative pairing cards with no filters and combined filters; confirm each dialog name count equals its card count.
+- Confirm a zero-count pairing opens its clear empty state and analytics drill-downs remain usable at 375px and 768px widths.
 - Save a workshop containing start/end times and confirm the list refreshes immediately without reloading the page.
 - Preview an assessment workbook with more than eight participants and scroll through the complete roster before importing.
 - Review any possible duplicates before relying on unique-person totals.

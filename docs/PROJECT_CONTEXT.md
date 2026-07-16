@@ -19,7 +19,7 @@ The normal engagement sequence is:
 7. Validate results, select the leader, and review the Team View.
 8. Preview and locally print/save the Team Map.
 9. Add independent individual assessments when needed and build reusable groups when a team does not map one-to-one to a workshop.
-10. Review unique-person, individual-Genius, and 15-pairing assessment analytics.
+10. Review unique-person, individual-Genius, and 15-pairing assessment analytics, and open any metric card to see the matching filtered people.
 11. Complete follow-up and maintain the records.
 
 The admin sidebar currently follows this order:

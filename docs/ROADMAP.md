@@ -24,10 +24,11 @@ This roadmap records product capabilities rather than relying solely on historic
 - Ad hoc individual assessment entry with drag/tap card assignment and analytics inclusion.
 - Exact-token workshop save confirmation that refreshes the visible list after Sheets persistence.
 - Complete scrollable assessment-import previews without a participant display cap.
+- Filter-aware, accessible name drill-downs for all individual Genius and pairing analytics cards.
 
 ## Current release boundary
 
-Version `2026.07.14.03` makes the full assessment roster reviewable before import. It requires the corresponding static-site commit on the deployed Git branch; no Apps Script change is required beyond the prior `2026.07.14.02` deployment.
+Version `2026.07.15.01` adds Assessment Analytics card drill-downs using the existing filtered, deduplicated client-side dataset. It requires only the corresponding static-site commit on the deployed Git branch; no Apps Script change is required.
 
 See `CURRENT_STATE.md` before continuing.
 
@@ -44,6 +45,7 @@ See `CURRENT_STATE.md` before continuing.
 - Select its leader and verify Team View/Team Map output.
 - Confirm analytics totals count a person once when they appear in multiple workshops.
 - Confirm reversed Genius order lands in the same pairing and pairing counts follow every analytics filter.
+- Confirm each analytics card drill-down count matches its card and retains active filter context.
 - Save a workshop with time values and confirm the page updates without a manual refresh.
 
 ### Near-term polish

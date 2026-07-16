@@ -319,6 +319,9 @@
     .analytics-filters { display:grid; grid-template-columns:minmax(180px,1fr) repeat(5,minmax(125px,.55fr)) auto; gap:10px; margin-bottom:16px; }
     .genius-metrics { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; margin:16px 0; }
     .genius-metric { border:1px solid rgba(96,165,250,.24); border-radius:16px; padding:15px; background:linear-gradient(180deg,rgba(30,41,59,.92),rgba(15,23,42,.82)); }
+    button.genius-metric, button.pairing-metric { width:100%; color:inherit; font:inherit; text-align:left; cursor:pointer; transition:border-color .16s ease,transform .16s ease,box-shadow .16s ease; }
+    button.genius-metric:hover, button.pairing-metric:hover { border-color:#4F8FEA; transform:translateY(-1px); box-shadow:0 12px 28px rgba(0,0,0,.20); }
+    button.genius-metric:focus-visible, button.pairing-metric:focus-visible { outline:3px solid #8fb9f4; outline-offset:3px; border-color:#4F8FEA; }
     .genius-metric-head { display:flex; align-items:center; gap:9px; margin-bottom:10px; font-weight:850; }
     .genius-metric-abbr { display:grid; place-items:center; width:31px; height:31px; border-radius:50%; background:#1d4ed8; color:#fff; font-weight:900; }
     .genius-metric-value { font-size:27px; font-weight:900; line-height:1; }
@@ -331,6 +334,16 @@
     .pairing-metric-count { display:block; color:#F8FAFC; font-size:24px; font-weight:700; line-height:1; }
     .pairing-metric-percent { display:block; margin-top:5px; color:#8fb9f4; font-size:11px; font-weight:650; }
     .analytics-results { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .analytics-drilldown-dialog { width:min(840px,100%); max-height:calc(100dvh - 36px); overflow:hidden; display:flex; flex-direction:column; }
+    .analytics-drilldown-header { flex:0 0 auto; }
+    .analytics-drilldown-code { display:inline-flex; margin-top:7px; padding:5px 9px; border-radius:9px; background:#263860; color:#F8FAFC; font-size:12px; font-weight:700; }
+    .analytics-drilldown-summary { flex:0 0 auto; margin:0 0 12px; }
+    .analytics-filter-summary { display:flex; flex-wrap:wrap; gap:7px; margin:10px 0 8px; }
+    .analytics-filter-chip { padding:5px 9px; border:1px solid #364152; border-radius:999px; background:#1E2936; color:#B8C0CC; font-size:11px; font-weight:600; }
+    .analytics-drilldown-list { min-height:0; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:2px 5px 2px 2px; }
+    .analytics-drilldown-person { padding:12px; border:1px solid #364152; border-radius:13px; background:#1E2936; }
+    .analytics-drilldown-person .record-title { margin-bottom:5px; }
+    .analytics-drilldown-empty { grid-column:1/-1; padding:22px; border:1px dashed #526174; border-radius:13px; color:#B8C0CC; text-align:center; }
     .tutorial-intro { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(240px,.6fr); gap:18px; align-items:start; margin-bottom:18px; }
     .tutorial-flow { display:grid; gap:12px; }
     .tutorial-step { border:1px solid rgba(96,165,250,.22); border-radius:16px; background:rgba(15,23,42,.52); overflow:hidden; }
@@ -623,6 +636,10 @@
       .simple-list-filters { grid-template-columns:1fr; }
       .analytics-results { grid-template-columns:1fr; }
       .pairing-metrics { grid-template-columns:1fr; }
+      .analytics-drilldown-dialog { width:100%; height:100dvh; max-height:100dvh; border-radius:0; border-left:0; border-right:0; padding:14px; }
+      .analytics-drilldown-backdrop { padding:0; }
+      .analytics-drilldown-header { position:sticky; top:-14px; z-index:4; background:#232F3E; padding:14px 0 12px; }
+      .analytics-drilldown-list { grid-template-columns:1fr; }
       .duplicate-people { grid-template-columns:1fr; }
       .ad-hoc-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .ad-hoc-zones { grid-template-columns:1fr; }
@@ -1159,6 +1176,14 @@ Sanger, CA 93657"></textarea>
   <datalist id="estimatesDatalist"></datalist>
   <datalist id="invoicesDatalist"></datalist>
 
+  <div id="analyticsDrilldownBackdrop" class="dialog-backdrop analytics-drilldown-backdrop no-print">
+    <div class="send-dialog analytics-drilldown-dialog" role="dialog" aria-modal="true" aria-labelledby="analyticsDrilldownTitle" aria-describedby="analyticsDrilldownExplanation">
+      <div class="section-title analytics-drilldown-header"><div><h2 id="analyticsDrilldownTitle">Assessment Analytics Details</h2><div id="analyticsDrilldownCode" class="analytics-drilldown-code hidden"></div></div><button id="closeAnalyticsDrilldownButton" class="button ghost small-btn" type="button" onclick="closeAnalyticsDrilldown()">Close</button></div>
+      <div class="analytics-drilldown-summary"><p id="analyticsDrilldownExplanation" class="muted small"></p><div id="analyticsDrilldownFilters" class="analytics-filter-summary"></div><p class="tiny muted">These results reflect the currently selected Assessment Analytics filters.</p></div>
+      <div id="analyticsDrilldownRows" class="analytics-drilldown-list" tabindex="0" aria-label="Matching people"></div>
+    </div>
+  </div>
+
   <div id="assessmentDialogBackdrop" class="dialog-backdrop assessment-dialog-backdrop no-print">
     <div class="send-dialog assessment-dialog" role="dialog" aria-modal="true" aria-labelledby="assessmentDialogTitle">
       <div class="section-title"><div><h2 id="assessmentDialogTitle">Workshop Assessment Results</h2><p id="assessmentDialogMeta" class="tiny muted"></p></div><button id="closeAssessmentDialogButton" class="button ghost small-btn" onclick="closeAssessmentDialog()">Close</button></div>
@@ -1285,7 +1310,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/invoices.js?v=2"></script>
 
   <script>
-    const APP_VERSION = "2026.07.14.03";
+    const APP_VERSION = "2026.07.15.01";
 
     const K = {
       clients: "jjc_clients",
@@ -1303,6 +1328,7 @@ Sanger, CA 93657"></textarea>
     let assessmentPreviewData = null;
     let currentAssessmentData = null;
     let assessmentAnalyticsResults = [];
+    let currentAssessmentAnalyticsRows = [];
     let assessmentAnalyticsLoaded = false;
     let assessmentComparisonData = null;
     let teamMapContext = null;
@@ -1314,6 +1340,7 @@ Sanger, CA 93657"></textarea>
     let editingInvoiceSource = null;
     const dirtyFormViews = new Set();
     let assessmentReturnFocus = null;
+    let analyticsDrilldownReturnFocus = null;
     let sendDialogReturnFocus = null;
     let previewReturnFocus = null;
 
@@ -2200,6 +2227,7 @@ Sanger, CA 93657"></textarea>
         if (!uniquePeople.has(key)) uniquePeople.set(key, row);
       });
       const rows = Array.from(uniquePeople.values()).sort((a,b) => `${a.LastName}|${a.FirstName}`.localeCompare(`${b.LastName}|${b.FirstName}`));
+      currentAssessmentAnalyticsRows = rows;
       document.getElementById("analyticsPeopleCount").textContent = rows.length;
       document.getElementById("analyticsWorkshopCount").textContent = workshopCount;
       document.getElementById("analyticsGeniusCount").textContent = rows.length * 2;
@@ -2207,16 +2235,98 @@ Sanger, CA 93657"></textarea>
       document.getElementById("analyticsGeniusMetrics").innerHTML = types.map(type => {
         const count = rows.filter(row => row.Genius1 === type.name || row.Genius2 === type.name).length;
         const percent = rows.length ? Math.round((count / rows.length) * 100) : 0;
-        return `<article class="genius-metric"><div class="genius-metric-head"><span class="genius-metric-abbr">${type.abbr}</span><span>${type.name}</span></div><div class="genius-metric-value">${count}</div><div class="genius-metric-percent">${percent}% of people</div></article>`;
+        return `<button class="genius-metric" type="button" onclick="openGeniusAnalyticsDrilldown('${jsEsc(type.name)}')" aria-label="View ${count} ${count === 1 ? "person" : "people"} with ${type.name} as a Working Genius"><div class="genius-metric-head"><span class="genius-metric-abbr">${type.abbr}</span><span>${type.name}</span></div><div class="genius-metric-value">${count}</div><div class="genius-metric-percent">${percent}% of people</div></button>`;
       }).join("");
       document.getElementById("analyticsPairingTotal").textContent = `${rows.length} ${rows.length === 1 ? "pairing" : "pairings"}`;
       document.getElementById("analyticsPairingMetrics").innerHTML = pairings.map(pairing => {
         const count = rows.filter(row => pairing.types.includes(row.Genius1) && pairing.types.includes(row.Genius2)).length;
         const percent = rows.length ? Math.round((count / rows.length) * 100) : 0;
-        return `<article class="pairing-metric"><span class="pairing-metric-code">${pairing.code}</span><span class="pairing-metric-name">${pairing.name}</span><span class="pairing-metric-values"><span class="pairing-metric-count">${count}</span><span class="pairing-metric-percent">${percent}% of people</span></span></article>`;
+        return `<button class="pairing-metric" type="button" onclick="openPairingAnalyticsDrilldown('${jsEsc(pairing.types[0])}','${jsEsc(pairing.types[1])}','${jsEsc(pairing.name)}','${jsEsc(pairing.code)}')" aria-label="View ${count} ${count === 1 ? "person" : "people"} with the ${pairing.types[0]} and ${pairing.types[1]} Genius pairing"><span class="pairing-metric-code">${pairing.code}</span><span class="pairing-metric-name">${pairing.name}</span><span class="pairing-metric-values"><span class="pairing-metric-count">${count}</span><span class="pairing-metric-percent">${percent}% of people</span></span></button>`;
       }).join("");
       document.getElementById("analyticsResults").innerHTML = rows.map(row => `<article class="assessment-result-card"><div class="record-title">${esc(row.FirstName)} ${esc(row.LastName)}</div><div class="tiny muted">${row.WorkshopID ? `${esc(row.organization)} • ${esc(row.WorkshopID)}${row.workshopDate ? " • " + esc(formatDate(row.workshopDate)) : ""}` : "Independent assessment"}</div><div class="small"><strong>Genius:</strong> <span class="team-genius-label">${esc(row.Genius1)}, ${esc(row.Genius2)}</span></div><div class="small"><strong>Competency:</strong> <span class="team-competency-label">${esc(row.Competency1)}, ${esc(row.Competency2)}</span></div><div class="small"><strong>Frustration:</strong> <span class="team-frustration-label">${esc(row.Frustration1)}, ${esc(row.Frustration2)}</span></div>${row.WorkshopID ? `<div class="actions"><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(row.WorkshopID)}')">Open Workshop Assessment</button></div>` : ""}</article>`).join("");
       document.getElementById("analyticsEmpty").classList.toggle("hidden", rows.length > 0);
+    }
+
+    function analyticsPeopleLabel(count, capitalized = false) {
+      const noun = count === 1 ? "person" : "people";
+      return `${count} ${capitalized ? noun.charAt(0).toUpperCase() + noun.slice(1) : noun}`;
+    }
+
+    function getAnalyticsFilterSummary() {
+      const summary = [];
+      const search = document.getElementById("analyticsSearch").value.trim();
+      const client = document.getElementById("analyticsClient");
+      const workshop = document.getElementById("analyticsWorkshop");
+      const start = document.getElementById("analyticsStartDate").value;
+      const end = document.getElementById("analyticsEndDate").value;
+      const genius = document.getElementById("analyticsGenius").value;
+      if (search) summary.push(`Search: ${search}`);
+      if (client.value) summary.push(`Client: ${client.selectedOptions[0]?.textContent || client.value}`);
+      if (workshop.value) summary.push(`Workshop: ${workshop.selectedOptions[0]?.textContent || workshop.value}`);
+      if (start && end) summary.push(`Date range: ${formatDate(start)} through ${formatDate(end)}`);
+      else if (start) summary.push(`Starting: ${formatDate(start)}`);
+      else if (end) summary.push(`Through: ${formatDate(end)}`);
+      if (genius) summary.push(`Genius filter: ${genius}`);
+      return summary;
+    }
+
+    function renderAnalyticsDrilldownRows(rows) {
+      const container = document.getElementById("analyticsDrilldownRows");
+      if (!rows.length) {
+        container.innerHTML = '<div class="analytics-drilldown-empty">No people match this card under the current filters.</div>';
+        return;
+      }
+      container.innerHTML = [...rows]
+        .sort((a,b) => `${a.LastName}|${a.FirstName}`.localeCompare(`${b.LastName}|${b.FirstName}`))
+        .map(row => `<article class="analytics-drilldown-person"><div class="record-title">${esc(row.FirstName)} ${esc(row.LastName)}</div><div class="tiny muted">${esc(row.organization || "Unknown organization")}</div>${row.WorkshopID ? `<div class="small"><strong>Workshop:</strong> ${esc(row.WorkshopID)}</div>${row.workshopDate ? `<div class="small"><strong>Date:</strong> ${esc(formatDate(row.workshopDate))}</div>` : ""}` : '<div class="small"><strong>Independent assessment</strong></div>'}<div class="small"><strong>Genius pairing:</strong> <span class="team-genius-label">${esc(row.Genius1)} + ${esc(row.Genius2)}</span></div></article>`).join("");
+    }
+
+    function openAnalyticsDrilldown({ title, code = "", explanation, rows }) {
+      analyticsDrilldownReturnFocus = document.activeElement;
+      const count = rows.length;
+      const percent = currentAssessmentAnalyticsRows.length ? Math.round((count / currentAssessmentAnalyticsRows.length) * 100) : 0;
+      document.getElementById("analyticsDrilldownTitle").textContent = `${title}: ${analyticsPeopleLabel(count, true)}`;
+      const codeElement = document.getElementById("analyticsDrilldownCode");
+      codeElement.textContent = code;
+      codeElement.classList.toggle("hidden", !code);
+      document.getElementById("analyticsDrilldownExplanation").textContent = `${explanation} ${percent}% of the currently filtered people.`;
+      const filters = getAnalyticsFilterSummary();
+      document.getElementById("analyticsDrilldownFilters").innerHTML = filters.map(item => `<span class="analytics-filter-chip">${esc(item)}</span>`).join("");
+      document.getElementById("analyticsDrilldownFilters").classList.toggle("hidden", filters.length === 0);
+      renderAnalyticsDrilldownRows(rows);
+      document.getElementById("analyticsDrilldownBackdrop").classList.add("open");
+      setTimeout(() => document.getElementById("closeAnalyticsDrilldownButton").focus(), 0);
+    }
+
+    function openGeniusAnalyticsDrilldown(geniusName) {
+      const rows = currentAssessmentAnalyticsRows.filter(row => row.Genius1 === geniusName || row.Genius2 === geniusName);
+      openAnalyticsDrilldown({ title:`${geniusName} Genius`, explanation:`People whose Working Genius pairing includes ${geniusName}.`, rows });
+    }
+
+    function openPairingAnalyticsDrilldown(type1, type2, pairingName, pairingCode) {
+      const rows = currentAssessmentAnalyticsRows.filter(row => {
+        const geniuses = [row.Genius1, row.Genius2];
+        return geniuses.includes(type1) && geniuses.includes(type2);
+      });
+      openAnalyticsDrilldown({ title:pairingName, code:pairingCode, explanation:`People whose two Working Geniuses are ${type1} and ${type2}, in either order.`, rows });
+    }
+
+    function closeAnalyticsDrilldown() {
+      document.getElementById("analyticsDrilldownBackdrop").classList.remove("open");
+      if (analyticsDrilldownReturnFocus?.focus) analyticsDrilldownReturnFocus.focus();
+      analyticsDrilldownReturnFocus = null;
+    }
+
+    function trapAnalyticsDrilldownFocus(event) {
+      if (event.key !== "Tab" || !document.getElementById("analyticsDrilldownBackdrop").classList.contains("open")) return false;
+      const dialog = document.querySelector(".analytics-drilldown-dialog");
+      const focusable = [...dialog.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')].filter(element => !element.disabled && !element.classList.contains("hidden"));
+      if (!focusable.length) return false;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); return true; }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); return true; }
+      return false;
     }
 
     function clearAnalyticsFilters() {
@@ -3402,9 +3512,11 @@ Sanger, CA 93657"></textarea>
     document.querySelectorAll("#view-invoices input, #view-invoices select").forEach(el => el.addEventListener("input", updateInvoiceBalancePreview));
     document.querySelectorAll('input[name="orgType"]').forEach(el => el.addEventListener("change", recalc));
     document.addEventListener("keydown", event => {
+      if (trapAnalyticsDrilldownFocus(event)) return;
       if (event.key !== "Escape") return;
       if (!document.getElementById("teamMapPreview").classList.contains("hidden")) return closeTeamMapPreview();
       if (!document.getElementById("printView").classList.contains("hidden")) return closePrintView();
+      if (document.getElementById("analyticsDrilldownBackdrop").classList.contains("open")) return closeAnalyticsDrilldown();
       if (document.getElementById("adHocAssessmentBackdrop").classList.contains("open")) return closeAdHocAssessmentDialog();
       if (document.getElementById("sendDialogBackdrop").classList.contains("open")) return closeSendDialog();
       if (document.getElementById("assessmentDialogBackdrop").classList.contains("open")) return closeAssessmentDialog();
