@@ -1,18 +1,22 @@
 # Current State and Handoff
 
-Last updated: 2026-07-15
+Last updated: 2026-07-16
 
 ## Repository state
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.15.03`
-- Latest feature: adaptive Team Map typography and explicit saved-group management
+- Current application version: `2026.07.16.01`
+- Latest feature: compact assessment-library scrolling and reliable group recovery visibility
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Constrained People & Assessments to a viewport-responsive scrolling pane instead of allowing all 185 people to lengthen the page.
+- Made the Saved Groups summary actionable and separated its active and recently deleted counts.
+- Made Recently Deleted Groups persistently visible with an empty state and Refresh Groups control.
+- Verified the deployed recovery action and restored Family; the workspace now reports one active group with its previous one-member membership and zero deleted groups.
 - Increased Team Map names to a uniform 13px starting size and added layout-based fitting that shrinks all names together only when any list would overflow.
 - Removed “No participants” from empty graphical Team Map areas so those panels remain blank.
 - Added a saved-group selector at the top of Group Builder with explicit Load Group, Create Team Map, and Delete Group actions.
@@ -91,7 +95,7 @@ Cloudflare may reject a build if its build token was deleted or rolled. In that 
 - Saved groups copy person references and are not recursively nested.
 - Team Maps remain local print/save artifacts.
 - A workshop may use a workbook-backed import or a manually assembled roster of canonical people.
-- Workshop-result notes are planned separately and are not part of version `2026.07.15.03`.
+- Workshop-result notes are planned separately and are not part of version `2026.07.16.01`.
 - Apps Script and the static website are separate deployments.
 
 ## Suggested opening instruction for a new Codex task

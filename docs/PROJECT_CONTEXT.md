@@ -55,6 +55,7 @@ The admin sidebar currently follows this order:
 - Animations should be subtle and respect reduced-motion settings.
 - Mobile portrait and landscape layouts must be meaningfully different across every page.
 - Mobile record cards should show the most important actions and place additional buttons in an expandable menu.
+- Long people libraries should scroll inside a bounded pane rather than extending the entire page.
 - The primary mobile reference is a Samsung Galaxy Ultra-class phone. Test practical CSS viewports such as approximately `412 × 915` portrait and `915 × 412` landscape; physical screen resolution is not the CSS viewport.
 - Printed estimates, invoices, and Team Maps must retain a clean US Letter layout independent of screen size.
 

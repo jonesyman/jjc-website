@@ -210,8 +210,11 @@ async function saveAdHocAssessment(button) {
 
 function renderAssessmentLibrary() {
   if (!assessmentLibraryState) return;
+  const activeGroupCount = assessmentLibraryGroups().length;
+  const deletedGroupCount = deletedAssessmentLibraryGroups().length;
   document.getElementById("libraryPeopleCount").textContent = assessmentLibraryPeople().length;
-  document.getElementById("libraryGroupCount").textContent = assessmentLibraryGroups().length;
+  document.getElementById("libraryGroupCount").textContent = `${activeGroupCount} active`;
+  document.getElementById("libraryGroupMetricNote").textContent = deletedGroupCount ? `${deletedGroupCount} recently deleted • Open group management` : "Open group management";
   document.getElementById("libraryDuplicateCount").textContent = (assessmentLibraryState.duplicates || []).length;
   populateAssessmentLibraryOptions();
   renderAssessmentPeople();
@@ -259,6 +262,15 @@ function syncAssessmentGroupManagerActions() {
   document.getElementById("loadAssessmentGroupButton").disabled = !hasSelection;
   document.getElementById("mapSelectedAssessmentGroupButton").disabled = !hasSelection;
   document.getElementById("deleteSelectedAssessmentGroupButton").disabled = !hasSelection;
+}
+
+function focusSavedGroups() {
+  const section = document.getElementById("savedAssessmentGroupsSection");
+  section.scrollIntoView({ behavior:"smooth", block:"start" });
+  const target = assessmentLibraryGroups().length
+    ? document.getElementById("assessmentGroupManagerSelect")
+    : document.querySelector("#deletedAssessmentGroupsList button") || document.getElementById("refreshAssessmentGroupsButton");
+  setTimeout(() => target?.focus(), 280);
 }
 
 function loadSelectedAssessmentGroup() {
@@ -437,8 +449,8 @@ function renderAssessmentGroups() {
 
 function renderDeletedAssessmentGroups() {
   const groups = deletedAssessmentLibraryGroups().slice().sort((a, b) => String(a.GroupName).localeCompare(String(b.GroupName)));
-  document.getElementById("deletedAssessmentGroupsSection").classList.toggle("hidden", groups.length === 0);
   document.getElementById("deletedAssessmentGroupCount").textContent = `${groups.length} recoverable`;
+  document.getElementById("deletedAssessmentGroupsEmpty").classList.toggle("hidden", groups.length > 0);
   document.getElementById("deletedAssessmentGroupsList").innerHTML = groups.map(group => `<article class="record-card"><div class="record-title">${esc(group.GroupName || "Unnamed group")}</div><div class="tiny muted">Deleted ${group.UpdatedDate ? esc(formatDate(group.UpdatedDate)) : "date unavailable"}</div><div class="actions"><button class="button secondary small-btn" type="button" onclick="restoreAssessmentGroup('${jsEsc(group.GroupID)}',this)">Restore Group</button></div></article>`).join("");
 }
 

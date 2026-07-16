@@ -30,10 +30,11 @@ This roadmap records product capabilities rather than relying solely on historic
 - Uniform, adaptive Team Map name typography with blank empty areas.
 - A prominent saved-group manager for loading, mapping, and deleting groups.
 - Recoverable group deletion with restoration of the most recently active membership set.
+- A compact, internally scrolling people library and actionable active/deleted group summary.
 
 ## Current release boundary
 
-Version `2026.07.15.03` improves graphical Team Map readability, makes saved-group management explicit, and adds recoverable group deletion. Deploy the new Apps Script version before the corresponding static-site deployment.
+Version `2026.07.16.01` keeps the large people library compact and makes active versus recoverable group state explicit. The required restore action is already present in the deployed Apps Script; this release updates only the static admin interface.
 
 See `CURRENT_STATE.md` before continuing.
 

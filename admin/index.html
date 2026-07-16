@@ -395,6 +395,9 @@
     #assessmentPreviewRows { max-height:min(55vh,560px); padding-right:4px; scrollbar-gutter:stable; overscroll-behavior:contain; }
     .assessment-result-card { border:1px solid rgba(148,163,184,.16); border-radius:14px; padding:12px; background:rgba(15,23,42,.55); }
     .library-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-bottom:16px; }
+    .library-people-scroll { max-height:min(560px,58vh); overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding:2px 6px 2px 2px; }
+    .library-metric-button { width:100%; color:inherit; text-align:left; cursor:pointer; font:inherit; transition:border-color .16s ease,background-color .16s ease,transform .16s ease; }
+    .library-metric-button:hover,.library-metric-button:focus-visible { border-color:#4F8FEA; background:#263860; transform:translateY(-1px); }
     .assessment-library-grid { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:16px; align-items:start; }
     .member-picker { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
     .group-member-list { display:grid; gap:8px; margin:12px 0; }
@@ -685,6 +688,7 @@
       }
       .genius-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .library-metrics { grid-template-columns:1fr; }
+      .library-people-scroll { max-height:min(420px,52vh); }
       .member-picker { grid-template-columns:1fr; }
       .record-card .actions, .mobile-action-panel { grid-template-columns:1fr; }
       .tutorial-body { padding:0 14px 14px; }
@@ -772,7 +776,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.15.03</strong><br>
+        Version <strong id="appVersionLabel">2026.07.16.01</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -869,7 +873,7 @@
         <section id="view-assessment-library" class="view">
           <div class="library-metrics">
             <div class="metric"><div class="metric-label">Unique People</div><div id="libraryPeopleCount" class="metric-value">0</div><div class="metric-note">Canonical assessment records</div></div>
-            <div class="metric"><div class="metric-label">Saved Groups</div><div id="libraryGroupCount" class="metric-value">0</div><div class="metric-note">Reusable teams and collections</div></div>
+            <button class="metric library-metric-button" type="button" onclick="focusSavedGroups()"><div class="metric-label">Saved Groups</div><div id="libraryGroupCount" class="metric-value">0 active</div><div id="libraryGroupMetricNote" class="metric-note">Open group management</div></button>
             <div class="metric"><div class="metric-label">Needs Review</div><div id="libraryDuplicateCount" class="metric-value">0</div><div class="metric-note">Possible duplicate names</div></div>
           </div>
           <div id="assessmentLibraryLoading" class="card muted small">Loading assessment library...</div>
@@ -878,7 +882,7 @@
               <div class="card">
                 <div class="section-title"><div><h2>People & Assessments</h2><p class="tiny muted">One assessment record per person, reused across workshops and groups</p></div><div class="actions" style="margin:0;"><button class="button small-btn" onclick="openAdHocAssessmentDialog()">Add Individual</button><button class="button secondary small-btn" onclick="loadAssessmentLibrary(true)">Refresh</button></div></div>
                 <input id="libraryPersonSearch" placeholder="Search people or Genius types..." oninput="renderAssessmentPeople()">
-                <div id="libraryPeopleList" class="list-grid" style="margin-top:12px;"></div>
+                <div class="library-people-scroll" style="margin-top:12px;"><div id="libraryPeopleList" class="list-grid"></div></div>
                 <p id="libraryPeopleEmpty" class="muted small hidden">No assessment records match this search.</p>
               </div>
               <div class="card">
@@ -904,13 +908,14 @@
                 <div class="actions"><button class="button" onclick="saveAssessmentGroup(this)">Save Group</button><button class="button secondary" onclick="saveAssessmentGroup(this,true)">Save &amp; Create Team Map</button><button id="deleteCurrentAssessmentGroupButton" class="button danger hidden" onclick="deleteCurrentAssessmentGroup()">Delete This Group</button><button class="button ghost" onclick="resetAssessmentGroupForm()">Cancel / Clear</button></div>
               </div>
             </div>
-            <div class="card" style="margin-top:16px;">
-              <div class="section-title"><div><h2>Saved Groups</h2><p class="tiny muted">Use Load Group to edit members or the leader. Creating a Team Map and deleting are available directly on every card.</p></div><span id="assessmentGroupMatchCount" class="tiny muted"></span></div>
+            <div id="savedAssessmentGroupsSection" class="card" style="margin-top:16px;" tabindex="-1">
+              <div class="section-title"><div><h2>Saved Groups</h2><p class="tiny muted">Use Load Group to edit members or the leader. Creating a Team Map and deleting are available directly on every card.</p></div><div class="actions" style="margin:0;"><span id="assessmentGroupMatchCount" class="tiny muted"></span><button id="refreshAssessmentGroupsButton" class="button ghost small-btn" type="button" onclick="loadAssessmentLibrary(true)">Refresh Groups</button></div></div>
               <div id="assessmentGroupsList" class="list-grid"></div>
               <p id="assessmentGroupsEmpty" class="muted small hidden">No custom groups yet.</p>
-              <div id="deletedAssessmentGroupsSection" class="hidden" style="margin-top:18px; padding-top:16px; border-top:1px solid #364152;">
+              <div id="deletedAssessmentGroupsSection" style="margin-top:18px; padding-top:16px; border-top:1px solid #364152;">
                 <div class="section-title"><div><h3>Recently Deleted Groups</h3><p class="tiny muted">Restore a group if it was deleted by mistake. People and assessment records are never deleted with the group.</p></div><span id="deletedAssessmentGroupCount" class="tiny muted"></span></div>
                 <div id="deletedAssessmentGroupsList" class="list-grid"></div>
+                <p id="deletedAssessmentGroupsEmpty" class="muted small hidden">No recently deleted groups are available to restore.</p>
               </div>
             </div>
             <div class="card" style="margin-top:16px;">
@@ -1339,13 +1344,13 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/googleSheets.js?v=9"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
-  <script src="../assets/js/assessmentLibrary.js?v=4"></script>
+  <script src="../assets/js/assessmentLibrary.js?v=5"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
   <script src="../assets/js/invoices.js?v=2"></script>
 
   <script>
-    const APP_VERSION = "2026.07.15.03";
+    const APP_VERSION = "2026.07.16.01";
 
     const K = {
       clients: "jjc_clients",

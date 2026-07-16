@@ -2,6 +2,14 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.16.01 — 2026-07-16
+
+- Constrained the long People & Assessments results to a responsive internal scrolling pane.
+- Made the Saved Groups summary card open and focus group management.
+- Distinguished active groups from recently deleted groups in the summary count.
+- Kept Recently Deleted Groups visible even when empty and added an explicit Refresh Groups action.
+- Verified the deployed recovery path and restored the Family group with its previous membership.
+
 ## 2026.07.15.03 — 2026-07-15
 
 - Increased graphical Team Map name text from a 10.5px default to a uniform 13px starting size.
