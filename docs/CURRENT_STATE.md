@@ -6,13 +6,19 @@ Last updated: 2026-07-15
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.15.01`
-- Latest feature: filter-aware Assessment Analytics card drill-downs
+- Current application version: `2026.07.15.02`
+- Latest feature: maintainable assessment groups and manually assembled workshop rosters
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Made Manage Group, Create Team Map, and Delete Group visible on each saved group, including mobile layouts.
+- Added an edit-state Delete This Group control and a Save & Create Team Map path in the group builder.
+- Added Add People to workshop assessment results, with searchable selection from the canonical assessment library and automatic exclusion of existing roster members.
+- Added Enter New Individual Result from the workshop picker so a result is stored once canonically and then linked into the workshop.
+- Added a manual workshop assessment-import record when a workshop has no workbook import, allowing leader selection, Team View, and Team Map generation.
+- Added polling verification for group updates, group deletion, and workshop roster additions.
 - Made every individual Genius and Genius pairing metric a mouse-, touch-, and keyboard-accessible button.
 - Added a responsive analytics detail dialog using the exact filtered, deduplicated rows behind each card count.
 - Added active-filter context, person details, reverse-order pairing support, clear zero-count results, focus trapping, Escape close, and focus return.
@@ -63,6 +69,9 @@ Cloudflare may reject a build if its build token was deleted or rolled. In that 
 - Preview an assessment workbook with more than eight participants and scroll through the complete roster before importing.
 - Review any possible duplicates before relying on unique-person totals.
 - Build a custom group, set its leader, and print-preview its Team Map.
+- Edit and delete a test group, then confirm both changes persist after refresh.
+- Add existing people to a workshop with and without a prior workbook import; confirm duplicate roster members are excluded and the Team Map remains available.
+- Enter a new individual from a workshop, confirm it appears once in the canonical library, and confirm it is linked to that workshop.
 - Test the new area on mobile portrait and landscape.
 
 ## Known design decisions
@@ -74,6 +83,8 @@ Cloudflare may reject a build if its build token was deleted or rolled. In that 
 - Historical workshop dates are optional.
 - Saved groups copy person references and are not recursively nested.
 - Team Maps remain local print/save artifacts.
+- A workshop may use a workbook-backed import or a manually assembled roster of canonical people.
+- Workshop-result notes are planned separately and are not part of version `2026.07.15.02`.
 - Apps Script and the static website are separate deployments.
 
 ## Suggested opening instruction for a new Codex task

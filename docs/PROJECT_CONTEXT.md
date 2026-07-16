@@ -15,8 +15,8 @@ The normal engagement sequence is:
 3. Prepare and send the estimate.
 4. After acceptance, create and schedule the workshop.
 5. Create and manage the invoice.
-6. Upload the official Working Genius Individual Results workbook from the workshop.
-7. Validate results, select the leader, and review the Team View.
+6. Upload the official Working Genius Individual Results workbook from the workshop, or assemble the roster from existing individual results when no workbook exists.
+7. Add any additional individual results, select the leader, and review the Team View.
 8. Preview and locally print/save the Team Map.
 9. Add independent individual assessments when needed and build reusable groups when a team does not map one-to-one to a workshop.
 10. Review unique-person, individual-Genius, and 15-pairing assessment analytics, and open any metric card to see the matching filtered people.
@@ -31,15 +31,18 @@ The admin sidebar currently follows this order:
 - The official portal export does not contain email addresses.
 - A person normally takes the assessment only once.
 - Workshop uploads remain the normal way assessment results enter the application.
+- A workshop roster may also be assembled or extended from existing canonical people without duplicating their assessment records.
 - Individual results received outside a workshop may be entered directly by assigning the six Working Genius cards to Genius, Competency, and Frustration.
 - One canonical person/assessment may be referenced by multiple workshops and custom groups.
 - Analytics treats the two Genius positions as an unordered pairing; WI and IW are the same named pairing.
 - Custom groups do not need a workshop or date. Examples include families, departments, leadership teams, and former employees.
 - A group can copy members from an individual search, a workshop roster, or another saved group.
+- Saved groups can be reopened for maintenance, deleted when genuinely unnecessary, or saved directly into Team Map preview.
 - Adding another group copies its current person references; groups are not nested.
 - Leader status belongs to a specific workshop or group, not permanently to the person.
 - Team Maps are previewed in the application and printed or saved locally. They are not stored in Google Sheets or Drive.
 - In Team Maps, Genius names are green, Frustration names are red, and the leader is marked with an asterisk without bolding.
+- Notes about workshop assessment results are a planned separate capability and are not part of roster assembly.
 
 ## Business and interface preferences
 

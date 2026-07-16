@@ -40,7 +40,7 @@ Supporting modules include:
 - `estimates.js` — estimate normalization and local persistence helpers.
 - `invoices.js` — invoice normalization and local persistence helpers.
 - `assessments.js` — workbook parsing, validation, comparison, and Team View derivation.
-- `assessmentLibrary.js` — canonical people, ad hoc card-based assessment entry, reusable groups, duplicate review, and group Team Map preparation.
+- `assessmentLibrary.js` — canonical people, ad hoc card-based assessment entry, reusable group maintenance, duplicate review, and group Team Map preparation.
 - `xlsx.full.min.js` — local workbook parsing dependency.
 
 The admin console caches core lists in `localStorage` so the most recently loaded data remains available if Sheets cannot be reached. Google Sheets remains the source of truth.
@@ -54,6 +54,8 @@ The admin console caches core lists in `localStorage` so the most recently loade
 - Because no-cors POST responses are opaque, the frontend confirms writes by polling a corresponding GET action. Workshop saves carry a unique `SaveToken` so confirmation verifies the exact write without comparing Sheet-formatted time/date cells.
 - Script locks protect critical numbering, assessment-import, and independent-assessment save operations.
 - Missing assessment-library tabs and columns are created lazily on first use.
+- `addPeopleToWorkshopAssessment` links selected canonical people into an existing workshop import or creates a manual roster import when none exists; the frontend polls the workshop assessment read until every requested person is visible.
+- Group saves and deletions are likewise confirmed against the assessment workspace before the interface reports success.
 
 The deployed web-app URL is configured in `assets/js/googleSheets.js`. If the Apps Script deployment URL changes, update it there.
 

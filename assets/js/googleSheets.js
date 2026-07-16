@@ -190,23 +190,50 @@ saveSettings(data) {
 
     async saveAssessmentGroup(data) {
         await this.postNoCors("saveAssessmentGroup", data);
-        for (let attempt = 1; attempt <= 5; attempt++) {
-            await this.wait(attempt * 450);
-            const workspace = await this.getAssessmentWorkspace();
-            const saved = workspace?.groups?.find(group => String(group.GroupID) === String(data.groupId || group.GroupID) && String(group.GroupName) === String(data.groupName));
-            if (saved) return workspace;
+        let lastError = null;
+        for (let attempt = 1; attempt <= 8; attempt++) {
+            await this.wait(attempt * 500);
+            try {
+                const workspace = await this.getAssessmentWorkspace();
+                const saved = workspace?.groups?.find(group => String(group.GroupID) === String(data.groupId) && String(group.GroupName) === String(data.groupName));
+                const groupMemberships = (workspace?.memberships || []).filter(member => String(member.GroupID) === String(data.groupId));
+                const memberIds = new Set(groupMemberships.map(member => String(member.PersonID)));
+                const membersMatch = data.personIds.length === memberIds.size && data.personIds.every(personId => memberIds.has(String(personId)));
+                const activeLeaders = groupMemberships.filter(member => String(member.IsLeader).toLowerCase() === "true");
+                const leaderMatches = data.leaderPersonId ? activeLeaders.length === 1 && String(activeLeaders[0].PersonID) === String(data.leaderPersonId) : activeLeaders.length === 0;
+                if (saved && membersMatch && leaderMatches) return workspace;
+            } catch (error) { lastError = error; }
         }
-        throw new Error("Google Sheets did not confirm the assessment group.");
+        throw new Error(`Google Sheets did not confirm the assessment group.${lastError ? " " + lastError.message : ""}`);
     },
 
     async deleteAssessmentGroup(groupId) {
         await this.postNoCors("deleteAssessmentGroup", { groupId });
-        for (let attempt = 1; attempt <= 5; attempt++) {
-            await this.wait(attempt * 450);
-            const workspace = await this.getAssessmentWorkspace();
-            if (!workspace?.groups?.some(group => String(group.GroupID) === String(groupId))) return workspace;
+        let lastError = null;
+        for (let attempt = 1; attempt <= 8; attempt++) {
+            await this.wait(attempt * 500);
+            try {
+                const workspace = await this.getAssessmentWorkspace();
+                if (!workspace?.groups?.some(group => String(group.GroupID) === String(groupId))) return workspace;
+            } catch (error) { lastError = error; }
         }
-        throw new Error("Google Sheets did not confirm group removal.");
+        throw new Error(`Google Sheets did not confirm group removal.${lastError ? " " + lastError.message : ""}`);
+    },
+
+    async addPeopleToWorkshopAssessment(data) {
+        const personIds = Array.from(new Set((data.personIds || []).map(value => String(value || "").trim()).filter(Boolean)));
+        if (!data.workshopId || !personIds.length) throw new Error("Choose a workshop and at least one person.");
+        await this.postNoCors("addPeopleToWorkshopAssessment", { ...data, personIds });
+        let lastError = null;
+        for (let attempt = 1; attempt <= 8; attempt++) {
+            await this.wait(attempt * 500);
+            try {
+                const assessment = await this.getWorkshopAssessment(data.workshopId);
+                const savedIds = new Set((assessment?.results || []).map(row => String(row.PersonID || "")));
+                if (assessment?.import && personIds.every(personId => savedIds.has(personId))) return assessment;
+            } catch (error) { lastError = error; }
+        }
+        throw new Error(`Google Sheets did not confirm the workshop roster update.${lastError ? " " + lastError.message : ""}`);
     },
 
     async resolveAssessmentDuplicate(data) {

@@ -168,6 +168,7 @@ function doPost(e) {
     if (action === "saveAssessmentGroup") return jsonResponse(saveAssessmentGroup(body.data || {}));
     if (action === "saveAdHocAssessment") return jsonResponse(saveAdHocAssessment(body.data || {}));
     if (action === "deleteAssessmentGroup") return jsonResponse(deleteAssessmentGroup(body.data || {}));
+    if (action === "addPeopleToWorkshopAssessment") return jsonResponse(addPeopleToWorkshopAssessment(body.data || {}));
     if (action === "resolveAssessmentDuplicate") return jsonResponse(resolveAssessmentDuplicate(body.data || {}));
 
     if (action === "deleteWorkshop") {
@@ -423,6 +424,100 @@ function deleteAssessmentGroup(data) {
     if (info) updateRowFields("AssessmentGroupMembers", info.rowNumber, { Active: false, UpdatedDate: now });
   });
   return { success: true, groupId: groupId };
+}
+
+function addPeopleToWorkshopAssessment(data) {
+  const workshopId = String(data.workshopId || "").trim();
+  const requestedIds = Array.from(new Set((Array.isArray(data.personIds) ? data.personIds : []).map(value => String(value || "").trim()).filter(Boolean)));
+  const workshopInfo = workshopId ? getRowById(SHEET_NAMES.workshops, "WorkshopID", workshopId) : null;
+  if (!workshopInfo) throw new Error("The target workshop does not exist.");
+  if (!requestedIds.length) throw new Error("Choose at least one assessment person to add.");
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    ensureCanonicalAssessmentData();
+    const peopleById = {};
+    getRows("AssessmentPeople").filter(isActiveAssessmentRow).forEach(person => { peopleById[String(person.PersonID)] = person; });
+    const selectedPeople = requestedIds.map(personId => peopleById[personId]).filter(Boolean);
+    if (selectedPeople.length !== requestedIds.length) throw new Error("One or more selected assessment records are no longer available.");
+
+    ensureSheetWithHeaders("AssessmentImports", ASSESSMENT_IMPORT_HEADERS);
+    ensureSheetWithHeaders("AssessmentResults", ASSESSMENT_RESULT_HEADERS);
+    ensureSheetWithHeaders("AssessmentImportHistory", ASSESSMENT_HISTORY_HEADERS);
+    let assessment = getWorkshopAssessment(workshopId);
+    const now = new Date().toISOString();
+    let importId = String(assessment.import?.AssessmentImportID || "");
+    let createdImport = false;
+    const previousImportState = assessment.import ? {
+      ParticipantCount: assessment.import.ParticipantCount,
+      UpdatedDate: assessment.import.UpdatedDate,
+      ImportStatus: assessment.import.ImportStatus,
+      TeamPdfFileId: assessment.import.TeamPdfFileId,
+      TeamPdfUrl: assessment.import.TeamPdfUrl,
+      TeamPdfGeneratedDate: assessment.import.TeamPdfGeneratedDate
+    } : null;
+    const workshop = workshopInfo.row || {};
+    const groupName = String(data.groupName || assessment.import?.GroupName || workshop.Organization || "").trim();
+    if (!assessment.import) {
+      importId = "AIM-" + Utilities.getUuid();
+      appendRow("AssessmentImports", {
+        AssessmentImportID: importId, WorkshopID: workshopId, GroupName: groupName, OriginalFileName: "", ParticipantCount: 0,
+        ImportedDate: now, UpdatedDate: now, Active: true, ImportStatus: "Built Manually", ValidationWarnings: "[]", SourceType: "Manual roster", SourceVersion: "Canonical assessment library"
+      });
+      createdImport = true;
+      assessment = getWorkshopAssessment(workshopId);
+    }
+
+    const existingPersonIds = {};
+    assessment.results.forEach(row => { if (row.PersonID) existingPersonIds[String(row.PersonID)] = true; });
+    const addedResultIds = [];
+    let added = 0;
+    try {
+      selectedPeople.forEach(person => {
+        if (existingPersonIds[String(person.PersonID)]) return;
+        const resultId = "ASR-" + Utilities.getUuid();
+        appendRow("AssessmentResults", {
+          AssessmentResultID: resultId, AssessmentImportID: importId, WorkshopID: workshopId, PersonID: person.PersonID,
+          FirstName: person.FirstName, LastName: person.LastName, DisplayName: person.DisplayName || (person.FirstName + " " + person.LastName), GroupName: groupName,
+          Genius1: person.Genius1, Genius2: person.Genius2, Competency1: person.Competency1, Competency2: person.Competency2,
+          Frustration1: person.Frustration1, Frustration2: person.Frustration2, SortOrder: assessment.results.length + added + 1, ImportedDate: now, UpdatedDate: now, Active: true
+        });
+        addedResultIds.push(resultId);
+        existingPersonIds[String(person.PersonID)] = true;
+        added++;
+      });
+      const importInfo = getRowById("AssessmentImports", "AssessmentImportID", importId);
+      const finalTotal = assessment.results.length + added;
+      updateRowFields("AssessmentImports", importInfo.rowNumber, {
+        ParticipantCount: finalTotal, UpdatedDate: now, ImportStatus: createdImport ? "Built Manually" : "Expanded Manually",
+        TeamPdfFileId: "", TeamPdfUrl: "", TeamPdfGeneratedDate: ""
+      });
+      appendAssessmentHistory({
+        importId: importId, workshopId: workshopId, mode: "Add Existing People", fileName: "Assessment library", uploaded: selectedPeople.length,
+        added: added, updated: 0, unchanged: selectedPeople.length - added, previous: assessment.results.length, finalTotal: finalTotal,
+        groupBefore: assessment.import?.GroupName || "", groupAfter: groupName,
+        leaderBefore: assessment.import ? (assessment.import.LeaderFirstName + " " + assessment.import.LeaderLastName) : "",
+        leaderAfter: assessment.import ? (assessment.import.LeaderFirstName + " " + assessment.import.LeaderLastName) : ""
+      });
+      return getWorkshopAssessment(workshopId);
+    } catch (writeError) {
+      addedResultIds.forEach(resultId => {
+        const resultInfo = getRowById("AssessmentResults", "AssessmentResultID", resultId);
+        if (resultInfo) updateRowFields("AssessmentResults", resultInfo.rowNumber, { Active:false, UpdatedDate:now });
+      });
+      if (createdImport) {
+        const importInfo = getRowById("AssessmentImports", "AssessmentImportID", importId);
+        if (importInfo) updateRowFields("AssessmentImports", importInfo.rowNumber, { Active:false, ImportStatus:"Failed", UpdatedDate:now });
+      } else if (previousImportState) {
+        const importInfo = getRowById("AssessmentImports", "AssessmentImportID", importId);
+        if (importInfo) updateRowFields("AssessmentImports", importInfo.rowNumber, previousImportState);
+      }
+      throw writeError;
+    }
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function resolveAssessmentDuplicate(data) {

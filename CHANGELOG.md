@@ -2,6 +2,15 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.15.02 — 2026-07-15
+
+- Made group maintenance actions explicit on desktop and mobile, including Manage Group and Delete Group.
+- Added Save & Create Team Map so a compiled group can move directly into its Team Map preview.
+- Added workshop roster building from existing canonical people without duplicating their assessments.
+- Added an in-workshop path for entering a new individual result and immediately adding it to the workshop roster.
+- Added verified Google Sheets persistence for group saves, group deletion, and workshop roster additions.
+- Recorded workshop-result notes as a separate planned phase rather than coupling them to roster management.
+
 ## 2026.07.15.01 — 2026-07-15
 
 - Made all six individual Genius cards and all 15 Genius pairing cards clickable.

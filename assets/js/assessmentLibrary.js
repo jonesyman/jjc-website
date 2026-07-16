@@ -20,6 +20,7 @@ const adHocAssessmentRoles = [
 let adHocAssessmentAssignments = { genius: [], competency: [], frustration: [] };
 let adHocSelectedType = "";
 let adHocAssessmentReturnFocus = null;
+let adHocTargetWorkshopId = "";
 
 async function loadAssessmentLibrary(force = false) {
   if (assessmentLibraryLoaded && !force) return renderAssessmentLibrary();
@@ -61,8 +62,11 @@ function assessmentPersonById(personId) {
   return assessmentLibraryPeople().find(person => String(person.PersonID) === String(personId));
 }
 
-function openAdHocAssessmentDialog() {
+function openAdHocAssessmentDialog(targetWorkshopId = "") {
   adHocAssessmentReturnFocus = document.activeElement;
+  adHocTargetWorkshopId = String(targetWorkshopId || "");
+  document.getElementById("adHocAssessmentTitle").textContent = adHocTargetWorkshopId ? "Add Individual to Workshop" : "Add Individual Assessment";
+  document.getElementById("adHocAssessmentDescription").textContent = adHocTargetWorkshopId ? "Enter the result once. It will be saved to the assessment library and added to this workshop." : "Enter the name, then drag each card to a category. On a phone, tap a card and then tap its category.";
   document.getElementById("adHocFirstName").value = "";
   document.getElementById("adHocLastName").value = "";
   clearAdHocAssessmentAssignments();
@@ -74,6 +78,7 @@ function closeAdHocAssessmentDialog() {
   document.getElementById("adHocAssessmentBackdrop").classList.remove("open");
   if (adHocAssessmentReturnFocus && typeof adHocAssessmentReturnFocus.focus === "function") adHocAssessmentReturnFocus.focus();
   adHocAssessmentReturnFocus = null;
+  adHocTargetWorkshopId = "";
 }
 
 function clearAdHocAssessmentAssignments() {
@@ -152,11 +157,22 @@ async function saveAdHocAssessment(button) {
   if (adHocAssessmentRoles.some(role => adHocAssessmentAssignments[role.key].length !== 2)) return toast("Assign exactly two cards to each category.");
   const fingerprint = role => adHocAssessmentAssignments[role].slice().sort().join("|");
   const existing = assessmentLibraryPeople().find(person => normalizedAdHocName(person.FirstName) === normalizedAdHocName(firstName) && normalizedAdHocName(person.LastName) === normalizedAdHocName(lastName) && [person.Genius1, person.Genius2].sort().join("|") === fingerprint("genius") && [person.Competency1, person.Competency2].sort().join("|") === fingerprint("competency") && [person.Frustration1, person.Frustration2].sort().join("|") === fingerprint("frustration"));
-  if (existing) return toast("That person and assessment are already in the library.");
+  if (existing && !adHocTargetWorkshopId) return toast("That person and assessment are already in the library.");
+  if (existing && adHocTargetWorkshopId) {
+    try {
+      const assessment = await Database.addPeopleToWorkshopAssessment({ workshopId: adHocTargetWorkshopId, personIds: [existing.PersonID] });
+      assessmentAnalyticsLoaded = false;
+      renderSavedAssessment(assessment);
+      closeAdHocAssessmentDialog();
+      toast("Existing assessment added to the workshop.");
+    } catch (error) { toast(error.message || "Unable to add the existing assessment to the workshop."); }
+    return;
+  }
   const finish = beginSave(button, "Saving Assessment...");
   if (!finish) return;
   try {
     const personId = `PER-${crypto.randomUUID()}`;
+    const targetWorkshopId = adHocTargetWorkshopId;
     assessmentLibraryState = await Database.saveAdHocAssessment({
       personId,
       firstName,
@@ -171,8 +187,18 @@ async function saveAdHocAssessment(button) {
     assessmentLibraryLoaded = true;
     assessmentAnalyticsLoaded = false;
     renderAssessmentLibrary();
+    if (targetWorkshopId) {
+      try {
+        const assessment = await Database.addPeopleToWorkshopAssessment({ workshopId: targetWorkshopId, personIds: [personId] });
+        renderSavedAssessment(assessment);
+      } catch (linkError) {
+        closeAdHocAssessmentDialog();
+        toast("The individual assessment was saved, but it could not be added to the workshop. Use Add People to try again.");
+        return;
+      }
+    }
     closeAdHocAssessmentDialog();
-    toast("Individual assessment saved.");
+    toast(targetWorkshopId ? "Individual assessment saved and added to the workshop." : "Individual assessment saved.");
   } catch (error) {
     toast(error.message || "Unable to save the assessment.");
   } finally { finish(); }
@@ -299,13 +325,16 @@ function resetAssessmentGroupForm() {
   document.getElementById("assessmentGroupSourceGroup").value = "";
   assessmentGroupDraftMembers = [];
   assessmentGroupLeaderId = "";
+  document.getElementById("assessmentGroupModeLabel").textContent = "Creating a new group";
+  document.getElementById("deleteCurrentAssessmentGroupButton").classList.add("hidden");
   renderAssessmentGroupMembers();
 }
 
-async function saveAssessmentGroup(button) {
+async function saveAssessmentGroup(button, previewAfterSave = false) {
   const groupName = document.getElementById("assessmentGroupName").value.trim();
   if (!groupName) return focusRequiredField("assessmentGroupName", "Group name is required.");
   if (!assessmentGroupDraftMembers.length) return toast("Add at least one person to this group.");
+  if (previewAfterSave && !assessmentGroupLeaderId) return toast("Select a group leader before creating the Team Map.");
   const clientId = document.getElementById("assessmentGroupClient").value;
   const client = clients.find(item => String(item.ClientID) === String(clientId)) || {};
   const finish = beginSave(button, "Saving Group...");
@@ -324,7 +353,10 @@ async function saveAssessmentGroup(button) {
     assessmentLibraryLoaded = true;
     resetAssessmentGroupForm();
     renderAssessmentLibrary();
-    toast("Assessment group saved.");
+    if (previewAfterSave) {
+      previewAssessmentGroup(groupId);
+      toast("Group saved. Team Map preview opened.");
+    } else toast("Assessment group saved. You can maintain it from Saved Groups.");
   } catch (error) {
     toast(error.message || "Unable to save the group.");
   } finally { finish(); }
@@ -341,6 +373,8 @@ function editAssessmentGroup(groupId) {
   const members = assessmentLibraryMemberships().filter(item => String(item.GroupID) === String(groupId));
   assessmentGroupDraftMembers = members.map(item => String(item.PersonID));
   assessmentGroupLeaderId = String(members.find(item => String(item.IsLeader).toLowerCase() === "true")?.PersonID || "");
+  document.getElementById("assessmentGroupModeLabel").textContent = `Editing: ${group.GroupName}`;
+  document.getElementById("deleteCurrentAssessmentGroupButton").classList.remove("hidden");
   renderAssessmentGroupMembers();
   document.getElementById("assessmentGroupName").scrollIntoView({ behavior: "smooth", block: "center" });
   document.getElementById("assessmentGroupName").focus({ preventScroll: true });
@@ -355,9 +389,14 @@ function renderAssessmentGroups() {
     const members = assessmentLibraryMemberships().filter(item => String(item.GroupID) === String(group.GroupID));
     const leaderMembership = members.find(item => String(item.IsLeader).toLowerCase() === "true");
     const leader = leaderMembership ? assessmentPersonById(leaderMembership.PersonID) : null;
-    return `<article class="record-card"><div class="record-title">${esc(group.GroupName)}</div><div class="tiny muted">${esc(group.Organization || "Independent group")} • ${members.length} ${members.length === 1 ? "person" : "people"}</div>${group.Description ? `<div class="small">${esc(group.Description)}</div>` : ""}<div class="small"><strong>Leader:</strong> ${leader ? esc(assessmentPersonName(leader)) : '<span class="muted">Not selected</span>'}</div><div class="actions"><button class="button secondary small-btn" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">Edit</button><button class="button small-btn" onclick="previewAssessmentGroup('${jsEsc(group.GroupID)}')">Preview Team Map</button><button class="button danger small-btn" onclick="deleteAssessmentGroup('${jsEsc(group.GroupID)}')">Delete</button></div></article>`;
+    return `<article class="record-card"><div class="record-title">${esc(group.GroupName)}</div><div class="tiny muted">${esc(group.Organization || "Independent group")} • ${members.length} ${members.length === 1 ? "person" : "people"}</div>${group.Description ? `<div class="small">${esc(group.Description)}</div>` : ""}<div class="small"><strong>Leader:</strong> ${leader ? esc(assessmentPersonName(leader)) : '<span class="muted">Not selected</span>'}</div><div class="actions group-card-actions"><button class="button secondary small-btn" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">Manage Group</button><button class="button small-btn" onclick="previewAssessmentGroup('${jsEsc(group.GroupID)}')">Create Team Map</button><button class="button danger small-btn" onclick="deleteAssessmentGroup('${jsEsc(group.GroupID)}')">Delete Group</button></div></article>`;
   }).join("");
-  prepareMobileActionMenus(list);
+}
+
+function deleteCurrentAssessmentGroup() {
+  const groupId = document.getElementById("assessmentGroupId").value;
+  if (!groupId) return toast("Choose a saved group first.");
+  deleteAssessmentGroup(groupId);
 }
 
 function previewAssessmentGroup(groupId) {
@@ -365,7 +404,10 @@ function previewAssessmentGroup(groupId) {
   const memberships = assessmentLibraryMemberships().filter(item => String(item.GroupID) === String(groupId));
   const leaderId = String(memberships.find(item => String(item.IsLeader).toLowerCase() === "true")?.PersonID || "");
   if (!group || !memberships.length) return toast("This group does not have any members.");
-  if (!leaderId) return toast("Edit this group and select a leader before previewing the Team Map.");
+  if (!leaderId) {
+    editAssessmentGroup(groupId);
+    return toast("Select a leader, then use Save & Create Team Map.");
+  }
   const results = memberships.map(item => assessmentPersonById(item.PersonID)).filter(Boolean).map(person => ({
     AssessmentResultID: person.PersonID,
     PersonID: person.PersonID,

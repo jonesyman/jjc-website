@@ -69,13 +69,15 @@ Key/value rows used by `rates.js` and financial PDF reconstruction. The admin pa
 
 ### AssessmentImports
 
-One row describes an uploaded workbook associated with a workshop.
+One row describes an uploaded workbook or a manually assembled assessment roster associated with a workshop.
 
 Fields:
 
 `AssessmentImportID`, `WorkshopID`, `GroupName`, `OriginalFileName`, `ParticipantCount`, `ImportedDate`, `UpdatedDate`, `Active`, `ImportStatus`, `ValidationWarnings`, `SourceType`, `SourceVersion`, `LeaderAssessmentResultID`, `LeaderFirstName`, `LeaderLastName`, `LeaderSelectedDate`, `LeaderUpdatedDate`, `TeamPdfFileId`, `TeamPdfUrl`, `TeamPdfGeneratedDate`.
 
 The current Team Map flow does not persist Team Map PDFs, so the legacy Team PDF fields should remain empty.
+
+When a workshop roster is first assembled from canonical people, the backend creates an import with `SourceType` set to `Manual roster`, `SourceVersion` set to `Canonical assessment library`, and `ImportStatus` set to `Built Manually`. Subsequent people can be added to either a manual roster or a workbook-backed import.
 
 ### AssessmentResults
 
@@ -85,11 +87,11 @@ Fields:
 
 `AssessmentResultID`, `AssessmentImportID`, `WorkshopID`, `PersonID`, `FirstName`, `LastName`, `DisplayName`, `GroupName`, `Genius1`, `Genius2`, `Competency1`, `Competency2`, `Frustration1`, `Frustration2`, `SortOrder`, `ImportedDate`, `UpdatedDate`, `Active`.
 
-`PersonID` links the workshop result to the canonical person. Multiple active results may reference one person when that person participated in multiple workshops.
+`PersonID` links the workshop result to the canonical person. Multiple active results may reference one person when that person participated in multiple workshops. Adding an existing person to a workshop copies the canonical six placements into a workshop-participation row but does not create a second canonical assessment.
 
 ### AssessmentImportHistory
 
-Append-only audit information for initial import, merge, replace, and removal activity.
+Append-only audit information for initial import, merge, replace, manual roster additions, and removal activity.
 
 Fields:
 

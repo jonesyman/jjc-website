@@ -25,10 +25,12 @@ This roadmap records product capabilities rather than relying solely on historic
 - Exact-token workshop save confirmation that refreshes the visible list after Sheets persistence.
 - Complete scrollable assessment-import previews without a participant display cap.
 - Filter-aware, accessible name drill-downs for all individual Genius and pairing analytics cards.
+- Explicit group maintenance and deletion with a direct Save & Create Team Map workflow.
+- Workshop rosters assembled or extended from canonical people, including new ad hoc individual entry.
 
 ## Current release boundary
 
-Version `2026.07.15.01` adds Assessment Analytics card drill-downs using the existing filtered, deduplicated client-side dataset. It requires only the corresponding static-site commit on the deployed Git branch; no Apps Script change is required.
+Version `2026.07.15.02` adds persistent group maintenance and lets workshops build or extend assessment rosters from canonical people. It requires a new Apps Script deployment before the corresponding static-site deployment.
 
 See `CURRENT_STATE.md` before continuing.
 
@@ -47,9 +49,12 @@ See `CURRENT_STATE.md` before continuing.
 - Confirm reversed Genius order lands in the same pairing and pairing counts follow every analytics filter.
 - Confirm each analytics card drill-down count matches its card and retains active filter context.
 - Save a workshop with time values and confirm the page updates without a manual refresh.
+- Edit and delete a group, then confirm each operation after a full refresh.
+- Build a workshop roster from existing people, add a new individual from the same flow, select a leader, and generate its Team Map.
 
 ### Near-term polish
 
+- Design a dedicated workshop-result notes phase, including note scope, editing history, and whether notes belong to a workshop, a person, or the assembled team result.
 - Add clearer loading/progress feedback if a large historical backfill takes noticeable time.
 - Add filters for people by client, workshop, group, and Genius role if the library grows large.
 - Consider a non-destructive person-detail view showing every workshop and group membership.
