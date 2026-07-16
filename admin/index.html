@@ -401,6 +401,8 @@
     .group-member-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:10px; align-items:center; padding:10px 12px; border:1px solid rgba(148,163,184,.15); border-radius:12px; background:rgba(15,23,42,.45); }
     .group-member-row input[type="radio"] { width:18px; height:18px; }
     .group-builder-status { margin:0 0 12px; padding:9px 11px; border:1px solid rgba(79,143,234,.24); border-radius:11px; background:rgba(38,56,96,.28); color:#B8C0CC; }
+    .record-title-button { appearance:none; border:0; padding:0; background:transparent; color:#F8FAFC; font:inherit; text-align:left; cursor:pointer; }
+    .record-title-button:hover,.record-title-button:focus-visible { color:#8fb9f4; text-decoration:underline; text-underline-offset:3px; }
     .workshop-people-backdrop { z-index:90; }
     .workshop-people-dialog { width:min(820px,100%); max-height:calc(100dvh - 36px); overflow:hidden; display:flex; flex-direction:column; }
     .workshop-people-toolbar { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; margin:10px 0; }
@@ -454,26 +456,24 @@
     .ad-hoc-zone-count { display:block; margin:3px 0 9px; color:#8C96A6; font-size:11px; }
     .ad-hoc-zone-values { display:flex; flex-wrap:wrap; gap:6px; }
     .ad-hoc-zone-value { padding:5px 8px; border-radius:999px; background:#263860; color:#F8FAFC; font-size:11px; font-weight:600; }
-    .team-map-sheet { width:min(8.5in,100%); min-height:11in; margin:0 auto; background:#fff; color:#172033; padding:.42in .48in .34in; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-sheet { --team-map-name-size:13px; width:min(8.5in,100%); height:11in; margin:0 auto; background:#fff; color:#172033; padding:.42in .48in .34in; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .team-map-header { display:flex; justify-content:space-between; align-items:center; gap:20px; border-bottom:4px solid #243f72; padding-bottom:12px; margin-bottom:14px; }
     .team-map-logo { width:62px; height:62px; object-fit:contain; }
     .team-map-title { color:#243f72; margin:0; font-size:27px; }
     .team-map-meta { color:#526077; font-size:11px; text-align:right; line-height:1.5; }
-    .team-map-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(2.25in,auto)); gap:10px; flex:1; }
+    .team-map-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr)); gap:10px; flex:1; min-height:0; }
     .team-map-panel { border:1px solid #cbd5e1; border-radius:12px; overflow:hidden; background:#f8fafc; display:flex; flex-direction:column; min-height:0; }
-    .team-map-dense .team-map-names { font-size:9px; gap:2px; }
-    .team-map-very-dense .team-map-names { font-size:7.5px; gap:1px; }
     .team-map-panel-title { display:flex; align-items:center; justify-content:center; gap:8px; background:#243f72; color:white; padding:7px 10px; font-size:16px; font-weight:900; }
     .team-map-panel-abbr { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; background:white; color:#243f72; }
     .team-map-columns { display:grid; grid-template-columns:1fr 1fr; flex:1; }
-    .team-map-column { padding:8px 10px; min-width:0; }
+    .team-map-column { padding:8px 10px; min-width:0; min-height:0; overflow:hidden; }
     .team-map-column + .team-map-column { border-left:1px solid #cbd5e1; }
     .team-map-column h4 { margin:0 0 6px; font-size:12px; text-align:center; }
     .team-map-genius h4 { color:#15803d; }
     .team-map-frustration h4 { color:#b91c1c; }
     .team-map-genius .team-map-names { color:#15803d; }
     .team-map-frustration .team-map-names { color:#b91c1c; }
-    .team-map-names { list-style:none; padding:0; margin:0; display:grid; gap:3px; font-size:10.5px; line-height:1.2; }
+    .team-map-names { list-style:none; padding:0; margin:0; display:grid; gap:3px; font-size:var(--team-map-name-size); line-height:1.18; }
     .team-map-name { overflow-wrap:anywhere; }
     .team-map-leader { font-weight:400; }
     .team-map-footer { border-top:1px solid #cbd5e1; margin-top:10px; padding-top:7px; display:flex; justify-content:space-between; gap:14px; color:#64748b; font-size:8.5px; line-height:1.35; }
@@ -772,7 +772,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.15.02</strong><br>
+        Version <strong id="appVersionLabel">2026.07.15.03</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -884,6 +884,11 @@
               <div class="card">
                 <div class="section-title"><div><h2>Group Builder</h2><p class="tiny muted">Create, maintain, or delete a family, department, former-employees list, or reusable team</p></div><button class="button ghost small-btn" onclick="resetAssessmentGroupForm()">New Group</button></div>
                 <input id="assessmentGroupId" type="hidden">
+                <div class="group-builder-status">
+                  <div class="field" style="margin:0;"><label for="assessmentGroupManagerSelect">Manage a saved group</label><div class="member-picker"><select id="assessmentGroupManagerSelect" onchange="syncAssessmentGroupManagerActions()"><option value="">Choose a saved group...</option></select><button id="loadAssessmentGroupButton" class="button secondary small-btn" type="button" onclick="loadSelectedAssessmentGroup()" disabled>Load Group</button></div></div>
+                  <div class="actions" style="justify-content:flex-start;"><button id="mapSelectedAssessmentGroupButton" class="button small-btn" type="button" onclick="previewSelectedAssessmentGroup()" disabled>Create Team Map</button><button id="deleteSelectedAssessmentGroupButton" class="button danger small-btn" type="button" onclick="deleteSelectedAssessmentGroup()" disabled>Delete Group</button></div>
+                  <div class="tiny muted">Choose a saved group, then load it into the form below to change its members, leader, name, or description.</div>
+                </div>
                 <p id="assessmentGroupModeLabel" class="group-builder-status">Creating a new group</p>
                 <div class="form-row">
                   <div class="field"><label>Group Name</label><input id="assessmentGroupName" placeholder="FPU Former Employees"></div>
@@ -900,9 +905,13 @@
               </div>
             </div>
             <div class="card" style="margin-top:16px;">
-              <div class="section-title"><div><h2>Saved Groups</h2><p class="tiny muted">Groups do not require a workshop or date</p></div><span id="assessmentGroupMatchCount" class="tiny muted"></span></div>
+              <div class="section-title"><div><h2>Saved Groups</h2><p class="tiny muted">Use Load Group to edit members or the leader. Creating a Team Map and deleting are available directly on every card.</p></div><span id="assessmentGroupMatchCount" class="tiny muted"></span></div>
               <div id="assessmentGroupsList" class="list-grid"></div>
               <p id="assessmentGroupsEmpty" class="muted small hidden">No custom groups yet.</p>
+              <div id="deletedAssessmentGroupsSection" class="hidden" style="margin-top:18px; padding-top:16px; border-top:1px solid #364152;">
+                <div class="section-title"><div><h3>Recently Deleted Groups</h3><p class="tiny muted">Restore a group if it was deleted by mistake. People and assessment records are never deleted with the group.</p></div><span id="deletedAssessmentGroupCount" class="tiny muted"></span></div>
+                <div id="deletedAssessmentGroupsList" class="list-grid"></div>
+              </div>
             </div>
             <div class="card" style="margin-top:16px;">
               <div class="section-title"><div><h2>Possible Duplicates</h2><p class="tiny muted">Shown when the same normalized name has conflicting assessment data</p></div><span id="assessmentDuplicateMatchCount" class="tiny muted"></span></div>
@@ -1115,7 +1124,7 @@
               <details class="tutorial-step"><summary><span class="tutorial-number">6</span><span>Import or assemble assessment results</span></summary><div class="tutorial-body">From the workshop, choose Assessment Results. Upload the official Individual Results workbook, or use Add Individual Results to assemble a roster from people already in the assessment library.<ul><li>Review validation messages, then scroll through the complete participant preview before importing a workbook.</li><li>Use Merge for additions or corrections that should preserve omitted people.</li><li>Use Replace only when the uploaded workbook should become the complete active roster.</li><li>A manually assembled roster can still select a leader and generate a Team Map.</li></ul><button class="button secondary small-btn" onclick="showView('workshops')">Find Workshop Assessments</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">7</span><span>Select the leader and review the Team View</span></summary><div class="tutorial-body">Choose and save the team leader, then review all six Team View cards. The leader is intentionally represented twice in Genius and Frustration lists to reflect leadership influence; the person’s stored result is not duplicated.</div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">8</span><span>Preview and save the Team Map</span></summary><div class="tutorial-body">Preview the Team Map, choose the preferred name format, and check all six Genius and Frustration sections.<ul><li>Use Print / Save as PDF to store the map locally.</li><li>Team Map PDFs are not stored in Google Sheets or Google Drive by the app.</li></ul></div></details>
-              <details class="tutorial-step"><summary><span class="tutorial-number">9</span><span>Add individuals and maintain reusable groups</span></summary><div class="tutorial-body">Use Assessments & Groups to add an individual result received outside a workshop, or combine individuals and complete workshop rosters without duplicating anyone’s assessment.<ul><li>For an ad hoc result, enter the person’s name and assign all six cards to Genius, Competency, or Frustration.</li><li>Groups do not require a workshop or date and can be reopened with Manage Group.</li><li>Choose a group-specific leader, then use Save &amp; Create Team Map for a direct preview.</li><li>Delete Group is available for groups that should not be retained.</li><li>Review possible duplicate names when assessment data conflicts.</li></ul><button class="button secondary small-btn" onclick="showView('assessment-library')">Open Assessments & Groups</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">9</span><span>Add individuals and maintain reusable groups</span></summary><div class="tutorial-body">Use Assessments & Groups to add an individual result received outside a workshop, or combine individuals and complete workshop rosters without duplicating anyone’s assessment.<ul><li>For an ad hoc result, enter the person’s name and assign all six cards to Genius, Competency, or Frustration.</li><li>At the top of Group Builder, choose a saved group and use Load Group to edit its members, leader, name, or description.</li><li>Choose a group-specific leader, then use Save &amp; Create Team Map for a direct preview.</li><li>Delete Group is available in the saved-group manager and on every saved-group card.</li><li>If a group is deleted by mistake, use Restore Group under Recently Deleted Groups.</li><li>Review possible duplicate names when assessment data conflicts.</li></ul><button class="button secondary small-btn" onclick="showView('assessment-library')">Open Assessments & Groups</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">10</span><span>Review Assessment Analytics</span></summary><div class="tutorial-body">Use the analytics page to review unique people served, individual Genius distribution, and all 15 Genius pairings. Filter by client, workshop, dates, Genius, or participant search; every count and percentage updates with the filtered list.<ul><li>A person appearing in multiple workshops counts once within the filtered view.</li><li>Each person has two Geniuses, so the six individual percentages normally total approximately 200%.</li><li>Each person has one pairing, and reversed order such as WI and IW is counted together.</li></ul><button class="button secondary small-btn" onclick="showView('assessments')">Open Assessment Analytics</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">11</span><span>Complete follow-up and maintain records</span></summary><div class="tutorial-body">Update the workshop status, follow-up date, invoice status, and notes after the engagement.<ul><li>Archive inactive business records to reduce clutter while preserving history.</li><li>Use permanent deletion only for genuine mistakes or test records.</li><li>Assessment removal leaves the workshop and financial documents intact and retains inactive import history.</li></ul><button class="button secondary small-btn" onclick="showView('dashboard')">Review Dashboard</button></div></details>
             </div>
@@ -1327,16 +1336,16 @@ Sanger, CA 93657"></textarea>
   </div>
 
   <script src="../assets/js/branding.js"></script>
-  <script src="../assets/js/googleSheets.js?v=8"></script>
+  <script src="../assets/js/googleSheets.js?v=9"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
-  <script src="../assets/js/assessmentLibrary.js?v=3"></script>
+  <script src="../assets/js/assessmentLibrary.js?v=4"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
   <script src="../assets/js/invoices.js?v=2"></script>
 
   <script>
-    const APP_VERSION = "2026.07.15.02";
+    const APP_VERSION = "2026.07.15.03";
 
     const K = {
       clients: "jjc_clients",
@@ -2706,12 +2715,32 @@ Sanger, CA 93657"></textarea>
       const mapIdentifier = teamMapContext?.identifier || assessmentWorkshopId;
       const mapDate = teamMapContext?.dateLabel || (workshop.WorkshopDate ? formatDate(workshop.WorkshopDate) : (workshop.DateDescription || ""));
       const mapSubtitle = teamMapContext?.organization || currentAssessmentData.import.GroupName || "";
-      const longestList = Math.max(...team.cards.flatMap(card => [card.geniusWeighted.length, card.frustrationWeighted.length]));
-      const densityClass = longestList > 20 ? "team-map-very-dense" : longestList > 12 ? "team-map-dense" : "";
       const generated = new Date().toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
       const mapRows = team.cards.map(card => teamMapPanel(card, team.leader, mode)).join("");
-      document.getElementById("teamMapSheet").className = `team-map-sheet ${densityClass}`;
+      document.getElementById("teamMapSheet").className = "team-map-sheet";
       document.getElementById("teamMapSheet").innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Working Genius Team Map</h1><div style="font-weight:900;">${esc(mapTitle)}</div></div></div><div class="team-map-meta">${esc(mapIdentifier)}<br>${esc(mapDate)}<br>${esc(mapSubtitle)}</div></div><div class="team-map-grid">${mapRows}</div><div class="team-map-footer"><div><strong>Jeff Jones Consulting</strong><br>Generated ${generated}</div><div>The selected team leader is represented twice in Genius and Frustration areas to reflect the leader's influence on the team environment.</div></div>`;
+      requestAnimationFrame(fitTeamMapNames);
+    }
+
+    function fitTeamMapNames() {
+      const sheet = document.getElementById("teamMapSheet");
+      const lists = [...sheet.querySelectorAll(".team-map-names")];
+      const maximumSize = 13;
+      const minimumSize = 7.5;
+      const step = 0.5;
+      let size = maximumSize;
+      const setSize = () => sheet.style.setProperty("--team-map-name-size", `${size}px`);
+      const anyListOverflows = () => lists.some(list => {
+        const column = list.closest(".team-map-column");
+        if (!column) return false;
+        return list.getBoundingClientRect().bottom > column.getBoundingClientRect().bottom - 3;
+      });
+      setSize();
+      while (size > minimumSize && anyListOverflows()) {
+        size = Math.max(minimumSize, size - step);
+        setSize();
+      }
+      sheet.dataset.nameFontSize = String(size);
     }
 
     function teamMapPanel(card, leader, mode) {
@@ -2719,7 +2748,7 @@ Sanger, CA 93657"></textarea>
     }
 
     function teamMapNameList(people, leader, mode) {
-      if (!people.length) return '<div class="team-map-names"><span>No participants</span></div>';
+      if (!people.length) return "";
       return `<ul class="team-map-names">${people.map(person => `<li class="team-map-name${leader && person.id === leader.id ? " team-map-leader" : ""}">${esc(teamMapDisplayName(person, mode))}${leader && person.id === leader.id ? " *" : ""}</li>`).join("")}</ul>`;
     }
 

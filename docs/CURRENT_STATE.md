@@ -6,13 +6,18 @@ Last updated: 2026-07-15
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.15.02`
-- Latest feature: maintainable assessment groups and manually assembled workshop rosters
+- Current application version: `2026.07.15.03`
+- Latest feature: adaptive Team Map typography and explicit saved-group management
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Increased Team Map names to a uniform 13px starting size and added layout-based fitting that shrinks all names together only when any list would overflow.
+- Removed “No participants” from empty graphical Team Map areas so those panels remain blank.
+- Added a saved-group selector at the top of Group Builder with explicit Load Group, Create Team Map, and Delete Group actions.
+- Made saved-group card titles clickable and renamed the card action to Load Group to Edit.
+- Added Recently Deleted Groups so an accidentally deleted group and its last active membership set can be restored.
 - Made Manage Group, Create Team Map, and Delete Group visible on each saved group, including mobile layouts.
 - Added an edit-state Delete This Group control and a Save & Create Team Map path in the group builder.
 - Added Add People to workshop assessment results, with searchable selection from the canonical assessment library and automatic exclusion of existing roster members.
@@ -73,6 +78,8 @@ Cloudflare may reject a build if its build token was deleted or rolled. In that 
 - Add existing people to a workshop with and without a prior workbook import; confirm duplicate roster members are excluded and the Team Map remains available.
 - Enter a new individual from a workshop, confirm it appears once in the canonical library, and confirm it is linked to that workshop.
 - Test the new area on mobile portrait and landscape.
+- Confirm sparse Team Maps remain at 13px, dense maps fit on one US Letter page, and every displayed name uses the same font size.
+- Load and delete a disposable saved group from both the manager selector and its saved-group card.
 
 ## Known design decisions
 
@@ -84,7 +91,7 @@ Cloudflare may reject a build if its build token was deleted or rolled. In that 
 - Saved groups copy person references and are not recursively nested.
 - Team Maps remain local print/save artifacts.
 - A workshop may use a workbook-backed import or a manually assembled roster of canonical people.
-- Workshop-result notes are planned separately and are not part of version `2026.07.15.02`.
+- Workshop-result notes are planned separately and are not part of version `2026.07.15.03`.
 - Apps Script and the static website are separate deployments.
 
 ## Suggested opening instruction for a new Codex task

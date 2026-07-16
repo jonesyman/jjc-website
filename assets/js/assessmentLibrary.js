@@ -50,6 +50,10 @@ function assessmentLibraryGroups() {
   return Array.isArray(assessmentLibraryState?.groups) ? assessmentLibraryState.groups : [];
 }
 
+function deletedAssessmentLibraryGroups() {
+  return Array.isArray(assessmentLibraryState?.deletedGroups) ? assessmentLibraryState.deletedGroups : [];
+}
+
 function assessmentLibraryMemberships() {
   return Array.isArray(assessmentLibraryState?.memberships) ? assessmentLibraryState.memberships : [];
 }
@@ -212,6 +216,7 @@ function renderAssessmentLibrary() {
   populateAssessmentLibraryOptions();
   renderAssessmentPeople();
   renderAssessmentGroups();
+  renderDeletedAssessmentGroups();
   renderAssessmentDuplicates();
   renderAssessmentGroupMembers();
 }
@@ -240,6 +245,38 @@ function populateAssessmentLibraryOptions() {
   const sourceGroups = assessmentLibraryGroups().filter(group => String(group.GroupID) !== String(currentGroupId)).slice().sort((a, b) => String(a.GroupName).localeCompare(String(b.GroupName)));
   document.getElementById("assessmentGroupSourceGroup").innerHTML = '<option value="">Choose a saved group...</option>' + sourceGroups.map(group => `<option value="${esc(group.GroupID)}">${esc(group.GroupName)}</option>`).join("");
   if (sourceGroups.some(group => String(group.GroupID) === selectedSourceGroup)) document.getElementById("assessmentGroupSourceGroup").value = selectedSourceGroup;
+
+  const manager = document.getElementById("assessmentGroupManagerSelect");
+  const selectedManagerGroup = currentGroupId || manager.value;
+  const savedGroups = assessmentLibraryGroups().slice().sort((a, b) => String(a.GroupName).localeCompare(String(b.GroupName)));
+  manager.innerHTML = '<option value="">Choose a saved group...</option>' + savedGroups.map(group => `<option value="${esc(group.GroupID)}">${esc(group.GroupName)}</option>`).join("");
+  if (savedGroups.some(group => String(group.GroupID) === String(selectedManagerGroup))) manager.value = selectedManagerGroup;
+  syncAssessmentGroupManagerActions();
+}
+
+function syncAssessmentGroupManagerActions() {
+  const hasSelection = Boolean(document.getElementById("assessmentGroupManagerSelect").value);
+  document.getElementById("loadAssessmentGroupButton").disabled = !hasSelection;
+  document.getElementById("mapSelectedAssessmentGroupButton").disabled = !hasSelection;
+  document.getElementById("deleteSelectedAssessmentGroupButton").disabled = !hasSelection;
+}
+
+function loadSelectedAssessmentGroup() {
+  const groupId = document.getElementById("assessmentGroupManagerSelect").value;
+  if (!groupId) return toast("Choose a saved group to load.");
+  editAssessmentGroup(groupId);
+}
+
+function previewSelectedAssessmentGroup() {
+  const groupId = document.getElementById("assessmentGroupManagerSelect").value;
+  if (!groupId) return toast("Choose a saved group first.");
+  previewAssessmentGroup(groupId);
+}
+
+function deleteSelectedAssessmentGroup() {
+  const groupId = document.getElementById("assessmentGroupManagerSelect").value;
+  if (!groupId) return toast("Choose a saved group to delete.");
+  deleteAssessmentGroup(groupId);
 }
 
 function renderAssessmentPeople() {
@@ -327,7 +364,10 @@ function resetAssessmentGroupForm() {
   assessmentGroupLeaderId = "";
   document.getElementById("assessmentGroupModeLabel").textContent = "Creating a new group";
   document.getElementById("deleteCurrentAssessmentGroupButton").classList.add("hidden");
+  document.getElementById("assessmentGroupManagerSelect").value = "";
+  syncAssessmentGroupManagerActions();
   renderAssessmentGroupMembers();
+  if (assessmentLibraryState) populateAssessmentLibraryOptions();
 }
 
 async function saveAssessmentGroup(button, previewAfterSave = false) {
@@ -375,6 +415,8 @@ function editAssessmentGroup(groupId) {
   assessmentGroupLeaderId = String(members.find(item => String(item.IsLeader).toLowerCase() === "true")?.PersonID || "");
   document.getElementById("assessmentGroupModeLabel").textContent = `Editing: ${group.GroupName}`;
   document.getElementById("deleteCurrentAssessmentGroupButton").classList.remove("hidden");
+  document.getElementById("assessmentGroupManagerSelect").value = group.GroupID;
+  syncAssessmentGroupManagerActions();
   renderAssessmentGroupMembers();
   document.getElementById("assessmentGroupName").scrollIntoView({ behavior: "smooth", block: "center" });
   document.getElementById("assessmentGroupName").focus({ preventScroll: true });
@@ -389,8 +431,27 @@ function renderAssessmentGroups() {
     const members = assessmentLibraryMemberships().filter(item => String(item.GroupID) === String(group.GroupID));
     const leaderMembership = members.find(item => String(item.IsLeader).toLowerCase() === "true");
     const leader = leaderMembership ? assessmentPersonById(leaderMembership.PersonID) : null;
-    return `<article class="record-card"><div class="record-title">${esc(group.GroupName)}</div><div class="tiny muted">${esc(group.Organization || "Independent group")} • ${members.length} ${members.length === 1 ? "person" : "people"}</div>${group.Description ? `<div class="small">${esc(group.Description)}</div>` : ""}<div class="small"><strong>Leader:</strong> ${leader ? esc(assessmentPersonName(leader)) : '<span class="muted">Not selected</span>'}</div><div class="actions group-card-actions"><button class="button secondary small-btn" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">Manage Group</button><button class="button small-btn" onclick="previewAssessmentGroup('${jsEsc(group.GroupID)}')">Create Team Map</button><button class="button danger small-btn" onclick="deleteAssessmentGroup('${jsEsc(group.GroupID)}')">Delete Group</button></div></article>`;
+    return `<article class="record-card"><button class="record-title record-title-button" type="button" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">${esc(group.GroupName)}</button><div class="tiny muted">${esc(group.Organization || "Independent group")} • ${members.length} ${members.length === 1 ? "person" : "people"}</div>${group.Description ? `<div class="small">${esc(group.Description)}</div>` : ""}<div class="small"><strong>Leader:</strong> ${leader ? esc(assessmentPersonName(leader)) : '<span class="muted">Not selected</span>'}</div><div class="actions group-card-actions"><button class="button secondary small-btn" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">Load Group to Edit</button><button class="button small-btn" onclick="previewAssessmentGroup('${jsEsc(group.GroupID)}')">Create Team Map</button><button class="button danger small-btn" onclick="deleteAssessmentGroup('${jsEsc(group.GroupID)}')">Delete Group</button></div></article>`;
   }).join("");
+}
+
+function renderDeletedAssessmentGroups() {
+  const groups = deletedAssessmentLibraryGroups().slice().sort((a, b) => String(a.GroupName).localeCompare(String(b.GroupName)));
+  document.getElementById("deletedAssessmentGroupsSection").classList.toggle("hidden", groups.length === 0);
+  document.getElementById("deletedAssessmentGroupCount").textContent = `${groups.length} recoverable`;
+  document.getElementById("deletedAssessmentGroupsList").innerHTML = groups.map(group => `<article class="record-card"><div class="record-title">${esc(group.GroupName || "Unnamed group")}</div><div class="tiny muted">Deleted ${group.UpdatedDate ? esc(formatDate(group.UpdatedDate)) : "date unavailable"}</div><div class="actions"><button class="button secondary small-btn" type="button" onclick="restoreAssessmentGroup('${jsEsc(group.GroupID)}',this)">Restore Group</button></div></article>`).join("");
+}
+
+async function restoreAssessmentGroup(groupId, button) {
+  const finish = beginSave(button, "Restoring Group...");
+  if (!finish) return;
+  try {
+    assessmentLibraryState = await Database.restoreAssessmentGroup(groupId);
+    assessmentLibraryLoaded = true;
+    renderAssessmentLibrary();
+    toast("Group restored. You can load it from Group Builder.");
+  } catch (error) { toast(error.message || "Unable to restore the group."); }
+  finally { finish(); }
 }
 
 function deleteCurrentAssessmentGroup() {

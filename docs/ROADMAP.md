@@ -27,10 +27,13 @@ This roadmap records product capabilities rather than relying solely on historic
 - Filter-aware, accessible name drill-downs for all individual Genius and pairing analytics cards.
 - Explicit group maintenance and deletion with a direct Save & Create Team Map workflow.
 - Workshop rosters assembled or extended from canonical people, including new ad hoc individual entry.
+- Uniform, adaptive Team Map name typography with blank empty areas.
+- A prominent saved-group manager for loading, mapping, and deleting groups.
+- Recoverable group deletion with restoration of the most recently active membership set.
 
 ## Current release boundary
 
-Version `2026.07.15.02` adds persistent group maintenance and lets workshops build or extend assessment rosters from canonical people. It requires a new Apps Script deployment before the corresponding static-site deployment.
+Version `2026.07.15.03` improves graphical Team Map readability, makes saved-group management explicit, and adds recoverable group deletion. Deploy the new Apps Script version before the corresponding static-site deployment.
 
 See `CURRENT_STATE.md` before continuing.
 

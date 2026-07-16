@@ -56,6 +56,7 @@ The admin console caches core lists in `localStorage` so the most recently loade
 - Missing assessment-library tabs and columns are created lazily on first use.
 - `addPeopleToWorkshopAssessment` links selected canonical people into an existing workshop import or creates a manual roster import when none exists; the frontend polls the workshop assessment read until every requested person is visible.
 - Group saves and deletions are likewise confirmed against the assessment workspace before the interface reports success.
+- Deleted groups remain inactive in Sheets and are exposed separately for recovery; the restore action reactivates the group and its latest membership set, with frontend polling confirmation.
 
 The deployed web-app URL is configured in `assets/js/googleSheets.js`. If the Apps Script deployment URL changes, update it there.
 

@@ -37,11 +37,12 @@ The admin sidebar currently follows this order:
 - Analytics treats the two Genius positions as an unordered pairing; WI and IW are the same named pairing.
 - Custom groups do not need a workshop or date. Examples include families, departments, leadership teams, and former employees.
 - A group can copy members from an individual search, a workshop roster, or another saved group.
-- Saved groups can be reopened for maintenance, deleted when genuinely unnecessary, or saved directly into Team Map preview.
+- Saved groups can be chosen from the manager at the top of Group Builder, loaded for maintenance, deleted when genuinely unnecessary, restored from Recently Deleted Groups, or opened directly in Team Map preview.
 - Adding another group copies its current person references; groups are not nested.
 - Leader status belongs to a specific workshop or group, not permanently to the person.
 - Team Maps are previewed in the application and printed or saved locally. They are not stored in Google Sheets or Drive.
 - In Team Maps, Genius names are green, Frustration names are red, and the leader is marked with an asterisk without bolding.
+- Graphical Team Map names start at one uniform 13px size. If any list would overflow, every name shrinks together; empty areas remain blank.
 - Notes about workshop assessment results are a planned separate capability and are not part of roster assembly.
 
 ## Business and interface preferences

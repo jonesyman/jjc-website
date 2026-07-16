@@ -220,6 +220,19 @@ saveSettings(data) {
         throw new Error(`Google Sheets did not confirm group removal.${lastError ? " " + lastError.message : ""}`);
     },
 
+    async restoreAssessmentGroup(groupId) {
+        await this.postNoCors("restoreAssessmentGroup", { groupId });
+        let lastError = null;
+        for (let attempt = 1; attempt <= 8; attempt++) {
+            await this.wait(attempt * 500);
+            try {
+                const workspace = await this.getAssessmentWorkspace();
+                if (workspace?.groups?.some(group => String(group.GroupID) === String(groupId))) return workspace;
+            } catch (error) { lastError = error; }
+        }
+        throw new Error(`Google Sheets did not confirm group restoration.${lastError ? " " + lastError.message : ""}`);
+    },
+
     async addPeopleToWorkshopAssessment(data) {
         const personIds = Array.from(new Set((data.personIds || []).map(value => String(value || "").trim()).filter(Boolean)));
         if (!data.workshopId || !personIds.length) throw new Error("Choose a workshop and at least one person.");

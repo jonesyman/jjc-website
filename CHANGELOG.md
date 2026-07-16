@@ -2,6 +2,15 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.15.03 — 2026-07-15
+
+- Increased graphical Team Map name text from a 10.5px default to a uniform 13px starting size.
+- Added automatic whole-map font fitting that reduces every name together only when at least one Genius or Frustration list would overflow its panel.
+- Left empty Team Map Genius and Frustration areas blank instead of displaying “No participants.”
+- Added a prominent saved-group manager with Load Group, Create Team Map, and Delete Group actions.
+- Made saved-group names clickable and clarified the load-to-edit workflow in the saved cards and in-app tutorial.
+- Added Recently Deleted Groups with restoration of the group and its last active membership set.
+
 ## 2026.07.15.02 — 2026-07-15
 
 - Made group maintenance actions explicit on desktop and mobile, including Manage Group and Delete Group.

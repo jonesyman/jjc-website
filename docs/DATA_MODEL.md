@@ -132,6 +132,8 @@ Fields:
 
 Only one current group member should be selected as leader. A person may lead multiple groups because leadership is membership-specific.
 
+Deleting a group sets the group and its active memberships to `Active: false`. The workspace returns inactive group metadata separately for recovery. Restoring reactivates the group and the membership rows from its most recently active membership set; canonical people and workshop results are never deleted with a group.
+
 ### AssessmentDuplicateReviews
 
 Stores duplicate-resolution decisions.

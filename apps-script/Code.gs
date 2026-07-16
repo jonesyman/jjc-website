@@ -168,6 +168,7 @@ function doPost(e) {
     if (action === "saveAssessmentGroup") return jsonResponse(saveAssessmentGroup(body.data || {}));
     if (action === "saveAdHocAssessment") return jsonResponse(saveAdHocAssessment(body.data || {}));
     if (action === "deleteAssessmentGroup") return jsonResponse(deleteAssessmentGroup(body.data || {}));
+    if (action === "restoreAssessmentGroup") return jsonResponse(restoreAssessmentGroup(body.data || {}));
     if (action === "addPeopleToWorkshopAssessment") return jsonResponse(addPeopleToWorkshopAssessment(body.data || {}));
     if (action === "resolveAssessmentDuplicate") return jsonResponse(resolveAssessmentDuplicate(body.data || {}));
 
@@ -310,7 +311,9 @@ function getAssessmentWorkspace() {
   lock.waitLock(15000);
   try { ensureCanonicalAssessmentData(); } finally { lock.releaseLock(); }
   const people = getRows("AssessmentPeople").filter(isActiveAssessmentRow);
-  const groups = getRows("AssessmentGroups").filter(isActiveAssessmentRow);
+  const allGroups = getRows("AssessmentGroups");
+  const groups = allGroups.filter(isActiveAssessmentRow);
+  const deletedGroups = allGroups.filter(row => !isActiveAssessmentRow(row));
   const memberships = getRows("AssessmentGroupMembers").filter(isActiveAssessmentRow);
   const activeImportIds = {};
   getRows("AssessmentImports").filter(isActiveAssessmentRow).forEach(row => { activeImportIds[String(row.AssessmentImportID)] = true; });
@@ -336,7 +339,7 @@ function getAssessmentWorkspace() {
       if (!resolvedPairs[pairKey]) duplicates.push({ person1: matches[i], person2: matches[j] });
     }
   });
-  return { people: people, groups: groups, memberships: memberships, workshopMembers: workshopMembers, duplicates: duplicates };
+  return { people: people, groups: groups, deletedGroups: deletedGroups, memberships: memberships, workshopMembers: workshopMembers, duplicates: duplicates };
 }
 
 function saveAdHocAssessment(data) {
@@ -424,6 +427,32 @@ function deleteAssessmentGroup(data) {
     if (info) updateRowFields("AssessmentGroupMembers", info.rowNumber, { Active: false, UpdatedDate: now });
   });
   return { success: true, groupId: groupId };
+}
+
+function restoreAssessmentGroup(data) {
+  const groupId = String(data.groupId || "").trim();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const groupInfo = getRowById("AssessmentGroups", "GroupID", groupId);
+    if (!groupInfo) throw new Error("Deleted group not found.");
+    if (isActiveAssessmentRow(groupInfo.row)) return { success: true, groupId: groupId };
+    const now = new Date().toISOString();
+    const inactiveMemberships = getRows("AssessmentGroupMembers").filter(row => String(row.GroupID) === groupId && !isActiveAssessmentRow(row));
+    const membershipTime = row => {
+      const parsed = new Date(row.UpdatedDate || row.AddedDate || 0).getTime();
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    const latestMembershipTime = inactiveMemberships.reduce((latest, row) => Math.max(latest, membershipTime(row)), 0);
+    inactiveMemberships.filter(row => membershipTime(row) === latestMembershipTime).forEach(row => {
+      const info = getRowById("AssessmentGroupMembers", "GroupMemberID", row.GroupMemberID);
+      if (info) updateRowFields("AssessmentGroupMembers", info.rowNumber, { Active:true, UpdatedDate:now });
+    });
+    updateRowFields("AssessmentGroups", groupInfo.rowNumber, { Active:true, UpdatedDate:now });
+    return { success: true, groupId: groupId };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function addPeopleToWorkshopAssessment(data) {
