@@ -5,6 +5,7 @@
 - Google Sheets is the durable source of truth.
 - Business IDs use prefixes such as `CLI-`, `EST-`, `WRK-`, and `INV-`.
 - Assessment-library IDs use UUID-backed prefixes: `PER-`, `GRP-`, `GMB-`, and `DUP-`.
+- Email template IDs use a backend-generated UUID-backed `EMT-` prefix.
 - Archive fields apply to business records: `archived`, `archivedDate`.
 - Assessment records use `Active` flags so import and merge history can be retained.
 - Dates are stored as sheet values or ISO strings and normalized by the frontend.
@@ -64,6 +65,18 @@ Key/value rows used for business name, email, phone, address, invoice footer, pa
 ### Rates
 
 Key/value rows used by `rates.js` and financial PDF reconstruction. The admin page displays these values but directs edits to Google Sheets.
+
+### EmailTemplates
+
+Primary key: `EmailTemplateID`.
+
+Exact fields:
+
+`EmailTemplateID`, `TemplateName`, `Category`, `Subject`, `Body`, `Description`, `Active`, `SortOrder`, `CreatedDate`, `UpdatedDate`.
+
+Subject and body are plain text. Body line breaks and paragraph spacing are preserved. Optional placeholders use `{{variableName}}` syntax and are resolved only in the browser preview; copied or unresolved placeholders do not alter the stored template.
+
+`Active: false` represents an archived template. Permanent deletion is allowed only after archive and explicit confirmation. The three starter rows are seeded once using an Apps Script property, so archived or permanently deleted starter templates are not silently recreated.
 
 ## Assessment sheets
 

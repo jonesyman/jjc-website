@@ -6,12 +6,19 @@ Last updated: 2026-07-16
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.16.01`
-- Latest feature: compact assessment-library scrolling and reliable group recovery visibility
+- Current application version: `2026.07.16.02`
+- Latest feature: reusable plain-text Email Template Library with workshop personalization
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Added Email Templates to the admin sidebar and Tutorial & Best Practices workflow.
+- Added Google Sheets-backed template creation, editing, duplication, archive, restore, and confirmed permanent deletion.
+- Added three once-only starter templates with stable backend-generated `EMT-` IDs.
+- Added search, category filtering, sorting, live preview, optional placeholders, unresolved warnings, and subject/body clipboard actions.
+- Added Use Email Template to workshop cards so available workshop and client context is prefilled without sending email.
+- Added unsaved-change warnings, focus trapping/return, Escape close, live toast announcements, and mobile layouts.
 
 - Constrained People & Assessments to a viewport-responsive scrolling pane instead of allowing all 185 people to lengthen the page.
 - Made the Saved Groups summary actionable and separated its active and recently deleted counts.
@@ -52,7 +59,7 @@ Always run `git status`, `git branch --show-current`, and a short `git log` befo
 
 ## Deployment status to verify
 
-The feature requires new Apps Script actions. If **Assessments & Groups** displays `Unknown action: getAssessmentWorkspace`, the static site is ahead of the deployed Apps Script.
+The release requires new Apps Script actions. If **Email Templates** displays `Unknown action: getEmailTemplates`, the static site is ahead of the deployed Apps Script. The earlier `getAssessmentWorkspace` warning remains applicable to assessment-library deployments.
 
 Deployment order:
 
@@ -60,10 +67,18 @@ Deployment order:
 2. Confirm the deployment continues to use the URL configured in `assets/js/googleSheets.js`, or update that URL if it changed.
 3. Push/deploy the static site through the normal GitHub/Cloudflare flow.
 4. Open **Assessments & Groups** and allow the first-load backfill to create/link canonical records.
+5. Open **Email Templates** once to create the `EmailTemplates` tab and its three starter rows.
 
 Cloudflare may reject a build if its build token was deleted or rolled. In that case, update the token in Worker Builds settings and retry; the source commit itself is not the cause.
 
 ## First production checks
+
+- Confirm `EmailTemplates` is created with the documented exact headers and three starter rows appear only once after repeated refreshes.
+- Create, edit, duplicate, archive, restore, and permanently delete a disposable archived template; confirm each result persists after refresh.
+- Open a template from a workshop, confirm available context is prefilled, enter any missing values, and verify unresolved placeholders are clearly reported.
+- Copy subject, message, and both together; paste into a plain-text editor to verify paragraph spacing and line breaks.
+- Confirm closing edited preview text and navigating away from an unsaved template each provides a warning.
+- Test Email Templates and its preview in desktop, phone portrait, and phone landscape layouts.
 
 - Confirm `AssessmentPeople`, `AssessmentGroups`, `AssessmentGroupMembers`, and `AssessmentDuplicateReviews` were created.
 - Confirm `AssessmentResults` gained and populated `PersonID` without losing prior rows.
@@ -95,7 +110,7 @@ Cloudflare may reject a build if its build token was deleted or rolled. In that 
 - Saved groups copy person references and are not recursively nested.
 - Team Maps remain local print/save artifacts.
 - A workshop may use a workbook-backed import or a manually assembled roster of canonical people.
-- Workshop-result notes are planned separately and are not part of version `2026.07.16.01`.
+- Workshop-result notes are planned separately and are not part of version `2026.07.16.02`.
 - Apps Script and the static website are separate deployments.
 
 ## Suggested opening instruction for a new Codex task

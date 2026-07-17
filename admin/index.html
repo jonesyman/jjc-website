@@ -406,6 +406,20 @@
     .group-builder-status { margin:0 0 12px; padding:9px 11px; border:1px solid rgba(79,143,234,.24); border-radius:11px; background:rgba(38,56,96,.28); color:#B8C0CC; }
     .record-title-button { appearance:none; border:0; padding:0; background:transparent; color:#F8FAFC; font:inherit; text-align:left; cursor:pointer; }
     .record-title-button:hover,.record-title-button:focus-visible { color:#8fb9f4; text-decoration:underline; text-underline-offset:3px; }
+    .email-template-layout { display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:16px; align-items:start; }
+    .email-template-editor-card { position:sticky; top:86px; }
+    .email-template-editor-status { margin-bottom:12px; padding:9px 11px; border:1px solid rgba(79,143,234,.24); border-radius:11px; background:rgba(38,56,96,.28); color:#B8C0CC; }
+    .email-template-body { min-height:330px; resize:vertical; white-space:pre-wrap; line-height:1.55; }
+    .email-template-variable-palette { display:flex; flex-wrap:wrap; gap:7px; margin:8px 0 14px; }
+    .email-variable-chip { border:1px solid #526174; border-radius:999px; padding:6px 9px; background:#1E2936; color:#B8C0CC; font-size:11px; cursor:pointer; }
+    .email-variable-chip:hover,.email-variable-chip:focus-visible { border-color:#4F8FEA; color:#F8FAFC; }
+    .email-template-filters { grid-template-columns:minmax(180px,1fr) minmax(170px,.7fr) minmax(150px,.55fr) auto auto; }
+    .email-template-body-preview { margin-top:8px; line-height:1.45; }
+    .email-template-preview-backdrop { z-index:95; }
+    .email-template-preview-dialog { width:min(980px,100%); max-height:calc(100dvh - 36px); overflow-y:auto; }
+    .email-template-variable-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .email-template-preview-message { min-height:300px; resize:vertical; white-space:pre-wrap; line-height:1.55; }
+    .email-template-warning { margin:10px 0; padding:10px 12px; border:1px solid rgba(255,176,32,.48); border-radius:11px; background:rgba(255,176,32,.09); color:#ffd27a; }
     .workshop-people-backdrop { z-index:90; }
     .workshop-people-dialog { width:min(820px,100%); max-height:calc(100dvh - 36px); overflow:hidden; display:flex; flex-direction:column; }
     .workshop-people-toolbar { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; margin:10px 0; }
@@ -657,6 +671,12 @@
       .workshop-people-backdrop { padding:0; }
       .workshop-people-list { grid-template-columns:1fr; }
       .workshop-people-toolbar { grid-template-columns:1fr; }
+      .email-template-layout { grid-template-columns:1fr; }
+      .email-template-editor-card { position:static; }
+      .email-template-variable-grid { grid-template-columns:1fr; }
+      .email-template-preview-backdrop { padding:0; }
+      .email-template-preview-dialog { width:100%; min-height:100dvh; max-height:100dvh; border-radius:0; border-left:0; border-right:0; padding:14px; }
+      .email-template-filters { grid-template-columns:1fr; }
       .duplicate-people { grid-template-columns:1fr; }
       .ad-hoc-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .ad-hoc-zones { grid-template-columns:1fr; }
@@ -768,6 +788,7 @@
         <button data-view-btn="clients">👥 Clients</button>
         <button data-view-btn="estimates">📝 Estimates</button>
         <button data-view-btn="workshops">📅 Workshops</button>
+        <button data-view-btn="email-templates">✉️ Email Templates</button>
         <button data-view-btn="assessment-library">🧩 Assessments & Groups</button>
         <button data-view-btn="invoices">💵 Invoices</button>
         <button data-view-btn="assessments">📊 Assessment Analytics</button>
@@ -776,7 +797,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.16.01</strong><br>
+        Version <strong id="appVersionLabel">2026.07.16.02</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1010,6 +1031,50 @@
           </div>
         </section>
 
+        <!-- EMAIL TEMPLATES -->
+        <section id="view-email-templates" class="view">
+          <div id="emailTemplatesLoading" class="card muted small">Loading email templates...</div>
+          <div id="emailTemplatesContent" class="hidden">
+            <datalist id="emailTemplateCategoryOptions"></datalist>
+            <div class="email-template-layout">
+              <div id="emailTemplateEditorCard" class="card email-template-editor-card">
+                <div class="section-title"><div><h2>Template Editor</h2><p class="tiny muted">Plain text is preserved exactly, including paragraphs and line breaks.</p></div><button class="button ghost small-btn" type="button" onclick="resetEmailTemplateEditor()">New Template</button></div>
+                <input id="emailTemplateId" type="hidden">
+                <div id="emailTemplateEditorMode" class="email-template-editor-status">Creating a new template</div>
+                <div class="form-row">
+                  <div class="field"><label for="emailTemplateName">Template Name</label><input id="emailTemplateName" oninput="markEmailTemplateDirty()"></div>
+                  <div class="field"><label for="emailTemplateCategory">Category</label><input id="emailTemplateCategory" list="emailTemplateCategoryOptions" value="General" oninput="markEmailTemplateDirty()"></div>
+                </div>
+                <div class="field"><label for="emailTemplateSubject">Subject</label><input id="emailTemplateSubject" oninput="markEmailTemplateDirty()"></div>
+                <div class="field"><label for="emailTemplateBody">Body</label><textarea id="emailTemplateBody" class="email-template-body" rows="15" oninput="markEmailTemplateDirty()"></textarea></div>
+                <div class="tiny muted">Insert an optional placeholder at the cursor:</div>
+                <div class="email-template-variable-palette" aria-label="Available template placeholders">
+                  <button class="email-variable-chip" type="button" onclick="insertEmailTemplateVariable('firstName')">{{firstName}}</button><button class="email-variable-chip" type="button" onclick="insertEmailTemplateVariable('fullName')">{{fullName}}</button><button class="email-variable-chip" type="button" onclick="insertEmailTemplateVariable('organization')">{{organization}}</button><button class="email-variable-chip" type="button" onclick="insertEmailTemplateVariable('workshopDate')">{{workshopDate}}</button><button class="email-variable-chip" type="button" onclick="insertEmailTemplateVariable('workshopTime')">{{workshopTime}}</button><button class="email-variable-chip" type="button" onclick="insertEmailTemplateVariable('workshopLocation')">{{workshopLocation}}</button><button class="email-variable-chip" type="button" onclick="insertEmailTemplateVariable('leaderName')">{{leaderName}}</button><button class="email-variable-chip" type="button" onclick="insertEmailTemplateVariable('assessmentDeadline')">{{assessmentDeadline}}</button>
+                </div>
+                <div class="field"><label for="emailTemplateDescription">Description / Internal Notes</label><textarea id="emailTemplateDescription" rows="3" oninput="markEmailTemplateDirty()"></textarea></div>
+                <div class="form-row-3">
+                  <label class="archive-toggle"><input id="emailTemplateActive" type="checkbox" checked onchange="markEmailTemplateDirty()"> Active</label>
+                  <div class="field"><label for="emailTemplateSortOrder">Sort Order</label><input id="emailTemplateSortOrder" type="number" inputmode="numeric" value="10" onchange="markEmailTemplateDirty()"></div>
+                </div>
+                <div class="actions"><button class="button" type="button" onclick="saveEmailTemplate(this)">Save</button><button class="button secondary" type="button" onclick="previewEmailTemplateEditor()">Preview</button><button class="button ghost" type="button" onclick="resetEmailTemplateEditor()">Cancel</button></div>
+                <div class="actions"><button class="button secondary small-btn" type="button" onclick="copyEmailTemplateEditor('subject')">Copy Subject</button><button class="button secondary small-btn" type="button" onclick="copyEmailTemplateEditor('body')">Copy Body</button><button class="button secondary small-btn" type="button" onclick="copyEmailTemplateEditor('both')">Copy Subject and Body</button></div>
+              </div>
+              <div class="card">
+                <div class="section-title"><div><h2>Email Template Library</h2><p class="tiny muted">Use, personalize, preview, and copy recurring workshop messages.</p></div><div class="actions" style="margin:0;"><span id="emailTemplateMatchCount" class="tiny muted"></span><button class="button secondary small-btn" type="button" onclick="loadEmailTemplates(true)">Refresh</button></div></div>
+                <div class="list-filter-panel open"><button class="button secondary small-btn list-filter-toggle" type="button" aria-expanded="true" onclick="toggleListFilters(this)">Search &amp; Filters</button><div class="list-filter-controls email-template-filters">
+                  <input id="emailTemplateSearch" placeholder="Search templates..." oninput="renderEmailTemplates()">
+                  <select id="emailTemplateCategoryFilter" onchange="renderEmailTemplates()"><option value="">All categories</option></select>
+                  <select id="emailTemplateSort" onchange="renderEmailTemplates()"><option value="updated">Recently updated</option><option value="name">Template name</option><option value="category">Category</option><option value="order">Sort order</option></select>
+                  <label class="archive-toggle"><input id="includeArchivedEmailTemplates" type="checkbox" onchange="renderEmailTemplates()"> Include Archived</label>
+                  <button class="button ghost small-btn" type="button" onclick="document.getElementById('emailTemplateSearch').value='';document.getElementById('emailTemplateCategoryFilter').value='';document.getElementById('includeArchivedEmailTemplates').checked=false;renderEmailTemplates()">Clear</button>
+                </div></div>
+                <div id="emailTemplatesList" class="list-grid"></div>
+                <p id="emailTemplatesEmpty" class="muted small hidden">No email templates match these filters.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- ESTIMATES -->
         <section id="view-estimates" class="view">
           <div class="grid workspace">
@@ -1115,7 +1180,7 @@
         <section id="view-tutorial" class="view">
           <div class="tutorial-intro">
             <div class="card"><div class="section-title"><div><h2>Tutorial & Best Practices</h2><p class="muted small">The recommended order for managing a client engagement from setup through follow-up.</p></div></div><p>Use this workflow for a clean record trail. Each step includes a shortcut to the correct admin area.</p><div class="actions" style="justify-content:flex-start;"><button class="button" onclick="showView('clients')">Start with a Client</button><button class="button secondary" onclick="showView('dashboard')">Return to Dashboard</button></div></div>
-            <div class="metric"><div class="metric-label">Recommended Workflow</div><div class="metric-value">11 Steps</div><div class="metric-note">Client → estimate → workshop → billing → assessments → groups → follow-up</div></div>
+            <div class="metric"><div class="metric-label">Recommended Workflow</div><div class="metric-value">12 Steps</div><div class="metric-note">Client → estimate → workshop → messages → billing → assessments → groups → follow-up</div></div>
           </div>
 
           <div class="card">
@@ -1132,6 +1197,7 @@
               <details class="tutorial-step"><summary><span class="tutorial-number">9</span><span>Add individuals and maintain reusable groups</span></summary><div class="tutorial-body">Use Assessments & Groups to add an individual result received outside a workshop, or combine individuals and complete workshop rosters without duplicating anyone’s assessment.<ul><li>For an ad hoc result, enter the person’s name and assign all six cards to Genius, Competency, or Frustration.</li><li>At the top of Group Builder, choose a saved group and use Load Group to edit its members, leader, name, or description.</li><li>Choose a group-specific leader, then use Save &amp; Create Team Map for a direct preview.</li><li>Delete Group is available in the saved-group manager and on every saved-group card.</li><li>If a group is deleted by mistake, use Restore Group under Recently Deleted Groups.</li><li>Review possible duplicate names when assessment data conflicts.</li></ul><button class="button secondary small-btn" onclick="showView('assessment-library')">Open Assessments & Groups</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">10</span><span>Review Assessment Analytics</span></summary><div class="tutorial-body">Use the analytics page to review unique people served, individual Genius distribution, and all 15 Genius pairings. Filter by client, workshop, dates, Genius, or participant search; every count and percentage updates with the filtered list.<ul><li>A person appearing in multiple workshops counts once within the filtered view.</li><li>Each person has two Geniuses, so the six individual percentages normally total approximately 200%.</li><li>Each person has one pairing, and reversed order such as WI and IW is counted together.</li></ul><button class="button secondary small-btn" onclick="showView('assessments')">Open Assessment Analytics</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">11</span><span>Complete follow-up and maintain records</span></summary><div class="tutorial-body">Update the workshop status, follow-up date, invoice status, and notes after the engagement.<ul><li>Archive inactive business records to reduce clutter while preserving history.</li><li>Use permanent deletion only for genuine mistakes or test records.</li><li>Assessment removal leaves the workshop and financial documents intact and retains inactive import history.</li></ul><button class="button secondary small-btn" onclick="showView('dashboard')">Review Dashboard</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">12</span><span>Use reusable email templates</span></summary><div class="tutorial-body">Use Email Templates whenever you need a recurring workshop message. Select a template, personalize its placeholders, review unresolved values, and copy the plain-text result into your email provider.<ul><li>From a workshop card, Use Email Template prefills available organization, contact, schedule, location, participant count, and leader details.</li><li>Templates never send email; you remain in control of the final recipient and message.</li><li>Archive old templates to preserve them without cluttering the active library.</li></ul><button class="button secondary small-btn" onclick="showView('email-templates')">Open Email Templates</button></div></details>
             </div>
           </div>
 
@@ -1258,6 +1324,31 @@ Sanger, CA 93657"></textarea>
     </div>
   </div>
 
+  <div id="emailTemplatePreviewBackdrop" class="dialog-backdrop email-template-preview-backdrop no-print" onclick="if(event.target===this) closeEmailTemplatePreview()">
+    <div id="emailTemplatePreviewDialog" class="send-dialog email-template-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="emailPreviewName" aria-describedby="emailPreviewHelp">
+      <div class="section-title">
+        <div><h2 id="emailPreviewName">Email Template Preview</h2><p id="emailPreviewCategory" class="tiny muted">General</p></div>
+        <button id="closeEmailTemplatePreviewButton" class="button ghost small-btn" type="button" onclick="closeEmailTemplatePreview()">Close</button>
+      </div>
+      <p id="emailPreviewHelp" class="muted small">Personalize any values you need, review the plain-text message, then copy it into your email provider. This tool does not send email.</p>
+      <div id="emailPreviewTemplateChooserWrap" class="field hidden"><label for="emailPreviewTemplateChooser">Template</label><select id="emailPreviewTemplateChooser" onchange="selectEmailPreviewTemplate(this.value)"></select></div>
+      <div id="emailPreviewVariableFields" class="email-template-variable-grid"></div>
+      <div class="actions"><button class="button secondary small-btn" type="button" onclick="applyEmailTemplatePersonalization()">Apply Personalization</button></div>
+      <div id="emailPreviewUnresolved" class="email-template-warning hidden" role="status"></div>
+      <p id="emailPreviewSubstitutions" class="tiny muted"></p>
+      <div class="field"><label for="emailPreviewSubject">Subject</label><input id="emailPreviewSubject" oninput="markEmailTemplatePreviewDirty()"></div>
+      <div class="field"><label for="emailPreviewBody">Message</label><textarea id="emailPreviewBody" class="email-template-preview-message" oninput="markEmailTemplatePreviewDirty()"></textarea></div>
+      <div class="actions">
+        <button class="button" type="button" onclick="copyEmailPreview('body')">Copy Message</button>
+        <button class="button secondary" type="button" onclick="copyEmailPreview('subject')">Copy Subject</button>
+        <button class="button secondary" type="button" onclick="copyEmailPreview('both')">Copy Subject &amp; Message</button>
+        <button class="button ghost" type="button" onclick="editEmailPreviewBeforeCopying()">Edit Before Copying</button>
+        <button class="button ghost" type="button" onclick="saveEmailPreviewAsNewTemplate()">Save as New Template</button>
+        <button class="button ghost" type="button" onclick="closeEmailTemplatePreview()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div id="sendDialogBackdrop" class="dialog-backdrop no-print">
     <div class="send-dialog" role="dialog" aria-modal="true" aria-labelledby="sendDialogTitle">
       <div class="section-title">
@@ -1341,16 +1432,17 @@ Sanger, CA 93657"></textarea>
   </div>
 
   <script src="../assets/js/branding.js"></script>
-  <script src="../assets/js/googleSheets.js?v=9"></script>
+  <script src="../assets/js/googleSheets.js?v=10"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
   <script src="../assets/js/assessmentLibrary.js?v=5"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
   <script src="../assets/js/invoices.js?v=2"></script>
+  <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.16.01";
+    const APP_VERSION = "2026.07.16.02";
 
     const K = {
       clients: "jjc_clients",
@@ -1565,12 +1657,13 @@ Sanger, CA 93657"></textarea>
       document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
       document.getElementById("view-" + view).classList.add("active");
       document.querySelectorAll("[data-view-btn]").forEach(btn => btn.classList.toggle("active", btn.dataset.viewBtn === view));
-      const viewTitles = { assessments: "Assessment Analytics", "assessment-library": "Assessments & Groups", tutorial: "Tutorial & Best Practices" };
+      const viewTitles = { assessments: "Assessment Analytics", "assessment-library": "Assessments & Groups", "email-templates": "Email Templates", tutorial: "Tutorial & Best Practices" };
       document.getElementById("pageTitle").textContent = viewTitles[view] || view.charAt(0).toUpperCase() + view.slice(1);
       closeSidebar();
       location.hash = view;
       if (view === "assessments") loadAssessmentAnalytics();
       if (view === "assessment-library") loadAssessmentLibrary();
+      if (view === "email-templates") loadEmailTemplates();
     }
 
     document.querySelectorAll("[data-view-btn]").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.viewBtn)));
@@ -2075,6 +2168,15 @@ Sanger, CA 93657"></textarea>
         el.className = "record-card";
         const workshopWhen = w.WorkshopDate ? formatDate(w.WorkshopDate) : (w.DateDescription || "Date not recorded");
         el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
+        if (!isArchived(w)) {
+          const emailButton = document.createElement("button");
+          emailButton.className = "button secondary small-btn";
+          emailButton.type = "button";
+          emailButton.textContent = "Use Email Template";
+          emailButton.addEventListener("click", () => openWorkshopEmailTemplates(w.WorkshopID));
+          const actions = el.querySelector(".actions");
+          actions.insertBefore(emailButton, actions.children[2] || null);
+        }
         wrap.appendChild(el);
       });
       prepareMobileActionMenus(wrap);
@@ -3661,15 +3763,17 @@ Sanger, CA 93657"></textarea>
     function formatDate(s) { if (!s) return "-"; return new Date(String(s).slice(0, 10) + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); }
     function esc(str) { return String(str || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
     function jsEsc(str) { return String(str || "").replaceAll("\\", "\\\\").replaceAll("'", "\\'").replaceAll("\n", " "); }
-    function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
+    function toast(msg) { const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); t.setAttribute("aria-live", "polite"); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
 
     document.querySelectorAll("#view-estimates input, #view-estimates select").forEach(el => el.addEventListener("input", recalc));
     document.querySelectorAll("#view-invoices input, #view-invoices select").forEach(el => el.addEventListener("input", updateInvoiceBalancePreview));
     document.querySelectorAll('input[name="orgType"]').forEach(el => el.addEventListener("change", recalc));
     document.addEventListener("keydown", event => {
+      if (trapEmailTemplatePreviewFocus(event)) return;
       if (trapAnalyticsDrilldownFocus(event)) return;
       if (trapWorkshopPeopleFocus(event)) return;
       if (event.key !== "Escape") return;
+      if (document.getElementById("emailTemplatePreviewBackdrop").classList.contains("open")) return closeEmailTemplatePreview();
       if (!document.getElementById("teamMapPreview").classList.contains("hidden")) return closeTeamMapPreview();
       if (!document.getElementById("printView").classList.contains("hidden")) return closePrintView();
       if (document.getElementById("analyticsDrilldownBackdrop").classList.contains("open")) return closeAnalyticsDrilldown();
@@ -3694,6 +3798,7 @@ Sanger, CA 93657"></textarea>
       resetWorkshopForm();
       resetEstimateForm();
       resetInvoiceForm();
+      resetEmailTemplateEditor(true);
       renderClients();
       renderWorkshops();
       renderEstimates();

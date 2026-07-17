@@ -166,6 +166,63 @@ saveSettings(data) {
         return this.post("deleteWorkshop", { id });
     },
 
+    //----------------------------------------------------
+    // Email Templates
+    //----------------------------------------------------
+
+    getEmailTemplates() {
+        return this.get("getEmailTemplates");
+    },
+
+    async saveEmailTemplate(data) {
+        const before = await this.getEmailTemplates();
+        const beforeIds = new Set(before.map(row => String(row.EmailTemplateID)));
+        await this.postNoCors("saveEmailTemplate", data);
+        for (let attempt = 1; attempt <= 8; attempt++) {
+            await this.wait(attempt * 500);
+            const rows = await this.getEmailTemplates();
+            const saved = data.EmailTemplateID
+                ? rows.find(row => String(row.EmailTemplateID) === String(data.EmailTemplateID) && String(row.TemplateName) === String(data.TemplateName) && String(row.Subject) === String(data.Subject) && String(row.Body) === String(data.Body))
+                : rows.find(row => !beforeIds.has(String(row.EmailTemplateID)) && String(row.TemplateName) === String(data.TemplateName) && String(row.Subject) === String(data.Subject) && String(row.Body) === String(data.Body));
+            if (saved) return { rows, saved };
+        }
+        throw new Error("Google Sheets did not confirm the email template save.");
+    },
+
+    async setEmailTemplateActive(id, active) {
+        await this.postNoCors(active ? "restoreEmailTemplate" : "archiveEmailTemplate", { EmailTemplateID:id });
+        for (let attempt = 1; attempt <= 8; attempt++) {
+            await this.wait(attempt * 500);
+            const rows = await this.getEmailTemplates();
+            const saved = rows.find(row => String(row.EmailTemplateID) === String(id));
+            if (saved && (String(saved.Active).toLowerCase() !== "false") === Boolean(active)) return rows;
+        }
+        throw new Error(`Google Sheets did not confirm the template ${active ? "restore" : "archive"}.`);
+    },
+
+    async duplicateEmailTemplate(id) {
+        const before = await this.getEmailTemplates();
+        const beforeIds = new Set(before.map(row => String(row.EmailTemplateID)));
+        await this.postNoCors("duplicateEmailTemplate", { EmailTemplateID:id });
+        for (let attempt = 1; attempt <= 8; attempt++) {
+            await this.wait(attempt * 500);
+            const rows = await this.getEmailTemplates();
+            const saved = rows.find(row => !beforeIds.has(String(row.EmailTemplateID)));
+            if (saved) return { rows, saved };
+        }
+        throw new Error("Google Sheets did not confirm the template duplication.");
+    },
+
+    async deleteEmailTemplate(id) {
+        await this.postNoCors("deleteEmailTemplate", { EmailTemplateID:id });
+        for (let attempt = 1; attempt <= 8; attempt++) {
+            await this.wait(attempt * 500);
+            const rows = await this.getEmailTemplates();
+            if (!rows.some(row => String(row.EmailTemplateID) === String(id))) return rows;
+        }
+        throw new Error("Google Sheets did not confirm permanent template deletion.");
+    },
+
     getWorkshopAssessment(workshopId) {
         return this.get("getWorkshopAssessment", { workshopId });
     },

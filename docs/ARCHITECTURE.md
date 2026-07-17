@@ -41,6 +41,7 @@ Supporting modules include:
 - `invoices.js` — invoice normalization and local persistence helpers.
 - `assessments.js` — workbook parsing, validation, comparison, and Team View derivation.
 - `assessmentLibrary.js` — canonical people, ad hoc card-based assessment entry, reusable group maintenance, duplicate review, and group Team Map preparation.
+- `emailTemplates.js` — template library rendering, personalization, workshop prefilling, preview editing, clipboard copying, and dialog accessibility.
 - `xlsx.full.min.js` — local workbook parsing dependency.
 
 The admin console caches core lists in `localStorage` so the most recently loaded data remains available if Sheets cannot be reached. Google Sheets remains the source of truth.
@@ -57,6 +58,7 @@ The admin console caches core lists in `localStorage` so the most recently loade
 - `addPeopleToWorkshopAssessment` links selected canonical people into an existing workshop import or creates a manual roster import when none exists; the frontend polls the workshop assessment read until every requested person is visible.
 - Group saves and deletions are likewise confirmed against the assessment workspace before the interface reports success.
 - Deleted groups remain inactive in Sheets and are exposed separately for recovery; the restore action reactivates the group and its latest membership set, with frontend polling confirmation.
+- Email template reads create the sheet and seed starter rows once when needed. Template writes use Script Lock-backed stable IDs and the frontend polls `getEmailTemplates` to confirm saves, duplication, status changes, and deletion.
 
 The deployed web-app URL is configured in `assets/js/googleSheets.js`. If the Apps Script deployment URL changes, update it there.
 
@@ -71,6 +73,8 @@ The deployed web-app URL is configured in `assets/js/googleSheets.js`. If the Ap
 ## Email
 
 Apps Script sends estimates and invoices through Zoho Mail. Credentials and account configuration live in Apps Script Properties, never in this repository. Required properties are documented in `CONTRIBUTING.md`.
+
+The Email Template Library is deliberately separate from that delivery path. It stores and personalizes plain text, then copies the reviewed subject or message to the clipboard; it does not address or send email.
 
 ## Security boundaries
 

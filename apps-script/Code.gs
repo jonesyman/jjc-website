@@ -20,6 +20,7 @@ const ASSESSMENT_PERSON_HEADERS = ["PersonID", "FirstName", "LastName", "Display
 const ASSESSMENT_GROUP_HEADERS = ["GroupID", "GroupName", "ClientID", "Organization", "Description", "CreatedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_GROUP_MEMBER_HEADERS = ["GroupMemberID", "GroupID", "PersonID", "IsLeader", "AddedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_DUPLICATE_HEADERS = ["DuplicateReviewID", "PersonID1", "PersonID2", "Status", "ResolutionDate", "Notes"];
+const EMAIL_TEMPLATE_HEADERS = ["EmailTemplateID", "TemplateName", "Category", "Subject", "Body", "Description", "Active", "SortOrder", "CreatedDate", "UpdatedDate"];
 const PDF_ROOT_FOLDER = "Jeff Jones Consulting PDFs";
 const PDF_ESTIMATE_FOLDER = "Estimates";
 const PDF_INVOICE_FOLDER = "Invoices";
@@ -48,6 +49,7 @@ function doGet(e) {
     if (action === "getAllActiveAssessmentResults") return jsonResponse(getAllActiveAssessmentResults());
     if (action === "getAssessmentWorkspace") return jsonResponse(getAssessmentWorkspace());
     if (action === "getAssessmentImportHistory") return jsonResponse(getRows("AssessmentImportHistory").filter(row => String(row.WorkshopID) === String(e.parameter.workshopId || "")));
+    if (action === "getEmailTemplates") return jsonResponse(getEmailTemplates());
     if (action === "generateEstimatePdf") return jsonResponse(generatePdfForRecord("estimate", e.parameter.id));
     if (action === "generateInvoicePdf") return jsonResponse(generatePdfForRecord("invoice", e.parameter.invoiceNo));
     if (action === "sendEstimateEmail") return jsonResponse(sendEmailForRecord("estimate", e.parameter));
@@ -171,6 +173,11 @@ function doPost(e) {
     if (action === "restoreAssessmentGroup") return jsonResponse(restoreAssessmentGroup(body.data || {}));
     if (action === "addPeopleToWorkshopAssessment") return jsonResponse(addPeopleToWorkshopAssessment(body.data || {}));
     if (action === "resolveAssessmentDuplicate") return jsonResponse(resolveAssessmentDuplicate(body.data || {}));
+    if (action === "saveEmailTemplate") return jsonResponse(saveEmailTemplate(body.data || {}));
+    if (action === "archiveEmailTemplate") return jsonResponse(setEmailTemplateActive(body.data || {}, false));
+    if (action === "restoreEmailTemplate") return jsonResponse(setEmailTemplateActive(body.data || {}, true));
+    if (action === "deleteEmailTemplate") return jsonResponse(deleteEmailTemplate(body.data || {}));
+    if (action === "duplicateEmailTemplate") return jsonResponse(duplicateEmailTemplate(body.data || {}));
 
     if (action === "deleteWorkshop") {
       deleteRowById(SHEET_NAMES.workshops, "WorkshopID", (body.data || {}).id);
@@ -237,6 +244,135 @@ function getAllActiveAssessmentResults() {
     }));
   });
   return results;
+}
+
+function emailTemplateSeedRows() {
+  const sharedOpening = "Thank you for taking the time to complete The Six Types of Working Genius Assessment.\n\nBefore you begin, take a moment to consider what type of work is most energizing for you. This is NOT about what you are good at, NOR what you are required to do, but what gives you energy, joy, or fulfillment.\n\nThis assessment is the simplest and most practical productivity tool to discover your gifts and put your natural talents to use at work, home, or any area of your life.";
+  return [
+    {
+      TemplateName:"Standard Working Genius Assessment Invitation", Category:"Assessment Invitation", Subject:"Please Complete the Six Types of Working Genius Assessment",
+      Body:"Hello {{firstName}},\n\n" + sharedOpening + "\n\nPlease complete the assessment before {{assessmentDeadline}}.\n\nThank you,\n\nJeff Jones\nJeff Jones Consulting",
+      Description:"This is the standard message that either the workshop leader or Jeff may send directly to participants.", SortOrder:10
+    },
+    {
+      TemplateName:"Request Access to Existing Working Genius Profile", Category:"Existing Assessment Request", Subject:"Working Genius Assessment Profile Access",
+      Body:"Hello {{firstName}},\n\n" + sharedOpening + "\n\nIf you have already completed the Working Genius assessment, please log in to your Working Genius portal and share or transfer your results with:\n\njeffrey.g.jones@gmail.com\n\nIf you are unable to locate that option, reply with the email address you used when completing the assessment. I can search for your profile and send you a request to release or share the results. You will then need to approve that request.\n\nThank you,\n\nJeff Jones\nJeff Jones Consulting",
+      Description:"Use this when a participant reports that they previously completed the assessment, but Jeff does not yet have access to the profile.", SortOrder:20
+    },
+    {
+      TemplateName:"Existing Working Genius Profile Confirmed", Category:"Assessment Already Available", Subject:"Your Working Genius Assessment Is Already Available",
+      Body:"Hello {{firstName}},\n\n" + sharedOpening + "\n\nI already have access to your completed Working Genius profile, so you do not need to take the assessment again.\n\nAll you need to do is participate in the upcoming workshop.\n\nI look forward to working with you.\n\nThank you,\n\nJeff Jones\nJeff Jones Consulting",
+      Description:"Use this when Jeff already has access to the participant's valid Working Genius profile.", SortOrder:30
+    }
+  ];
+}
+
+function ensureEmailTemplates() {
+  ensureSheetWithHeaders("EmailTemplates", EMAIL_TEMPLATE_HEADERS);
+  const properties = PropertiesService.getScriptProperties();
+  if (properties.getProperty("EMAIL_TEMPLATES_SEEDED_V1") === "TRUE") return;
+  const existing = getRows("EmailTemplates");
+  const existingNames = {};
+  existing.forEach(row => { existingNames[String(row.TemplateName || "").trim().toLowerCase()] = true; });
+  const now = new Date().toISOString();
+  emailTemplateSeedRows().forEach(seed => {
+    const key = String(seed.TemplateName).toLowerCase();
+    if (existingNames[key]) return;
+    appendRow("EmailTemplates", Object.assign({}, seed, {
+      EmailTemplateID:"EMT-" + Utilities.getUuid(), Active:true, CreatedDate:now, UpdatedDate:now
+    }));
+    existingNames[key] = true;
+  });
+  properties.setProperty("EMAIL_TEMPLATES_SEEDED_V1", "TRUE");
+}
+
+function getEmailTemplates() {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try { ensureEmailTemplates(); } finally { lock.releaseLock(); }
+  return getRows("EmailTemplates");
+}
+
+function validatedEmailTemplateData(data) {
+  const template = {
+    TemplateName:String(data.TemplateName || "").trim(),
+    Category:String(data.Category || "General").trim() || "General",
+    Subject:String(data.Subject || "").trim(),
+    Body:String(data.Body || ""),
+    Description:String(data.Description || ""),
+    Active:String(data.Active).toLowerCase() === "false" ? false : true,
+    SortOrder:Number(data.SortOrder || 0)
+  };
+  if (!template.TemplateName) throw new Error("Template Name is required.");
+  if (!template.Subject) throw new Error("Subject is required.");
+  if (!template.Body.trim()) throw new Error("Body is required.");
+  if (!Number.isFinite(template.SortOrder)) template.SortOrder = 0;
+  return template;
+}
+
+function saveEmailTemplate(data) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    ensureEmailTemplates();
+    const template = validatedEmailTemplateData(data);
+    const requestedId = String(data.EmailTemplateID || "").trim();
+    const existing = requestedId ? getRowById("EmailTemplates", "EmailTemplateID", requestedId) : null;
+    const now = new Date().toISOString();
+    template.EmailTemplateID = existing ? requestedId : ("EMT-" + Utilities.getUuid());
+    template.CreatedDate = existing ? (existing.row.CreatedDate || now) : now;
+    template.UpdatedDate = now;
+    if (existing) updateRowFields("EmailTemplates", existing.rowNumber, template);
+    else appendRow("EmailTemplates", template);
+    return { success:true, template:template };
+  } finally { lock.releaseLock(); }
+}
+
+function setEmailTemplateActive(data, active) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    ensureEmailTemplates();
+    const id = String(data.EmailTemplateID || "").trim();
+    const info = getRowById("EmailTemplates", "EmailTemplateID", id);
+    if (!info) throw new Error("Email template not found.");
+    updateRowFields("EmailTemplates", info.rowNumber, { Active:active, UpdatedDate:new Date().toISOString() });
+    return { success:true, EmailTemplateID:id, Active:active };
+  } finally { lock.releaseLock(); }
+}
+
+function deleteEmailTemplate(data) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    ensureEmailTemplates();
+    const id = String(data.EmailTemplateID || "").trim();
+    const info = getRowById("EmailTemplates", "EmailTemplateID", id);
+    if (!info) throw new Error("Email template not found.");
+    if (String(info.row.Active).toLowerCase() !== "false") throw new Error("Archive the template before permanently deleting it.");
+    deleteRowById("EmailTemplates", "EmailTemplateID", id);
+    return { success:true, EmailTemplateID:id };
+  } finally { lock.releaseLock(); }
+}
+
+function duplicateEmailTemplate(data) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    ensureEmailTemplates();
+    const sourceId = String(data.EmailTemplateID || "").trim();
+    const source = getRowById("EmailTemplates", "EmailTemplateID", sourceId);
+    if (!source) throw new Error("Email template not found.");
+    const now = new Date().toISOString();
+    const copy = {
+      EmailTemplateID:"EMT-" + Utilities.getUuid(), TemplateName:String(source.row.TemplateName || "Template") + " Copy",
+      Category:source.row.Category || "General", Subject:source.row.Subject || "", Body:source.row.Body || "",
+      Description:source.row.Description || "", Active:true, SortOrder:Number(source.row.SortOrder || 0) + 1,
+      CreatedDate:now, UpdatedDate:now
+    };
+    appendRow("EmailTemplates", copy);
+    return { success:true, template:copy };
+  } finally { lock.releaseLock(); }
 }
 
 function assessmentFingerprint(row) {

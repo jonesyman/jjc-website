@@ -14,17 +14,27 @@ The normal engagement sequence is:
 2. Create or reuse the client.
 3. Prepare and send the estimate.
 4. After acceptance, create and schedule the workshop.
-5. Create and manage the invoice.
-6. Upload the official Working Genius Individual Results workbook from the workshop, or assemble the roster from existing individual results when no workbook exists.
-7. Add any additional individual results, select the leader, and review the Team View.
-8. Preview and locally print/save the Team Map.
-9. Add independent individual assessments when needed and build reusable groups when a team does not map one-to-one to a workshop.
-10. Review unique-person, individual-Genius, and 15-pairing assessment analytics, and open any metric card to see the matching filtered people.
-11. Complete follow-up and maintain the records.
+5. Prepare recurring workshop messages from the Email Template Library and copy the reviewed plain text into the chosen email provider.
+6. Create and manage the invoice.
+7. Upload the official Working Genius Individual Results workbook from the workshop, or assemble the roster from existing individual results when no workbook exists.
+8. Add any additional individual results, select the leader, and review the Team View.
+9. Preview and locally print/save the Team Map.
+10. Add independent individual assessments when needed and build reusable groups when a team does not map one-to-one to a workshop.
+11. Review unique-person, individual-Genius, and 15-pairing assessment analytics, and open any metric card to see the matching filtered people.
+12. Complete follow-up and maintain the records.
 
 The admin sidebar currently follows this order:
 
-`Dashboard → Clients → Estimates → Workshops → Assessments & Groups → Invoices → Assessment Analytics → Tutorial & Best Practices → Settings`
+`Dashboard → Clients → Estimates → Workshops → Email Templates → Assessments & Groups → Invoices → Assessment Analytics → Tutorial & Best Practices → Settings`
+
+## Email template rules
+
+- Templates are reusable plain-text content, not an outbound mail system.
+- A workshop may prefill available client, primary contact, date, time, location, participant count, and saved leader values.
+- Placeholders are optional. Unresolved placeholders remain visible and must be reviewed before the user copies the result.
+- The library never chooses recipients or sends a message directly.
+- Stable template IDs are created only by Apps Script; opening or refreshing the page never consumes an ID.
+- Archive is the normal way to retire a template. Permanent deletion requires archive plus confirmation.
 
 ## Assessment rules
 

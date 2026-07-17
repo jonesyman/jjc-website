@@ -2,6 +2,16 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.16.02 — 2026-07-16
+
+- Added a protected Email Templates admin area backed by a new `EmailTemplates` Google Sheet.
+- Added create, edit, duplicate, archive, restore, permanent-delete, search, category, sort, preview, and clipboard workflows.
+- Seeded three editable Working Genius assessment messages exactly once with backend-generated stable IDs.
+- Added optional plain-text placeholders, unresolved-value warnings, editable previews, and clipboard fallback behavior.
+- Added workshop-level template use with available client, contact, schedule, participant, location, and leader details prefilled.
+- Added unsaved-change safeguards, accessible dialog focus handling, live status messages, and responsive portrait/landscape layouts.
+- Kept template use copy-only; the library never sends messages directly.
+
 ## 2026.07.16.01 — 2026-07-16
 
 - Constrained the long People & Assessments results to a responsive internal scrolling pane.

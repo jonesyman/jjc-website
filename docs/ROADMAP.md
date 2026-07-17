@@ -31,16 +31,21 @@ This roadmap records product capabilities rather than relying solely on historic
 - A prominent saved-group manager for loading, mapping, and deleting groups.
 - Recoverable group deletion with restoration of the most recently active membership set.
 - A compact, internally scrolling people library and actionable active/deleted group summary.
+- A Google Sheets-backed plain-text Email Template Library with once-only starter content, workshop personalization, preview, clipboard copying, and full archive lifecycle.
 
 ## Current release boundary
 
-Version `2026.07.16.01` keeps the large people library compact and makes active versus recoverable group state explicit. The required restore action is already present in the deployed Apps Script; this release updates only the static admin interface.
+Version `2026.07.16.02` adds reusable workshop email content while keeping message delivery explicitly manual. This release requires both the new Apps Script template actions and the static admin interface.
 
 See `CURRENT_STATE.md` before continuing.
 
 ## Recommended next work
 
 ### Immediate validation
+
+- Deploy the Apps Script update, open Email Templates, and confirm the sheet and three starter rows are created exactly once.
+- Exercise the complete template lifecycle and confirm every no-cors write through a refreshed read.
+- Verify workshop-prefilled personalization, unresolved-value warnings, plain-text clipboard output, and desktop/portrait/landscape layouts.
 
 - Deploy Apps Script and allow the first assessment-library backfill to complete.
 - Confirm the created sheet tabs and `PersonID` links.
