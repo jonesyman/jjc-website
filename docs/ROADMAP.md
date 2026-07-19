@@ -35,7 +35,7 @@ This roadmap records product capabilities rather than relying solely on historic
 
 ## Current release boundary
 
-Version `2026.07.19.02` streamlines the square second Team Map page while retaining its stage labels and balanced-column protection for dense name areas. The Team Map remains a browser-generated local print/save artifact.
+Version `2026.07.19.03` makes Team Map previews reliable and navigable on mobile while retaining the two-page print layout and dense-name protections. The Team Map remains a browser-generated local print/save artifact.
 
 See `CURRENT_STATE.md` before continuing.
 

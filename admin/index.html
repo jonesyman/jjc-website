@@ -259,6 +259,9 @@
       display: none;
     }
 
+    .print-view { z-index:110; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+    html.team-map-preview-open, html.team-map-preview-open body { overflow:hidden; }
+
     .sidebar-backdrop {
       display: none;
       position: fixed;
@@ -707,11 +710,11 @@
       .assessment-dialog > .section-title:first-child { position:sticky; top:-14px; z-index:4; background:#232F3E; padding:14px 0 12px; }
       .assessment-action-bar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
       .assessment-action-bar > .button { width:100%; }
-      #teamMapPreview { padding:8px; overflow:auto; }
-      #teamMapPreview .print-toolbar { position:sticky; top:0; z-index:5; margin-bottom:8px; }
+      #teamMapPreview { padding:8px; overflow:auto; touch-action:pan-x pan-y; }
+      #teamMapPreview .print-toolbar { position:sticky; top:0; left:0; z-index:5; width:calc(100vw - 16px); margin:0 0 8px; }
       #teamMapPreview .print-toolbar > .actions { width:100%; }
       .team-map-mobile-note { display:block; width:100%; color:#475569; font-size:11px; }
-      #teamMapPreview .team-map-sheet { width:8.5in; min-width:8.5in; }
+      #teamMapPreview .team-map-sheet, #teamMapPreview .team-map-concept-sheet { width:8.5in; min-width:8.5in; }
 
       .table-wrap {
         border: 1px solid rgba(148,163,184,.13);
@@ -820,7 +823,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.19.02</strong><br>
+        Version <strong id="appVersionLabel">2026.07.19.03</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1393,7 +1396,7 @@ Sanger, CA 93657"></textarea>
   </div>
 
   <!-- PRINT VIEW -->
-  <div id="teamMapPreview" class="print-view hidden">
+  <div id="teamMapPreview" class="print-view hidden" aria-hidden="true">
     <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="changeTeamMapLeader()">Change Leader</button><button class="button small-btn" onclick="window.print()">Print / Save as PDF</button></div></div>
     <div id="teamMapSheet" class="team-map-sheet"></div>
     <div id="teamMapConceptSheet" class="team-map-concept-sheet"></div>
@@ -1466,7 +1469,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.19.02";
+    const APP_VERSION = "2026.07.19.03";
 
     const K = {
       clients: "jjc_clients",
@@ -2812,12 +2815,19 @@ Sanger, CA 93657"></textarea>
       if (!currentAssessmentData?.import?.LeaderAssessmentResultID) return toast("Select and save the team leader before previewing the Team Map.");
       renderTeamMapPreview();
       previewReturnFocus = document.activeElement;
-      document.getElementById("teamMapPreview").classList.remove("hidden");
+      const preview = document.getElementById("teamMapPreview");
+      preview.classList.remove("hidden");
+      preview.setAttribute("aria-hidden", "false");
+      document.documentElement.classList.add("team-map-preview-open");
+      preview.scrollTo({ top:0, left:0 });
       setTimeout(() => document.getElementById("closeTeamMapPreviewButton").focus(), 0);
     }
 
     function closeTeamMapPreview() {
-      document.getElementById("teamMapPreview").classList.add("hidden");
+      const preview = document.getElementById("teamMapPreview");
+      preview.classList.add("hidden");
+      preview.setAttribute("aria-hidden", "true");
+      document.documentElement.classList.remove("team-map-preview-open");
       if (previewReturnFocus?.focus) previewReturnFocus.focus();
       previewReturnFocus = null;
     }

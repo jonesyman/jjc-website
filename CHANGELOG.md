@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.19.03 — 2026-07-19
+
+- Fixed Team Map previews opened from Assessment Results being hidden behind the assessment dialog on mobile.
+- Raised printable previews above all application dialogs and locked background scrolling while the Team Map is open.
+- Added touch-friendly two-axis preview scrolling, a viewport-width sticky toolbar, and consistent letter-size pages on mobile.
+- Preserved close-button focus return and exposed the preview's open/closed state to assistive technology.
+
 ## 2026.07.19.02 — 2026-07-19
 
 - Simplified the condensed Team Map column headings to Responsive and Disruptive.
