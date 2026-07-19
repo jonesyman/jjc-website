@@ -514,6 +514,7 @@
     .team-map-concept-grid .team-map-column { padding:6px 8px; }
     .team-map-concept-grid .team-map-column h4 { margin-bottom:4px; font-size:10px; }
     .team-map-concept-grid .team-map-names { gap:2px; line-height:1.12; }
+    .team-map-names.team-map-names-two-column { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--team-map-name-rows),auto); grid-auto-flow:column; column-gap:7px; }
     .team-map-concept-footer { display:flex; justify-content:space-between; gap:12px; padding-top:7px; color:#64748b; font-size:7.5px; line-height:1.25; }
 
     /* Working Genius-inspired visual system */
@@ -820,7 +821,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.16.02</strong><br>
+        Version <strong id="appVersionLabel">2026.07.19.01</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1466,7 +1467,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.16.02";
+    const APP_VERSION = "2026.07.19.01";
 
     const K = {
       clients: "jjc_clients",
@@ -2862,16 +2863,23 @@ Sanger, CA 93657"></textarea>
       const step = 0.5;
       sheets.forEach(sheet => {
         const lists = [...sheet.querySelectorAll(".team-map-names")];
-        let size = sheet.id === "teamMapConceptSheet" ? 11 : maximumSize;
+        const isConceptSheet = sheet.id === "teamMapConceptSheet";
+        const sheetMinimumSize = isConceptSheet ? 8.5 : minimumSize;
+        let size = isConceptSheet ? 11 : maximumSize;
         const setSize = () => sheet.style.setProperty("--team-map-name-size", `${size}px`);
-        const anyListOverflows = () => lists.some(list => {
+        const listOverflows = list => {
           const column = list.closest(".team-map-column");
           if (!column) return false;
           return list.getBoundingClientRect().bottom > column.getBoundingClientRect().bottom - 3;
-        });
+        };
+        const anyListOverflows = () => lists.some(listOverflows);
         setSize();
-        while (size > minimumSize && anyListOverflows()) {
-          size = Math.max(minimumSize, size - step);
+        lists.filter(list => !list.classList.contains("team-map-names-two-column") && listOverflows(list)).forEach(list => {
+          list.classList.add("team-map-names-two-column");
+          list.style.setProperty("--team-map-name-rows", String(Math.ceil(list.children.length / 2)));
+        });
+        while (size > sheetMinimumSize && anyListOverflows()) {
+          size = Math.max(sheetMinimumSize, size - step);
           setSize();
         }
         sheet.dataset.nameFontSize = String(size);
@@ -2888,7 +2896,8 @@ Sanger, CA 93657"></textarea>
 
     function teamMapNameList(people, leader, mode) {
       if (!people.length) return "";
-      return `<ul class="team-map-names">${people.map(person => `<li class="team-map-name${leader && person.id === leader.id ? " team-map-leader" : ""}">${esc(teamMapDisplayName(person, mode))}${leader && person.id === leader.id ? " *" : ""}</li>`).join("")}</ul>`;
+      const useTwoColumns = people.length > 8;
+      return `<ul class="team-map-names${useTwoColumns ? " team-map-names-two-column" : ""}"${useTwoColumns ? ` style="--team-map-name-rows:${Math.ceil(people.length / 2)}"` : ""}>${people.map(person => `<li class="team-map-name${leader && person.id === leader.id ? " team-map-leader" : ""}">${esc(teamMapDisplayName(person, mode))}${leader && person.id === leader.id ? " *" : ""}</li>`).join("")}</ul>`;
     }
 
     function clearAssessmentPreview() {

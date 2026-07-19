@@ -1,17 +1,21 @@
 # Current State and Handoff
 
-Last updated: 2026-07-16
+Last updated: 2026-07-19
 
 ## Repository state
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.16.02`
-- Latest feature: reusable plain-text Email Template Library with workshop personalization
+- Current application version: `2026.07.19.01`
+- Latest feature: two-page Team Map PDF with an annotated square layout and dense-list column fitting
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Preserved the existing Team Map as PDF page one and added a square second page for clean slide-deck screenshots.
+- Labeled the page-two vertical Responsive/Disruptive split and horizontal Ideation/Activation/Implementation stages.
+- Made crowded Genius and Frustration areas use two balanced name columns on both pages before any font reduction, preserving every weighted leader entry.
 
 - Added Email Templates to the admin sidebar and Tutorial & Best Practices workflow.
 - Added Google Sheets-backed template creation, editing, duplication, archive, restore, and confirmed permanent deletion.
@@ -24,7 +28,7 @@ Always run `git status`, `git branch --show-current`, and a short `git log` befo
 - Made the Saved Groups summary actionable and separated its active and recently deleted counts.
 - Made Recently Deleted Groups persistently visible with an empty state and Refresh Groups control.
 - Verified the deployed recovery action and restored Family; the workspace now reports one active group with its previous one-member membership and zero deleted groups.
-- Increased Team Map names to a uniform 13px starting size and added layout-based fitting that shrinks all names together only when any list would overflow.
+- Increased Team Map names to a uniform 13px starting size; crowded areas now split into two columns before layout-based fitting reduces the shared size.
 - Removed “No participants” from empty graphical Team Map areas so those panels remain blank.
 - Added a saved-group selector at the top of Group Builder with explicit Load Group, Create Team Map, and Delete Group actions.
 - Made saved-group card titles clickable and renamed the card action to Load Group to Edit.

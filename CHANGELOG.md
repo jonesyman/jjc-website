@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.19.01 — 2026-07-19
+
+- Preserved the original Team Map as PDF page one and added a square, presentation-friendly page two.
+- Added Responsive/Disruptive column labels and Ideation/Activation/Implementation stage labels to page two.
+- Rendered crowded Genius and Frustration lists in two balanced columns on both PDF pages before reducing the shared name size.
+- Ensured weighted leader entries and all other names remain visible in dense Team Map areas.
+
 ## 2026.07.16.02 — 2026-07-16
 
 - Added a protected Email Templates admin area backed by a new `EmailTemplates` Google Sheet.

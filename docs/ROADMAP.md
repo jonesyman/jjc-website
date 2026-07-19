@@ -27,7 +27,7 @@ This roadmap records product capabilities rather than relying solely on historic
 - Filter-aware, accessible name drill-downs for all individual Genius and pairing analytics cards.
 - Explicit group maintenance and deletion with a direct Save & Create Team Map workflow.
 - Workshop rosters assembled or extended from canonical people, including new ad hoc individual entry.
-- Uniform, adaptive Team Map name typography with blank empty areas.
+- Two-page Team Maps with a square annotated presentation layout, adaptive two-column name areas, and blank empty areas.
 - A prominent saved-group manager for loading, mapping, and deleting groups.
 - Recoverable group deletion with restoration of the most recently active membership set.
 - A compact, internally scrolling people library and actionable active/deleted group summary.
@@ -35,7 +35,7 @@ This roadmap records product capabilities rather than relying solely on historic
 
 ## Current release boundary
 
-Version `2026.07.16.02` adds reusable workshop email content while keeping message delivery explicitly manual. This release requires both the new Apps Script template actions and the static admin interface.
+Version `2026.07.19.01` adds a square annotated second Team Map page and protects dense name areas from clipping by using balanced columns on both pages. The Team Map remains a browser-generated local print/save artifact.
 
 See `CURRENT_STATE.md` before continuing.
 
