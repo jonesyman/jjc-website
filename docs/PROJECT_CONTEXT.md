@@ -50,7 +50,7 @@ The admin sidebar currently follows this order:
 - Saved groups can be chosen from the manager at the top of Group Builder, loaded for maintenance, deleted when genuinely unnecessary, restored from Recently Deleted Groups, or opened directly in Team Map preview.
 - Adding another group copies its current person references; groups are not nested.
 - Leader status belongs to a specific workshop or group, not permanently to the person.
-- Team Maps are previewed in the application and printed or saved locally. Page one retains the original letter-size map; page two provides a square map for presentation screenshots with concise Responsive/Disruptive and stage labels. They are not stored in Google Sheets or Drive.
+- Team Maps are previewed in the application and printed or saved locally. Page one retains the original letter-size map; page two provides a square map for presentation screenshots with concise Responsive/Disruptive and stage labels; the optional third page provides editable automated analysis and may flow to an additional printed page. PDF files are not stored in Google Sheets or Drive, while consultant analysis drafts are stored in `TeamMapAnalyses`.
 - On mobile, printable previews must appear above their source dialog, keep their controls pinned to the viewport, permit touch panning across the letter-size page, and prevent the underlying application from scrolling.
 - In Team Maps, Genius names are green, Frustration names are red, and the leader is marked with an asterisk without bolding.
 - Graphical Team Map names start at one uniform size. Dense Genius or Frustration areas split into two balanced columns on both pages before the shared size is reduced; empty areas remain blank.

@@ -174,6 +174,20 @@ saveSettings(data) {
         return this.get("getEmailTemplates");
     },
 
+    getTeamMapAnalysis(contextKey) {
+        return this.get("getTeamMapAnalysis", { contextKey });
+    },
+
+    async saveTeamMapAnalysis(data) {
+        await this.postNoCors("saveTeamMapAnalysis", data);
+        for (let attempt = 1; attempt <= 8; attempt++) {
+            await this.wait(attempt * 500);
+            const saved = await this.getTeamMapAnalysis(data.ContextKey);
+            if (saved && String(saved.SourceFingerprint) === String(data.SourceFingerprint) && String(saved.UpdatedDate || "")) return saved;
+        }
+        throw new Error("Google Sheets did not confirm the Team Map analysis save.");
+    },
+
     async saveEmailTemplate(data) {
         const before = await this.getEmailTemplates();
         const beforeIds = new Set(before.map(row => String(row.EmailTemplateID)));

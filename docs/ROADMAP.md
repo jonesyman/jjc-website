@@ -32,10 +32,11 @@ This roadmap records product capabilities rather than relying solely on historic
 - Recoverable group deletion with restoration of the most recently active membership set.
 - A compact, internally scrolling people library and actionable active/deleted group summary.
 - A Google Sheets-backed plain-text Email Template Library with once-only starter content, workshop personalization, preview, clipboard copying, and full archive lifecycle.
+- Automated Team Map Analysis with validated actual/weighted distributions, configurable diagnostics, consultant editing, persistence, and print safeguards.
 
 ## Current release boundary
 
-Version `2026.07.19.03` makes Team Map previews reliable and navigable on mobile while retaining the two-page print layout and dense-name protections. The Team Map remains a browser-generated local print/save artifact.
+Version `2026.07.19.04` adds an optional automated Team Map Analysis page after the unchanged map pages, with consultant editing and Google Sheets persistence. The Team Map remains a browser-generated local print/save artifact.
 
 See `CURRENT_STATE.md` before continuing.
 

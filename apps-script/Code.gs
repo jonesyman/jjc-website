@@ -21,6 +21,17 @@ const ASSESSMENT_GROUP_HEADERS = ["GroupID", "GroupName", "ClientID", "Organizat
 const ASSESSMENT_GROUP_MEMBER_HEADERS = ["GroupMemberID", "GroupID", "PersonID", "IsLeader", "AddedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_DUPLICATE_HEADERS = ["DuplicateReviewID", "PersonID1", "PersonID2", "Status", "ResolutionDate", "Notes"];
 const EMAIL_TEMPLATE_HEADERS = ["EmailTemplateID", "TemplateName", "Category", "Subject", "Body", "Description", "Active", "SortOrder", "CreatedDate", "UpdatedDate"];
+const TEAM_MAP_ANALYSIS_HEADERS = ["ContextKey", "ContextType", "ContextID", "OverallTeamPattern", "MostSignificantStrength", "MostSignificantRisk", "CompetencySustainabilityObservation", "LeaderInfluence", "Recommendations", "AdditionalConsultantNotes", "FieldModes", "SourceFingerprint", "CreatedDate", "UpdatedDate", "LastGeneratedDate"];
+const TEAM_MAP_ANALYSIS_DEFAULT_SETTINGS = {
+  AnalysisEnabled:true, MissingGeniusThresholdPercent:15, UnderrepresentedGeniusThresholdPercent:15,
+  WellRepresentedGeniusThresholdPercent:35, HighlyRepresentedGeniusThresholdPercent:50,
+  HighFrustrationThresholdPercent:35, VeryHighFrustrationThresholdPercent:50,
+  CompetencyHeavyThresholdPercent:40, StronglyCompetencyHeavyThresholdPercent:60,
+  BalancedSpreadThresholdPercent:10, OveruseGeniusThresholdPercent:50,
+  OveruseFrustrationMaximumPercent:15, MinimumTeamSizeForAnalysis:3,
+  IncludeLeaderWeighting:true, IncludeCompetencyAnalysis:true, IncludeConsultantQuestions:true,
+  IncludeMethodologyNote:true, MaximumAutomaticObservations:8
+};
 const PDF_ROOT_FOLDER = "Jeff Jones Consulting PDFs";
 const PDF_ESTIMATE_FOLDER = "Estimates";
 const PDF_INVOICE_FOLDER = "Invoices";
@@ -50,6 +61,7 @@ function doGet(e) {
     if (action === "getAssessmentWorkspace") return jsonResponse(getAssessmentWorkspace());
     if (action === "getAssessmentImportHistory") return jsonResponse(getRows("AssessmentImportHistory").filter(row => String(row.WorkshopID) === String(e.parameter.workshopId || "")));
     if (action === "getEmailTemplates") return jsonResponse(getEmailTemplates());
+    if (action === "getTeamMapAnalysis") return jsonResponse(getTeamMapAnalysis(e.parameter.contextKey));
     if (action === "generateEstimatePdf") return jsonResponse(generatePdfForRecord("estimate", e.parameter.id));
     if (action === "generateInvoicePdf") return jsonResponse(generatePdfForRecord("invoice", e.parameter.invoiceNo));
     if (action === "sendEstimateEmail") return jsonResponse(sendEmailForRecord("estimate", e.parameter));
@@ -178,6 +190,7 @@ function doPost(e) {
     if (action === "restoreEmailTemplate") return jsonResponse(setEmailTemplateActive(body.data || {}, true));
     if (action === "deleteEmailTemplate") return jsonResponse(deleteEmailTemplate(body.data || {}));
     if (action === "duplicateEmailTemplate") return jsonResponse(duplicateEmailTemplate(body.data || {}));
+    if (action === "saveTeamMapAnalysis") return jsonResponse(saveTeamMapAnalysis(body.data || {}));
 
     if (action === "deleteWorkshop") {
       deleteRowById(SHEET_NAMES.workshops, "WorkshopID", (body.data || {}).id);
@@ -912,6 +925,21 @@ function getSettings() {
     if (key) settings[key] = value;
   });
 
+  const settingsLock = LockService.getScriptLock();
+  settingsLock.waitLock(10000);
+  try {
+    const lockedRows = sheet.getDataRange().getValues();
+    const existingKeys = new Map(lockedRows.slice(1).map((row,index) => [String(row[0] || ""), { rowNumber:index + 2, value:row[1] }]));
+    Object.keys(TEAM_MAP_ANALYSIS_DEFAULT_SETTINGS).forEach(key => {
+      if (settings[key] === undefined || settings[key] === "") settings[key] = TEAM_MAP_ANALYSIS_DEFAULT_SETTINGS[key];
+      const existing = existingKeys.get(key);
+      if (!existing) sheet.appendRow([key, settings[key]]);
+      else if (existing.value === "") sheet.getRange(existing.rowNumber, 2).setValue(settings[key]);
+    });
+  } finally {
+    settingsLock.releaseLock();
+  }
+
   settings.businessName = settings.businessName || settings["Business Name"] || settings.Company || settings.company || "";
   settings.email = settings.email || settings.Email || "";
   settings.phone = settings.phone || settings.Phone || "";
@@ -942,6 +970,27 @@ function saveSettings(data) {
 
     if (!found) sheet.appendRow([key, data[key]]);
   });
+}
+
+function getTeamMapAnalysis(contextKey) {
+  ensureSheetWithHeaders("TeamMapAnalyses", TEAM_MAP_ANALYSIS_HEADERS);
+  return getRows("TeamMapAnalyses").find(row => String(row.ContextKey) === String(contextKey || "")) || null;
+}
+
+function saveTeamMapAnalysis(data) {
+  const key = String(data.ContextKey || "").trim();
+  if (!key) throw new Error("Team Map analysis context is required.");
+  ensureSheetWithHeaders("TeamMapAnalyses", TEAM_MAP_ANALYSIS_HEADERS);
+  const existing = getRowById("TeamMapAnalyses", "ContextKey", key);
+  const now = new Date().toISOString();
+  const row = {};
+  TEAM_MAP_ANALYSIS_HEADERS.forEach(header => { row[header] = data[header] === undefined ? "" : data[header]; });
+  row.ContextKey = key;
+  row.CreatedDate = existing ? (existing.row.CreatedDate || now) : now;
+  row.UpdatedDate = now;
+  if (existing) updateRowFields("TeamMapAnalyses", existing.rowNumber, row);
+  else appendRow("TeamMapAnalyses", row);
+  return { success:true, analysis:row };
 }
 
 function getRows(sheetName) {

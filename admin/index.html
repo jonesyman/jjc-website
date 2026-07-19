@@ -518,6 +518,25 @@
     .team-map-concept-grid .team-map-column h4 { margin-bottom:4px; font-size:10px; }
     .team-map-concept-grid .team-map-names { gap:2px; line-height:1.12; }
     .team-map-names.team-map-names-two-column { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--team-map-name-rows),auto); grid-auto-flow:column; column-gap:7px; }
+    .team-map-analysis-editor { max-width:900px; margin:0 auto 16px; padding:16px; border-radius:15px; background:#fff; color:#172033; }
+    .team-map-analysis-editor textarea { min-height:84px; color:#172033; background:#fff; border-color:#cbd5e1; }
+    .team-map-analysis-sheet { width:8.5in; min-height:11in; margin:24px auto 0; padding:.42in .48in .34in; background:#fff; color:#172033; box-shadow:0 22px 70px rgba(0,0,0,.2); break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .analysis-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:12px 0; }
+    .analysis-summary-item { padding:9px; border:1px solid #cbd5e1; border-radius:10px; background:#f8fafc; font-size:10px; }
+    .analysis-table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:9px; }
+    .analysis-table th,.analysis-table td { padding:6px 5px; border-bottom:1px solid #dbe3ee; text-align:left; vertical-align:top; }
+    .analysis-table th { background:#243f72; color:#fff; }
+    .analysis-section { margin-top:14px; break-inside:avoid; page-break-inside:avoid; }
+    .analysis-section h3 { margin:0 0 7px; color:#243f72; font-size:14px; }
+    .analysis-observations { margin:0; padding-left:18px; font-size:10px; line-height:1.4; }
+    .analysis-observations li { margin-bottom:6px; break-inside:avoid; }
+    .analysis-consultant-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .analysis-consultant-item { padding:8px; border:1px solid #dbe3ee; border-radius:9px; font-size:9px; line-height:1.35; break-inside:avoid; }
+    .analysis-methodology { margin-top:12px; padding:8px 10px; border-radius:9px; background:#eef2f7; color:#526077; font-size:8px; line-height:1.35; }
+    .analysis-validation { margin:10px 0; padding:10px; border:1px solid #dc2626; border-radius:10px; color:#991b1b; background:#fef2f2; }
+    .analysis-settings-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .analysis-setting { padding:12px; border:1px solid #364152; border-radius:12px; background:#1E2936; }
+    .analysis-setting .tiny { display:block; margin-top:5px; }
 
     /* Working Genius-inspired visual system */
     body { font-family:"Montserrat",Arial,Helvetica,sans-serif; background:#18222F; }
@@ -701,6 +720,8 @@
       .email-template-preview-backdrop { padding:0; }
       .email-template-preview-dialog { width:100%; min-height:100dvh; max-height:100dvh; border-radius:0; border-left:0; border-right:0; padding:14px; }
       .email-template-filters { grid-template-columns:1fr; }
+      .analysis-settings-grid,.analysis-consultant-grid { grid-template-columns:1fr; }
+      .team-map-analysis-editor { width:calc(100vw - 16px); margin:0 0 8px; border-radius:12px; }
       .duplicate-people { grid-template-columns:1fr; }
       .ad-hoc-card-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
       .ad-hoc-zones { grid-template-columns:1fr; }
@@ -794,6 +815,7 @@
       #teamMapPreview .team-map-sheet { width:8.5in !important; min-width:8.5in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; }
       #teamMapPreview .team-map-concept-sheet { width:8.5in !important; min-width:8.5in !important; height:11in !important; margin:0 !important; padding:.55in .5in !important; box-shadow:none !important; break-before:page; page-break-before:always; }
       #teamMapPreview .team-map-concept-card { width:7.5in !important; height:7.5in !important; box-sizing:border-box !important; }
+      #teamMapPreview .team-map-analysis-sheet { width:8.5in !important; min-width:8.5in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; break-before:page; page-break-before:always; }
     }
   </style>
 </head>
@@ -823,7 +845,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.19.03</strong><br>
+        Version <strong id="appVersionLabel">2026.07.19.04</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1275,6 +1297,11 @@ Sanger, CA 93657"></textarea>
             </div>
 
             <hr style="border:0; border-top:1px solid var(--line); margin:24px 0;">
+            <div class="section-title"><div><h2>Team Map Analysis</h2><p class="tiny muted">Adjust how the consultant-facing analysis identifies patterns. Percentages are based on team representation.</p></div></div>
+            <div id="teamMapAnalysisSettings" class="analysis-settings-grid"></div>
+            <div class="actions"><button class="button" type="button" onclick="saveTeamMapAnalysisSettings(this)">Save Analysis Settings</button><button class="button secondary" type="button" onclick="restoreTeamMapAnalysisDefaults()">Restore Recommended Defaults</button></div>
+
+            <hr style="border:0; border-top:1px solid var(--line); margin:24px 0;">
 
             <h2>Loaded Rates</h2>
             <p class="muted small">Edit these in Google Sheets, not here.</p>
@@ -1397,9 +1424,11 @@ Sanger, CA 93657"></textarea>
 
   <!-- PRINT VIEW -->
   <div id="teamMapPreview" class="print-view hidden" aria-hidden="true">
-    <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="changeTeamMapLeader()">Change Leader</button><button class="button small-btn" onclick="window.print()">Print / Save as PDF</button></div></div>
+    <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="changeTeamMapLeader()">Change Leader</button><button class="button small-btn" onclick="printTeamMapPdf()">Print / Save as PDF</button></div></div>
+    <details id="teamMapAnalysisEditor" class="team-map-analysis-editor no-print" open><summary><strong>Team Map Analysis Editor</strong> <span id="teamMapAnalysisStatus" class="tiny muted">Draft</span></summary><div id="teamMapAnalysisValidation"></div><div class="form-row" style="margin-top:12px;"><div class="field"><label>Overall Team Pattern</label><textarea data-analysis-field="OverallTeamPattern"></textarea></div><div class="field"><label>Most Significant Strength</label><textarea data-analysis-field="MostSignificantStrength"></textarea></div><div class="field"><label>Most Significant Risk</label><textarea data-analysis-field="MostSignificantRisk"></textarea></div><div class="field"><label>Competency and Sustainability Observation</label><textarea data-analysis-field="CompetencySustainabilityObservation"></textarea></div><div class="field"><label>Leader Influence</label><textarea data-analysis-field="LeaderInfluence"></textarea></div><div class="field"><label>Recommendations</label><textarea data-analysis-field="Recommendations"></textarea></div></div><div class="field"><label>Additional Consultant Notes</label><textarea data-analysis-field="AdditionalConsultantNotes"></textarea></div><div class="actions"><button class="button" type="button" onclick="generateTeamMapAnalysisSuggestions(false)">Generate Suggested Analysis</button><button class="button secondary" type="button" onclick="generateTeamMapAnalysisSuggestions(true)">Regenerate Suggestions</button><button class="button secondary" type="button" onclick="saveCurrentTeamMapAnalysis(this)">Save</button><button class="button ghost" type="button" onclick="resetTeamMapAnalysisToSuggestions()">Reset to Suggestions</button><button class="button small-btn" type="button" onclick="printTeamMapPdf()">Generate PDF</button></div></details>
     <div id="teamMapSheet" class="team-map-sheet"></div>
     <div id="teamMapConceptSheet" class="team-map-concept-sheet"></div>
+    <div id="teamMapAnalysisSheet" class="team-map-analysis-sheet"></div>
   </div>
 
   <div id="printView" class="print-view hidden">
@@ -1407,7 +1436,7 @@ Sanger, CA 93657"></textarea>
       <strong id="printPreviewLabel">Printable invoice preview</strong>
       <div class="actions" style="margin:0;">
         <button class="button secondary small-btn" onclick="closePrintView()">Close</button>
-        <button class="button small-btn" onclick="window.print()">Print / Save PDF</button>
+        <button class="button small-btn" onclick="printTeamMapPdf()">Print / Save PDF</button>
       </div>
     </div>
     <div class="invoice-sheet">
@@ -1462,6 +1491,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/googleSheets.js?v=10"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
+  <script src="../assets/js/teamMapAnalysis.js?v=1"></script>
   <script src="../assets/js/assessmentLibrary.js?v=5"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
@@ -1469,7 +1499,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.19.03";
+    const APP_VERSION = "2026.07.19.04";
 
     const K = {
       clients: "jjc_clients",
@@ -1491,6 +1521,11 @@ Sanger, CA 93657"></textarea>
     let assessmentAnalyticsLoaded = false;
     let assessmentComparisonData = null;
     let teamMapContext = null;
+    let currentTeamMapDistribution = null;
+    let currentTeamMapAnalysis = null;
+    let suggestedTeamMapAnalysis = null;
+    let teamMapAnalysisFieldModes = {};
+    let teamMapAnalysisStale = true;
     let estimates = [];
     let invoices = [];
     let settings = {};
@@ -1580,6 +1615,7 @@ Sanger, CA 93657"></textarea>
         profile.paymentInstructions = settingValue("paymentInstructions", "Payment Instructions");
         profile.checksPayableTo = settingValue("checksPayableTo", "Checks Payable To") || "Jeff Jones";
         localStorage.setItem(K.profile, JSON.stringify(profile));
+        renderTeamMapAnalysisSettings();
       } catch (err) {
         console.warn("Unable to load settings from Google Sheets.", err);
         profile = {
@@ -2811,9 +2847,26 @@ Sanger, CA 93657"></textarea>
       return `<ul class="team-view-list ${className}">${people.map(person => `<li>${esc(person.firstName)} ${esc(person.lastName)}${leader && person.id === leader.id ? ' <span class="status-badge">Leader</span>' : ''}</li>`).join("")}</ul>`;
     }
 
-    function openTeamMapPreview() {
+    function teamMapAnalysisContextKey(){ return teamMapContext?.groupId ? `group:${teamMapContext.groupId}` : `workshop:${assessmentWorkshopId||currentAssessmentData?.import?.AssessmentImportID||"unknown"}`; }
+    function teamMapAnalysisFingerprint(){ const raw=JSON.stringify({results:currentAssessmentData?.results||[],leader:currentAssessmentData?.import?.LeaderAssessmentResultID||"",settings:TeamMapAnalysis.normalizeSettings(settings)}); let hash=0; for(let i=0;i<raw.length;i++)hash=((hash<<5)-hash+raw.charCodeAt(i))|0; return `TM-${raw.length}-${Math.abs(hash)}`; }
+    function analysisFields(){ return [...document.querySelectorAll("[data-analysis-field]")]; }
+    function analysisFromEditor(){ const out={}; analysisFields().forEach(field=>out[field.dataset.analysisField]=field.value.trim()); return out; }
+    function fillAnalysisEditor(values,modes={}){ analysisFields().forEach(field=>{field.value=values?.[field.dataset.analysisField]||""; field.oninput=()=>{teamMapAnalysisFieldModes[field.dataset.analysisField]="manual"; teamMapAnalysisStale=true; updateTeamMapAnalysisStatus(); renderTeamMapAnalysisPage();};}); teamMapAnalysisFieldModes={...modes}; }
+    function updateTeamMapAnalysisStatus(){ const el=document.getElementById("teamMapAnalysisStatus"); if(el)el.textContent=teamMapAnalysisStale?"Changes not saved / PDF preview updated locally":"Saved and current"; }
+    function generateTeamMapAnalysisSuggestions(force){ if(force&&Object.values(teamMapAnalysisFieldModes).includes("manual")&&!confirm("Replace manually edited analysis fields with regenerated suggestions?"))return; suggestedTeamMapAnalysis=TeamMapAnalysis.suggestedAnalysis(currentTeamMapDistribution); const current=analysisFromEditor(); const next={}; Object.keys(suggestedTeamMapAnalysis).forEach(key=>next[key]=force||teamMapAnalysisFieldModes[key]!=="manual"?suggestedTeamMapAnalysis[key]:current[key]); fillAnalysisEditor(next,Object.fromEntries(Object.keys(next).map(key=>[key,force?"auto":(teamMapAnalysisFieldModes[key]||"auto")]))); currentTeamMapAnalysis=next; teamMapAnalysisStale=true; updateTeamMapAnalysisStatus(); renderTeamMapAnalysisPage(); }
+    function resetTeamMapAnalysisToSuggestions(){ if(!suggestedTeamMapAnalysis)return generateTeamMapAnalysisSuggestions(true); if(confirm("Reset all fields to the current suggested analysis?")){ fillAnalysisEditor(suggestedTeamMapAnalysis,Object.fromEntries(Object.keys(suggestedTeamMapAnalysis).map(key=>[key,"auto"]))); currentTeamMapAnalysis={...suggestedTeamMapAnalysis}; teamMapAnalysisStale=true; updateTeamMapAnalysisStatus(); renderTeamMapAnalysisPage(); } }
+    async function loadCurrentTeamMapAnalysis(){ const key=teamMapAnalysisContextKey(), fingerprint=teamMapAnalysisFingerprint(); let saved=null; try{saved=await Database.getTeamMapAnalysis(key);}catch(err){console.warn("Unable to load saved Team Map analysis.",err);} suggestedTeamMapAnalysis=TeamMapAnalysis.suggestedAnalysis(currentTeamMapDistribution); if(saved){ const values={}; Object.keys(suggestedTeamMapAnalysis).forEach(k=>values[k]=saved[k]||""); let modes={}; try{modes=JSON.parse(saved.FieldModes||"{}");}catch{} fillAnalysisEditor(values,modes); currentTeamMapAnalysis=values; teamMapAnalysisStale=String(saved.SourceFingerprint)!==fingerprint; }else{ fillAnalysisEditor(suggestedTeamMapAnalysis,Object.fromEntries(Object.keys(suggestedTeamMapAnalysis).map(k=>[k,"auto"]))); currentTeamMapAnalysis={...suggestedTeamMapAnalysis}; teamMapAnalysisStale=true; } updateTeamMapAnalysisStatus(); }
+    async function saveCurrentTeamMapAnalysis(button){ if(!currentTeamMapDistribution?.validation?.valid)return toast("Correct the invalid participant results before saving analysis."); const finish=beginSave(button,"Saving Analysis..."); try{ const values=analysisFromEditor(), key=teamMapAnalysisContextKey(), now=new Date().toISOString(); const payload={ContextKey:key,ContextType:teamMapContext?.groupId?"AssessmentGroup":"Workshop",ContextID:teamMapContext?.groupId||assessmentWorkshopId||currentAssessmentData?.import?.AssessmentImportID||"",...values,FieldModes:JSON.stringify(teamMapAnalysisFieldModes),SourceFingerprint:teamMapAnalysisFingerprint(),LastGeneratedDate:now}; await Database.saveTeamMapAnalysis(payload); currentTeamMapAnalysis=values; teamMapAnalysisStale=false; updateTeamMapAnalysisStatus(); renderTeamMapAnalysisPage(); toast("Team Map analysis saved."); return true;}catch(err){toast(err.message||"Unable to save Team Map analysis.");return false;}finally{finish();} }
+    function printTeamMapPdf(){ if(currentTeamMapDistribution?.settings?.AnalysisEnabled===false)return window.print(); if(!currentTeamMapDistribution?.validation?.valid)return toast("Correct the invalid participant results before generating the PDF."); if(teamMapAnalysisStale)return toast("Regenerate or review the Team Map analysis, then save it before generating the PDF."); window.print(); }
+    function renderTeamMapAnalysisPage(){ const sheet=document.getElementById("teamMapAnalysisSheet"); if(!sheet||!currentTeamMapDistribution)return; const d=currentTeamMapDistribution,s=d.settings; if(!s.AnalysisEnabled){sheet.classList.add("hidden");return;} sheet.classList.remove("hidden"); if(!d.validation.valid){sheet.innerHTML=`<div class="team-map-header"><h1 class="team-map-title">Team Map Analysis</h1></div><div class="analysis-validation"><strong>Analysis cannot be generated.</strong><ul>${d.validation.errors.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;return;} const observations=TeamMapAnalysis.generateTeamObservations(d), questions=TeamMapAnalysis.generateConsultantQuestions(d), analysis=currentTeamMapAnalysis||TeamMapAnalysis.suggestedAnalysis(d), workshop=workshops.find(w=>w.WorkshopID===assessmentWorkshopId)||{}, title=teamMapContext?.title||workshop.Organization||currentAssessmentData?.import?.GroupName||"Team", date=teamMapContext?.dateLabel||(workshop.WorkshopDate?formatDate(workshop.WorkshopDate):workshop.DateDescription||""), leader=d.leader?`${d.leader.FirstName||d.leader.firstName||""} ${d.leader.LastName||d.leader.lastName||""}`.trim():"Not selected"; const classification=m=>m.classifications[0]||"Monitor"; sheet.innerHTML=`<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Team Map Analysis</h1><div style="font-weight:900;">${esc(title)}</div></div></div><div class="team-map-meta">${esc(date)}<br>${d.actualTeamSize} actual participants<br>Leader: ${esc(leader)}</div></div>${d.actualTeamSize<s.MinimumTeamSizeForAnalysis?`<div class="analysis-validation"><strong>Limited sample:</strong> This team is below the configured minimum of ${s.MinimumTeamSizeForAnalysis}; interpret patterns cautiously.</div>`:""}<div class="analysis-summary-grid"><div class="analysis-summary-item"><strong>Actual team</strong><br>${d.actualTeamSize} people</div><div class="analysis-summary-item"><strong>Weighted team</strong><br>${d.weightedTeamSize} influence units</div><div class="analysis-summary-item"><strong>Leader weighting</strong><br>${d.leaderWeightingApplied?"Included":"Not included"}</div><div class="analysis-summary-item"><strong>Observations</strong><br>${observations.length} prioritized</div></div><table class="analysis-table"><thead><tr><th>Type</th><th>Actual G</th><th>Actual C</th><th>Actual F</th><th>Weighted G</th><th>Weighted F</th><th>Classification</th></tr></thead><tbody>${d.metrics.map(m=>`<tr><td><strong>${esc(m.type)}</strong></td><td>${m.actualGeniusCount} (${m.actualGeniusRate}%)</td><td>${m.actualCompetencyCount} (${m.actualCompetencyRate}%)</td><td>${m.actualFrustrationCount} (${m.actualFrustrationRate}%)</td><td>${m.weightedGeniusCount} (${m.weightedGeniusRate}%)</td><td>${m.weightedFrustrationCount} (${m.weightedFrustrationRate}%)</td><td>${esc(classification(m))}</td></tr>`).join("")}</tbody></table><section class="analysis-section"><h3>Key Team Observations</h3><ul class="analysis-observations">${observations.map(o=>`<li><strong>${esc(o.type)} - ${esc(o.label)}:</strong> ${esc(o.text)}</li>`).join("")||"<li>No automatic observation rose above the configured thresholds.</li>"}</ul></section><section class="analysis-section"><h3>Consultant Analysis</h3><div class="analysis-consultant-grid">${Object.entries(analysis).filter(([,v])=>v).map(([k,v])=>`<div class="analysis-consultant-item"><strong>${esc(k.replace(/([a-z])([A-Z])/g,"$1 $2"))}</strong><br>${esc(v)}</div>`).join("")}</div></section>${questions.length?`<section class="analysis-section"><h3>Discussion Questions</h3><ul class="analysis-observations">${questions.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></section>`:""}${s.IncludeMethodologyNote?`<div class="analysis-methodology"><strong>Methodology:</strong> Actual counts represent unique people. ${d.leaderWeightingApplied?"The selected leader receives one additional influence point in each of their two Geniuses and two Frustrations; Competencies are not weighted.":"Leader weighting is disabled."} These observations are cautious discussion prompts, not definitive conclusions or diagnoses.</div>`:""}`; }
+
+    async function openTeamMapPreview() {
       if (!currentAssessmentData?.import?.LeaderAssessmentResultID) return toast("Select and save the team leader before previewing the Team Map.");
+      currentTeamMapDistribution=TeamMapAnalysis.calculateTeamMapDistribution(currentAssessmentData.results,currentAssessmentData.import.LeaderAssessmentResultID,settings);
+      const validation=document.getElementById("teamMapAnalysisValidation"); validation.innerHTML=currentTeamMapDistribution.validation.valid?"":`<div class="analysis-validation"><strong>Correct these participant results before generating the analysis PDF:</strong><ul>${currentTeamMapDistribution.validation.errors.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
       renderTeamMapPreview();
+      await loadCurrentTeamMapAnalysis();
+      renderTeamMapAnalysisPage();
       previewReturnFocus = document.activeElement;
       const preview = document.getElementById("teamMapPreview");
       preview.classList.remove("hidden");
@@ -2881,6 +2934,7 @@ Sanger, CA 93657"></textarea>
           if (!column) return false;
           return list.getBoundingClientRect().bottom > column.getBoundingClientRect().bottom - 3;
         };
+        renderTeamMapAnalysisSettings();
         const anyListOverflows = () => lists.some(listOverflows);
         setSize();
         lists.filter(list => !list.classList.contains("team-map-names-two-column") && listOverflows(list)).forEach(list => {
@@ -3668,6 +3722,17 @@ Sanger, CA 93657"></textarea>
       }
       return { consultingDiscount, prepDiscount, assessmentDiscount };
     }
+
+    const TEAM_MAP_ANALYSIS_SETTING_HELP = {
+      AnalysisEnabled:"Include automated analysis pages in Team Map PDFs.", MissingGeniusThresholdPercent:"Below this weighted Genius percentage, a type may be treated as effectively missing when Frustration is high.", UnderrepresentedGeniusThresholdPercent:"Weighted Genius percentages below this value are underrepresented.", WellRepresentedGeniusThresholdPercent:"Weighted Genius percentages at or above this value are well represented.", HighlyRepresentedGeniusThresholdPercent:"Weighted Genius percentages at or above this value are highly represented.", HighFrustrationThresholdPercent:"Weighted Frustration percentages at or above this value receive a high-frustration note.", VeryHighFrustrationThresholdPercent:"Weighted Frustration percentages at or above this value receive the strongest caution.", CompetencyHeavyThresholdPercent:"Actual Competency percentages at or above this value are competency-heavy.", StronglyCompetencyHeavyThresholdPercent:"Actual Competency percentages at or above this value are strongly competency-heavy.", BalancedSpreadThresholdPercent:"Genius and Frustration percentages within this many points are worth monitoring as balanced tension.", OveruseGeniusThresholdPercent:"Weighted Genius percentages at or above this value may indicate a strong directional pull.", OveruseFrustrationMaximumPercent:"Potential overuse requires weighted Frustration at or below this value.", MinimumTeamSizeForAnalysis:"Teams smaller than this receive a limited-data caution.", IncludeLeaderWeighting:"Give the selected leader one additional point in each Genius and Frustration.", IncludeCompetencyAnalysis:"Include competency-heavy observations.", IncludeConsultantQuestions:"Include targeted discussion questions.", IncludeMethodologyNote:"Include the analysis methodology note.", MaximumAutomaticObservations:"Maximum prioritized automatic observations shown in the PDF."
+    };
+    function renderTeamMapAnalysisSettings(values=TeamMapAnalysis.normalizeSettings(settings)) {
+      const wrap=document.getElementById("teamMapAnalysisSettings"); if(!wrap||!window.TeamMapAnalysis)return;
+      wrap.innerHTML=Object.entries(TeamMapAnalysis.DEFAULTS).map(([key,defaultValue])=>{ const value=values[key]; const label=key.replace(/([a-z])([A-Z])/g,"$1 $2"); if(typeof defaultValue==="boolean") return `<label class="analysis-setting"><span>${esc(label)}</span><input data-analysis-setting="${key}" type="checkbox" ${value?"checked":""}><span class="tiny muted">${esc(TEAM_MAP_ANALYSIS_SETTING_HELP[key])}</span></label>`; const suffix=key.includes("Percent")?"%":""; return `<label class="analysis-setting"><span>${esc(label)}${suffix?` (${suffix})`:""}</span><input data-analysis-setting="${key}" type="number" min="0" max="${key==="MaximumAutomaticObservations"?20:100}" value="${Number(value)}"><span class="tiny muted">${esc(TEAM_MAP_ANALYSIS_SETTING_HELP[key])}</span></label>`; }).join("");
+    }
+    function teamMapAnalysisSettingsFromForm(){ const result={}; document.querySelectorAll("[data-analysis-setting]").forEach(field=>result[field.dataset.analysisSetting]=field.type==="checkbox"?field.checked:Number(field.value)); return TeamMapAnalysis.normalizeSettings(result); }
+    async function saveTeamMapAnalysisSettings(button){ const finish=beginSave(button,"Saving Settings..."); try{ const values=teamMapAnalysisSettingsFromForm(); await Database.saveSettings(values); settings={...settings,...values}; teamMapAnalysisStale=true; toast("Team Map Analysis settings saved."); }catch(err){toast(err.message||"Unable to save analysis settings.");}finally{finish();} }
+    function restoreTeamMapAnalysisDefaults(){ if(!confirm("Restore all recommended Team Map Analysis defaults?"))return; renderTeamMapAnalysisSettings(TeamMapAnalysis.DEFAULTS); teamMapAnalysisStale=true; }
 
     function normalizeEstimate(e) {
       const orgType = e.orgType || "for_profit";

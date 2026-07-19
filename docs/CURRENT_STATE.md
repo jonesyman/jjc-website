@@ -6,12 +6,19 @@ Last updated: 2026-07-19
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.19.03`
-- Latest feature: reliable mobile Team Map previews and touch-friendly printable-page navigation
+- Current application version: `2026.07.19.04`
+- Latest feature: automated, editable, settings-driven Team Map Analysis PDF page
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Added a third, branded Team Map Analysis page while preserving the existing first and second pages.
+- Added validated actual and leader-weighted G/C/F distribution metrics, threshold-based classifications, prioritized cautious observations, and discussion questions.
+- Added consultant-editable analysis with automatic suggestions, manual-field protection, saved/current status, and stale-source detection.
+- Added Team Map Analysis settings with seeded defaults, help text, and restore-default behavior.
+- Added `TeamMapAnalyses` persistence and post-write polling through the Apps Script backend.
+- Added 17 automated engine scenarios plus complete-page load verification.
 
 - Fixed mobile Team Map previews that opened behind the Assessment Results dialog by placing printable previews above every dialog layer.
 - Added background-scroll locking, touch-friendly two-axis panning, a viewport-width sticky toolbar, and consistent page sizing while previewing Team Maps on mobile.

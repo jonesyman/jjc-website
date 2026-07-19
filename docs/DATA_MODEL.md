@@ -11,6 +11,16 @@
 - Dates are stored as sheet values or ISO strings and normalized by the frontend.
 - Header changes are additive. Do not reorder or delete existing production columns casually.
 
+### TeamMapAnalyses
+
+Primary key: `ContextKey` (`workshop:<id>` or `group:<id>`).
+
+Fields: `ContextType`, `ContextID`, `OverallTeamPattern`, `MostSignificantStrength`, `MostSignificantRisk`, `CompetencySustainabilityObservation`, `LeaderInfluence`, `Recommendations`, `AdditionalConsultantNotes`, `FieldModes`, `SourceFingerprint`, `CreatedDate`, `UpdatedDate`, and `LastGeneratedDate`.
+
+The sheet is created idempotently on first analysis read or save. `FieldModes` preserves automatic versus consultant-edited fields. `SourceFingerprint` identifies analyses that became stale after participant, leader, or settings changes.
+
+Team Map Analysis settings are stored as key/value rows in `Settings`. Missing defaults are appended once during `getSettings`; existing values are never replaced. The settings cover enablement, distribution thresholds, small-team caution, leader weighting, competency analysis, questions, methodology, and observation limits.
+
 ## Core business sheets
 
 ### Clients

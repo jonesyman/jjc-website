@@ -2,6 +2,15 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.19.04 — 2026-07-19
+
+- Added an automated, branded Team Map Analysis page after the two existing Team Map pages without changing their layouts.
+- Added centralized Genius, Competency, Frustration, leader-weighting, validation, classification, observation-priority, and consultant-question logic.
+- Added editable consultant analysis, automatic suggestions, manual-edit protection, stale-data warnings, and Google Sheets persistence.
+- Added configurable analysis thresholds and content controls with seeded defaults and restore-default behavior.
+- Blocked analysis saves and PDF generation for invalid participant placements, and blocked outdated analysis from being printed.
+- Added 17 automated scenario tests covering validation, distributions, weighting, classification, limits, questions, and cautious language.
+
 ## 2026.07.19.03 — 2026-07-19
 
 - Fixed Team Map previews opened from Assessment Results being hidden behind the assessment dialog on mobile.
