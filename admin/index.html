@@ -515,7 +515,6 @@
     .team-map-concept-grid .team-map-column h4 { margin-bottom:4px; font-size:10px; }
     .team-map-concept-grid .team-map-names { gap:2px; line-height:1.12; }
     .team-map-names.team-map-names-two-column { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--team-map-name-rows),auto); grid-auto-flow:column; column-gap:7px; }
-    .team-map-concept-footer { display:flex; justify-content:space-between; gap:12px; padding-top:7px; color:#64748b; font-size:7.5px; line-height:1.25; }
 
     /* Working Genius-inspired visual system */
     body { font-family:"Montserrat",Arial,Helvetica,sans-serif; background:#18222F; }
@@ -821,7 +820,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.19.01</strong><br>
+        Version <strong id="appVersionLabel">2026.07.19.02</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1467,7 +1466,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.19.01";
+    const APP_VERSION = "2026.07.19.02";
 
     const K = {
       clients: "jjc_clients",
@@ -2852,7 +2851,7 @@ Sanger, CA 93657"></textarea>
       document.getElementById("teamMapSheet").className = "team-map-sheet";
       document.getElementById("teamMapSheet").innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Working Genius Team Map</h1><div style="font-weight:900;">${esc(mapTitle)}</div></div></div><div class="team-map-meta">${esc(mapIdentifier)}<br>${esc(mapDate)}<br>${esc(mapSubtitle)}</div></div><div class="team-map-grid">${mapRows}</div><div class="team-map-footer"><div><strong>Jeff Jones Consulting</strong><br>Generated ${generated}</div><div>The selected team leader is represented twice in Genius and Frustration areas to reflect the leader's influence on the team environment.</div></div>`;
       const conceptRows = team.cards.map(card => teamMapConceptPanel(card, team.leader, mode)).join("");
-      document.getElementById("teamMapConceptSheet").innerHTML = `<div class="team-map-concept-card"><div class="team-map-concept-header"><div style="display:flex;align-items:center;gap:10px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h2 class="team-map-concept-title">Working Genius Team Map</h2><div class="team-map-concept-subtitle">${esc(mapTitle)}${mapSubtitle && mapSubtitle !== mapTitle ? ` &bull; ${esc(mapSubtitle)}` : ""}</div></div></div><div class="team-map-meta">${esc(mapDate)}<br>${esc(mapIdentifier)}</div></div><div class="team-map-concept-layout"><div class="team-map-concept-axis-title">Stages of Work</div><div class="team-map-concept-columns"><div class="team-map-concept-column">Responsive Genius</div><div class="team-map-concept-column">Disruptive Genius</div></div><div class="team-map-stage-labels"><div class="team-map-stage-label">Ideation</div><div class="team-map-stage-label">Activation</div><div class="team-map-stage-label">Implementation</div></div><div class="team-map-concept-grid">${conceptRows}</div></div><div class="team-map-concept-footer"><div><strong>Vertical:</strong> Responsive (W, D, E) and Disruptive (I, G, T)</div><div><strong>Horizontal:</strong> Ideation (W, I), Activation (D, G), Implementation (E, T)</div></div></div>`;
+      document.getElementById("teamMapConceptSheet").innerHTML = `<div class="team-map-concept-card"><div class="team-map-concept-header"><div style="display:flex;align-items:center;gap:10px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h2 class="team-map-concept-title">Working Genius Team Map</h2><div class="team-map-concept-subtitle">${esc(mapTitle)}${mapSubtitle && mapSubtitle !== mapTitle ? ` &bull; ${esc(mapSubtitle)}` : ""}</div></div></div><div class="team-map-meta">${esc(mapDate)}</div></div><div class="team-map-concept-layout"><div class="team-map-concept-axis-title">Stages of Work</div><div class="team-map-concept-columns"><div class="team-map-concept-column">Responsive</div><div class="team-map-concept-column">Disruptive</div></div><div class="team-map-stage-labels"><div class="team-map-stage-label">Ideation</div><div class="team-map-stage-label">Activation</div><div class="team-map-stage-label">Implementation</div></div><div class="team-map-concept-grid">${conceptRows}</div></div></div>`;
       requestAnimationFrame(fitTeamMapNames);
     }
 

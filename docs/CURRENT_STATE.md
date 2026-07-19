@@ -6,13 +6,14 @@ Last updated: 2026-07-19
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.19.01`
-- Latest feature: two-page Team Map PDF with an annotated square layout and dense-list column fitting
+- Current application version: `2026.07.19.02`
+- Latest feature: streamlined square Team Map page with concise axes and dense-list column fitting
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Simplified the condensed map headings to Responsive and Disruptive and removed its workshop ID and redundant footer explanations.
 - Preserved the existing Team Map as PDF page one and added a square second page for clean slide-deck screenshots.
 - Labeled the page-two vertical Responsive/Disruptive split and horizontal Ideation/Activation/Implementation stages.
 - Made crowded Genius and Frustration areas use two balanced name columns on both pages before any font reduction, preserving every weighted leader entry.

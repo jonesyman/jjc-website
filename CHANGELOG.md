@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.19.02 — 2026-07-19
+
+- Simplified the condensed Team Map column headings to Responsive and Disruptive.
+- Removed the workshop ID and redundant axis explanations from the condensed second page.
+- Preserved the date, stage labels, square presentation format, and adaptive two-column name layout.
+
 ## 2026.07.19.01 — 2026-07-19
 
 - Preserved the original Team Map as PDF page one and added a square, presentation-friendly page two.
