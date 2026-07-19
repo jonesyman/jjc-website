@@ -494,6 +494,27 @@
     .team-map-name { overflow-wrap:anywhere; }
     .team-map-leader { font-weight:400; }
     .team-map-footer { border-top:1px solid #cbd5e1; margin-top:10px; padding-top:7px; display:flex; justify-content:space-between; gap:14px; color:#64748b; font-size:8.5px; line-height:1.35; }
+    .team-map-concept-sheet { --team-map-name-size:11px; width:min(8.5in,100%); height:11in; margin:24px auto 0; padding:.55in .5in; box-shadow:0 22px 70px rgba(0,0,0,.2); background:#fff; color:#172033; display:flex; align-items:center; justify-content:center; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-concept-card { width:7.5in; height:7.5in; padding:.22in; border:1px solid #cbd5e1; border-radius:16px; background:#fff; display:flex; flex-direction:column; }
+    .team-map-concept-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:0 2px 9px; border-bottom:3px solid #243f72; }
+    .team-map-concept-header .team-map-logo { width:44px; height:44px; }
+    .team-map-concept-title { margin:0; color:#243f72; font-size:20px; }
+    .team-map-concept-subtitle { margin-top:2px; color:#526077; font-size:9px; }
+    .team-map-concept-layout { display:grid; grid-template-columns:.58in minmax(0,1fr); grid-template-rows:.42in minmax(0,1fr); gap:7px 8px; flex:1; min-height:0; padding-top:9px; }
+    .team-map-concept-axis-title { display:flex; align-items:center; justify-content:center; color:#64748b; font-size:8px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; writing-mode:vertical-rl; transform:rotate(180deg); }
+    .team-map-concept-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .team-map-concept-column { display:flex; align-items:center; justify-content:center; border-radius:9px; background:#eaf0f9; color:#243f72; font-size:12px; font-weight:900; letter-spacing:.02em; }
+    .team-map-concept-column:last-child { background:#f3ecf8; color:#6b3f78; }
+    .team-map-stage-labels { display:grid; grid-template-rows:repeat(3,minmax(0,1fr)); gap:10px; min-height:0; }
+    .team-map-stage-label { display:flex; align-items:center; justify-content:center; border-radius:9px; background:#eef2f7; color:#34445e; font-size:10px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; writing-mode:vertical-rl; transform:rotate(180deg); }
+    .team-map-concept-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr)); gap:10px; min-height:0; }
+    .team-map-concept-grid .team-map-panel { border-radius:10px; }
+    .team-map-concept-grid .team-map-panel-title { padding:5px 8px; font-size:12px; }
+    .team-map-concept-grid .team-map-panel-abbr { width:21px; height:21px; font-size:11px; }
+    .team-map-concept-grid .team-map-column { padding:6px 8px; }
+    .team-map-concept-grid .team-map-column h4 { margin-bottom:4px; font-size:10px; }
+    .team-map-concept-grid .team-map-names { gap:2px; line-height:1.12; }
+    .team-map-concept-footer { display:flex; justify-content:space-between; gap:12px; padding-top:7px; color:#64748b; font-size:7.5px; line-height:1.25; }
 
     /* Working Genius-inspired visual system */
     body { font-family:"Montserrat",Arial,Helvetica,sans-serif; background:#18222F; }
@@ -768,6 +789,8 @@
       #printView .invoice-totals { width:280px !important; margin-left:auto !important; }
       #printView .invoice-header, #printView .invoice-parties, #printView tr, #printView .invoice-totals, #printPaymentInstructions, #printInvoiceFooter { break-inside:avoid; page-break-inside:avoid; }
       #teamMapPreview .team-map-sheet { width:8.5in !important; min-width:8.5in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; }
+      #teamMapPreview .team-map-concept-sheet { width:8.5in !important; min-width:8.5in !important; height:11in !important; margin:0 !important; padding:.55in .5in !important; box-shadow:none !important; break-before:page; page-break-before:always; }
+      #teamMapPreview .team-map-concept-card { width:7.5in !important; height:7.5in !important; box-sizing:border-box !important; }
     }
   </style>
 </head>
@@ -1373,6 +1396,7 @@ Sanger, CA 93657"></textarea>
   <div id="teamMapPreview" class="print-view hidden">
     <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="changeTeamMapLeader()">Change Leader</button><button class="button small-btn" onclick="window.print()">Print / Save as PDF</button></div></div>
     <div id="teamMapSheet" class="team-map-sheet"></div>
+    <div id="teamMapConceptSheet" class="team-map-concept-sheet"></div>
   </div>
 
   <div id="printView" class="print-view hidden">
@@ -2826,32 +2850,40 @@ Sanger, CA 93657"></textarea>
       const mapRows = team.cards.map(card => teamMapPanel(card, team.leader, mode)).join("");
       document.getElementById("teamMapSheet").className = "team-map-sheet";
       document.getElementById("teamMapSheet").innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Working Genius Team Map</h1><div style="font-weight:900;">${esc(mapTitle)}</div></div></div><div class="team-map-meta">${esc(mapIdentifier)}<br>${esc(mapDate)}<br>${esc(mapSubtitle)}</div></div><div class="team-map-grid">${mapRows}</div><div class="team-map-footer"><div><strong>Jeff Jones Consulting</strong><br>Generated ${generated}</div><div>The selected team leader is represented twice in Genius and Frustration areas to reflect the leader's influence on the team environment.</div></div>`;
+      const conceptRows = team.cards.map(card => teamMapConceptPanel(card, team.leader, mode)).join("");
+      document.getElementById("teamMapConceptSheet").innerHTML = `<div class="team-map-concept-card"><div class="team-map-concept-header"><div style="display:flex;align-items:center;gap:10px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h2 class="team-map-concept-title">Working Genius Team Map</h2><div class="team-map-concept-subtitle">${esc(mapTitle)}${mapSubtitle && mapSubtitle !== mapTitle ? ` &bull; ${esc(mapSubtitle)}` : ""}</div></div></div><div class="team-map-meta">${esc(mapDate)}<br>${esc(mapIdentifier)}</div></div><div class="team-map-concept-layout"><div class="team-map-concept-axis-title">Stages of Work</div><div class="team-map-concept-columns"><div class="team-map-concept-column">Responsive Genius</div><div class="team-map-concept-column">Disruptive Genius</div></div><div class="team-map-stage-labels"><div class="team-map-stage-label">Ideation</div><div class="team-map-stage-label">Activation</div><div class="team-map-stage-label">Implementation</div></div><div class="team-map-concept-grid">${conceptRows}</div></div><div class="team-map-concept-footer"><div><strong>Vertical:</strong> Responsive (W, D, E) and Disruptive (I, G, T)</div><div><strong>Horizontal:</strong> Ideation (W, I), Activation (D, G), Implementation (E, T)</div></div></div>`;
       requestAnimationFrame(fitTeamMapNames);
     }
 
     function fitTeamMapNames() {
-      const sheet = document.getElementById("teamMapSheet");
-      const lists = [...sheet.querySelectorAll(".team-map-names")];
+      const sheets = [document.getElementById("teamMapSheet"), document.getElementById("teamMapConceptSheet")];
       const maximumSize = 13;
       const minimumSize = 7.5;
       const step = 0.5;
-      let size = maximumSize;
-      const setSize = () => sheet.style.setProperty("--team-map-name-size", `${size}px`);
-      const anyListOverflows = () => lists.some(list => {
-        const column = list.closest(".team-map-column");
-        if (!column) return false;
-        return list.getBoundingClientRect().bottom > column.getBoundingClientRect().bottom - 3;
-      });
-      setSize();
-      while (size > minimumSize && anyListOverflows()) {
-        size = Math.max(minimumSize, size - step);
+      sheets.forEach(sheet => {
+        const lists = [...sheet.querySelectorAll(".team-map-names")];
+        let size = sheet.id === "teamMapConceptSheet" ? 11 : maximumSize;
+        const setSize = () => sheet.style.setProperty("--team-map-name-size", `${size}px`);
+        const anyListOverflows = () => lists.some(list => {
+          const column = list.closest(".team-map-column");
+          if (!column) return false;
+          return list.getBoundingClientRect().bottom > column.getBoundingClientRect().bottom - 3;
+        });
         setSize();
-      }
-      sheet.dataset.nameFontSize = String(size);
+        while (size > minimumSize && anyListOverflows()) {
+          size = Math.max(minimumSize, size - step);
+          setSize();
+        }
+        sheet.dataset.nameFontSize = String(size);
+      });
     }
 
     function teamMapPanel(card, leader, mode) {
       return `<section class="team-map-panel"><div class="team-map-panel-title">${esc(card.type)}</div><div class="team-map-columns"><div class="team-map-column team-map-genius"><h4>Genius</h4>${teamMapNameList(card.geniusWeighted, leader, mode)}</div><div class="team-map-column team-map-frustration"><h4>Frustration</h4>${teamMapNameList(card.frustrationWeighted, leader, mode)}</div></div></section>`;
+    }
+
+    function teamMapConceptPanel(card, leader, mode) {
+      return `<section class="team-map-panel"><div class="team-map-panel-title"><span class="team-map-panel-abbr">${esc(card.abbreviation)}</span>${esc(card.type)}</div><div class="team-map-columns"><div class="team-map-column team-map-genius"><h4>Genius</h4>${teamMapNameList(card.geniusWeighted, leader, mode)}</div><div class="team-map-column team-map-frustration"><h4>Frustration</h4>${teamMapNameList(card.frustrationWeighted, leader, mode)}</div></div></section>`;
     }
 
     function teamMapNameList(people, leader, mode) {
