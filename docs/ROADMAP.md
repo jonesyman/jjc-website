@@ -36,7 +36,7 @@ This roadmap records product capabilities rather than relying solely on historic
 
 ## Current release boundary
 
-Version `2026.07.19.04` adds an optional automated Team Map Analysis page after the unchanged map pages, with consultant editing and Google Sheets persistence. The Team Map remains a browser-generated local print/save artifact.
+Version `2026.07.19.05` gives page one a larger, first-column-first name flow while preserving the condensed page-two layout and automated analysis pages. The Team Map remains a browser-generated local print/save artifact.
 
 See `CURRENT_STATE.md` before continuing.
 

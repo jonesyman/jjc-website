@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.19.05 — 2026-07-19
+
+- Increased page-one Team Map names to a 15px starting size.
+- Separated page-one name flow from the condensed page-two balancing behavior.
+- Made page one fill its first name column vertically before opening a second column only when needed.
+- Preserved page two's compact, balanced two-column handling for dense areas.
+
 ## 2026.07.19.04 — 2026-07-19
 
 - Added an automated, branded Team Map Analysis page after the two existing Team Map pages without changing their layouts.

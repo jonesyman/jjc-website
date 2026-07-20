@@ -6,12 +6,15 @@ Last updated: 2026-07-19
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.19.04`
-- Latest feature: automated, editable, settings-driven Team Map Analysis PDF page
+- Current application version: `2026.07.19.05`
+- Latest feature: independent page-one Team Map name sizing and overflow flow
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Increased page-one Team Map names to 15px and made each list fill its first column before flowing into a second column only when required.
+- Kept the condensed page-two layout independent, including its balanced handling of dense name lists.
 
 - Added a third, branded Team Map Analysis page while preserving the existing first and second pages.
 - Added validated actual and leader-weighted G/C/F distribution metrics, threshold-based classifications, prioritized cautious observations, and discussion questions.
