@@ -537,6 +537,17 @@
     .analysis-settings-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
     .analysis-setting { padding:12px; border:1px solid #364152; border-radius:12px; background:#1E2936; }
     .analysis-setting .tiny { display:block; margin-top:5px; }
+    .global-loading-status { position:fixed; right:18px; bottom:18px; z-index:10050; width:min(390px,calc(100vw - 36px)); padding:14px 15px 12px; border:1px solid rgba(143,185,244,.38); border-radius:16px; background:rgba(17,24,39,.96); color:#f8fafc; box-shadow:0 20px 60px rgba(0,0,0,.42); backdrop-filter:blur(12px); transition:opacity .18s ease,transform .18s ease; }
+    .global-loading-status.hidden { display:block !important; opacity:0; transform:translateY(12px); pointer-events:none; }
+    .global-loading-head { display:grid; grid-template-columns:22px minmax(0,1fr) auto; align-items:center; gap:10px; }
+    .global-loading-spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,.22); border-top-color:#8fb9f4; border-radius:50%; animation:loadingSpin .8s linear infinite; }
+    .global-loading-detail,.global-loading-time { color:#b8c0cc; font-size:11px; line-height:1.35; }
+    .global-loading-percent { color:#8fb9f4; font-weight:800; }
+    .global-loading-track { height:5px; margin:10px 0 7px; overflow:hidden; border-radius:999px; background:rgba(255,255,255,.12); }
+    .global-loading-track span { display:block; height:100%; border-radius:inherit; background:#4f8fea; transition:width .25s ease; }
+    .global-loading-track span.indeterminate { animation:loadingTravel 1.25s ease-in-out infinite; }
+    @keyframes loadingSpin { to { transform:rotate(360deg); } }
+    @keyframes loadingTravel { 0% { transform:translateX(-130%); } 100% { transform:translateX(300%); } }
 
     /* Working Genius-inspired visual system */
     body { font-family:"Montserrat",Arial,Helvetica,sans-serif; background:#18222F; }
@@ -655,6 +666,7 @@
     }
 
     @media (max-width: 700px) {
+      .global-loading-status { left:12px; right:12px; bottom:12px; width:auto; }
       .dashboard-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
@@ -845,7 +857,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.20.01</strong><br>
+        Version <strong id="appVersionLabel">2026.07.20.02</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1488,6 +1500,7 @@ Sanger, CA 93657"></textarea>
   </div>
 
   <script src="../assets/js/branding.js"></script>
+  <script src="../assets/js/loadingStatus.js?v=1"></script>
   <script src="../assets/js/googleSheets.js?v=10"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
@@ -1499,7 +1512,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.20.01";
+    const APP_VERSION = "2026.07.20.02";
 
     const K = {
       clients: "jjc_clients",
@@ -1559,44 +1572,20 @@ Sanger, CA 93657"></textarea>
       return "";
     }
 
-    async function loadAllLocal() {
-      try {
-        clients = await Database.getClients();
-        if (!Array.isArray(clients)) clients = [];
-        localStorage.setItem(K.clients, JSON.stringify(clients));
-      } catch (err) {
-        console.warn("Unable to load clients from Google Sheets.", err);
-        clients = JSON.parse(localStorage.getItem(K.clients) || "[]");
-      }
-
-      try {
-        workshops = await Database.getWorkshops();
-        if (!Array.isArray(workshops)) workshops = [];
-        localStorage.setItem(K.workshops, JSON.stringify(workshops));
-      } catch (err) {
-        console.warn("Unable to load workshops from Google Sheets.", err);
-        workshops = JSON.parse(localStorage.getItem(K.workshops) || "[]");
-      }
-
-      try {
-        estimates = await Database.getEstimates();
-        if (!Array.isArray(estimates)) estimates = [];
-        estimates = estimates.map(normalizeEstimate);
-        localStorage.setItem(K.estimates, JSON.stringify(estimates));
-      } catch (err) {
-        console.warn("Unable to load estimates from Google Sheets.", err);
-        estimates = JSON.parse(localStorage.getItem(K.estimates) || "[]").map(normalizeEstimate);
-      }
-
-      try {
-        invoices = await Database.getInvoices();
-        if (!Array.isArray(invoices)) invoices = [];
-        invoices = invoices.map(normalizeInvoice);
-        localStorage.setItem(K.invoices, JSON.stringify(invoices));
-      } catch (err) {
-        console.warn("Unable to load invoices from Google Sheets.", err);
-        invoices = JSON.parse(localStorage.getItem(K.invoices) || "[]").map(normalizeInvoice);
-      }
+    async function loadAllLocal(onStep=()=>{}) {
+      const loadCollection = async ({label,key,load,normalize=value=>value,assign}) => {
+        try {
+          let rows=await load(); if(!Array.isArray(rows))rows=[]; rows=rows.map(normalize); assign(rows); localStorage.setItem(key,JSON.stringify(rows));
+        } catch(err) {
+          console.warn(`Unable to load ${label.toLowerCase()} from Google Sheets.`,err); assign(JSON.parse(localStorage.getItem(key)||"[]").map(normalize));
+        } finally { onStep(`${label} ready`); }
+      };
+      await Promise.all([
+        loadCollection({label:"Clients",key:K.clients,load:()=>Database.getClients(),assign:rows=>clients=rows}),
+        loadCollection({label:"Workshops",key:K.workshops,load:()=>Database.getWorkshops(),assign:rows=>workshops=rows}),
+        loadCollection({label:"Estimates",key:K.estimates,load:()=>Database.getEstimates(),normalize:normalizeEstimate,assign:rows=>estimates=rows}),
+        loadCollection({label:"Invoices",key:K.invoices,load:()=>Database.getInvoices(),normalize:normalizeInvoice,assign:rows=>invoices=rows})
+      ]);
 
       profile = {
         ...profile,
@@ -1643,11 +1632,13 @@ Sanger, CA 93657"></textarea>
 
     function beginSave(button, busyText) {
       if (!button || button.disabled) return null;
+      const loadingTask = LoadingStatus.start(busyText.replace(/\.\.\.$/, ""));
       const originalText = button.textContent;
       button.disabled = true;
       button.setAttribute("aria-busy", "true");
       button.textContent = busyText;
       return () => {
+        loadingTask.done("Finished");
         button.disabled = false;
         button.removeAttribute("aria-busy");
         button.textContent = originalText;
@@ -3900,12 +3891,16 @@ Sanger, CA 93657"></textarea>
     });
 
     window.addEventListener("load", async () => {
+      const startupLoading = LoadingStatus.start("Loading JJC Admin", 8, "adminStartup");
       document.getElementById("appVersionLabel").textContent = APP_VERSION;
       JJC_applyBranding("admin");
-      await loadAllLocal();
-      await loadSettings();
+      startupLoading.step("Branding and interface ready");
+      await Promise.all([
+        loadAllLocal(detail=>startupLoading.step(detail)),
+        loadSettings().finally(()=>startupLoading.step("Settings ready")),
+        Rates.load().finally(()=>startupLoading.step("Rates ready"))
+      ]);
       loadProfile();
-      await Rates.load();
       estimates = estimates.map(normalizeEstimate);
       invoices = invoices.map(normalizeInvoice);
       showRates();
@@ -3920,9 +3915,11 @@ Sanger, CA 93657"></textarea>
       renderInvoices();
       updateMetrics();
       updateLookupLists();
+      startupLoading.step("Dashboard rendered");
       initializeDirtyFormTracking();
       const initial = location.hash ? location.hash.replace("#", "") : "dashboard";
       if (document.getElementById("view-" + initial)) showView(initial);
+      startupLoading.done("Ready to work");
     });
   </script>
 </body>

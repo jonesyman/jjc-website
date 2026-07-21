@@ -2,6 +2,14 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.20.02 — 2026-07-20
+
+- Added a responsive global loading status for desktop and mobile with live step names, determinate startup progress, and accessible status announcements.
+- Added learned time-remaining estimates for Google Sheets requests based on recent completion times, with honest indeterminate messaging until an estimate is available.
+- Parallelized the six independent startup data requests instead of loading core records, settings, and rates sequentially.
+- Extended the status indicator to lazy-loaded views, refresh actions, PDF generation, email actions, and button-based saves through the shared data and save layers.
+- Removed full backend response logging from routine reads to reduce browser work and avoid exposing large datasets in the console.
+
 ## 2026.07.20.01 — 2026-07-20
 
 - Matched page one's name ordering and balanced two-column behavior to the condensed page-two Team Map.

@@ -6,12 +6,16 @@ Last updated: 2026-07-20
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.20.01`
-- Latest feature: matching name-flow behavior across Team Map pages one and two
+- Current application version: `2026.07.20.02`
+- Latest feature: global loading progress and parallelized admin startup
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Added one responsive loading status across the admin console with exact startup steps, percentage complete, background-operation labels, and learned time-remaining estimates.
+- Parallelized clients, workshops, estimates, invoices, settings, and rates during startup, while retaining local-cache fallbacks for each dataset independently.
+- Routed shared Google Sheets reads and button-based saves through the loading status so lazy views and long-running actions remain visible on desktop and mobile.
 
 - Matched page one's name ordering and balanced two-column trigger to page two while retaining page one's 15px font and taller panels.
 

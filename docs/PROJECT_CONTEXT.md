@@ -69,6 +69,7 @@ The admin sidebar currently follows this order:
 - Long people libraries should scroll inside a bounded pane rather than extending the entire page.
 - The primary mobile reference is a Samsung Galaxy Ultra-class phone. Test practical CSS viewports such as approximately `412 × 915` portrait and `915 × 412` landscape; physical screen resolution is not the CSS viewport.
 - Printed estimates, invoices, and Team Maps must retain a clean US Letter layout independent of screen size.
+- Desktop and mobile admin operations expose a global loading status. Startup uses real completed-step percentages; individual backend calls use learned approximate time remaining and never present an invented exact percentage.
 
 ## Terminology
 

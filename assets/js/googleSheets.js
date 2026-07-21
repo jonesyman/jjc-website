@@ -15,27 +15,26 @@ window.Database = {
 
     async get(action, params = {}) {
 
-        const query = new URLSearchParams({ action, _: Date.now(), ...params });
-        const url = `${this.apiUrl}?${query.toString()}`;
+        const loadingRequest = window.LoadingStatus?.requestStart(action);
 
-        const response = await fetch(url, {
-            method: "GET",
-            cache: "no-store"
-        });
+        try {
+            const query = new URLSearchParams({ action, _: Date.now(), ...params });
+            const url = `${this.apiUrl}?${query.toString()}`;
 
-        if (!response.ok) {
-            throw new Error(`Unable to load ${action}. Status: ${response.status}`);
+            const response = await fetch(url, { method: "GET", cache: "no-store" });
+
+            if (!response.ok) throw new Error(`Unable to load ${action}. Status: ${response.status}`);
+
+            const data = await response.json();
+
+            if (data && data.error) throw new Error(data.error);
+
+            window.LoadingStatus?.requestEnd(loadingRequest,true);
+            return data;
+        } catch (error) {
+            window.LoadingStatus?.requestEnd(loadingRequest,false);
+            throw error;
         }
-
-        const data = await response.json();
-
-        if (data && data.error) {
-            throw new Error(data.error);
-        }
-
-        console.log(`Loaded ${action}:`, data);
-
-        return data;
     },
 
     //----------------------------------------------------

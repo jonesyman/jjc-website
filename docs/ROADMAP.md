@@ -33,10 +33,11 @@ This roadmap records product capabilities rather than relying solely on historic
 - A compact, internally scrolling people library and actionable active/deleted group summary.
 - A Google Sheets-backed plain-text Email Template Library with once-only starter content, workshop personalization, preview, clipboard copying, and full archive lifecycle.
 - Automated Team Map Analysis with validated actual/weighted distributions, configurable diagnostics, consultant editing, persistence, and print safeguards.
+- Responsive global loading progress with operation steps, learned duration estimates, and parallelized core startup requests.
 
 ## Current release boundary
 
-Version `2026.07.20.01` aligns the name-flow behavior on Team Map pages one and two while retaining page one's larger font and taller panels. The Team Map remains a browser-generated local print/save artifact.
+Version `2026.07.20.02` adds visible loading progress throughout the admin console and parallelizes independent startup requests to reduce wait time. The Team Map remains a browser-generated local print/save artifact.
 
 See `CURRENT_STATE.md` before continuing.
 
