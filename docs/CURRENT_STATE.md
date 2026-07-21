@@ -6,12 +6,15 @@ Last updated: 2026-07-20
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.20.02`
-- Latest feature: global loading progress and parallelized admin startup
+- Current application version: `2026.07.20.03`
+- Latest feature: print-weighted Team Map names with capacity-based column flow
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Corrected hidden-preview measurement so small Team Map groups no longer split or shrink incorrectly.
+- Increased and thickened names on both Team Map graphics; lists now fill 12 rows before flowing to column two and only shrink beyond 24 names.
 
 - Added one responsive loading status across the admin console with exact startup steps, percentage complete, background-operation labels, and learned time-remaining estimates.
 - Parallelized clients, workshops, estimates, invoices, settings, and rates during startup, while retaining local-cache fallbacks for each dataset independently.

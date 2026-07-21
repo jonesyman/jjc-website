@@ -476,7 +476,7 @@
     .ad-hoc-zone-count { display:block; margin:3px 0 9px; color:#8C96A6; font-size:11px; }
     .ad-hoc-zone-values { display:flex; flex-wrap:wrap; gap:6px; }
     .ad-hoc-zone-value { padding:5px 8px; border-radius:999px; background:#263860; color:#F8FAFC; font-size:11px; font-weight:600; }
-    .team-map-sheet { --team-map-name-size:15px; width:min(8.5in,100%); height:11in; margin:0 auto; background:#fff; color:#172033; padding:.42in .48in .34in; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-sheet { --team-map-name-size:16px; width:min(8.5in,100%); height:11in; margin:0 auto; background:#fff; color:#172033; padding:.42in .48in .34in; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .team-map-header { display:flex; justify-content:space-between; align-items:center; gap:20px; border-bottom:4px solid #243f72; padding-bottom:12px; margin-bottom:14px; }
     .team-map-logo { width:62px; height:62px; object-fit:contain; }
     .team-map-title { color:#243f72; margin:0; font-size:27px; }
@@ -494,10 +494,10 @@
     .team-map-genius .team-map-names { color:#15803d; }
     .team-map-frustration .team-map-names { color:#b91c1c; }
     .team-map-names { list-style:none; padding:0; margin:0; display:grid; gap:3px; font-size:var(--team-map-name-size); line-height:1.18; }
-    .team-map-name { overflow-wrap:anywhere; }
-    .team-map-leader { font-weight:400; }
+    .team-map-name { overflow:hidden; white-space:nowrap; font-weight:600; }
+    .team-map-leader { font-weight:600; }
     .team-map-footer { border-top:1px solid #cbd5e1; margin-top:10px; padding-top:7px; display:flex; justify-content:space-between; gap:14px; color:#64748b; font-size:8.5px; line-height:1.35; }
-    .team-map-concept-sheet { --team-map-name-size:11px; width:min(8.5in,100%); height:11in; margin:24px auto 0; padding:.55in .5in; box-shadow:0 22px 70px rgba(0,0,0,.2); background:#fff; color:#172033; display:flex; align-items:center; justify-content:center; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-concept-sheet { --team-map-name-size:12.5px; width:min(8.5in,100%); height:11in; margin:24px auto 0; padding:.55in .5in; box-shadow:0 22px 70px rgba(0,0,0,.2); background:#fff; color:#172033; display:flex; align-items:center; justify-content:center; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .team-map-concept-card { width:7.5in; height:7.5in; padding:.22in; border:1px solid #cbd5e1; border-radius:16px; background:#fff; display:flex; flex-direction:column; }
     .team-map-concept-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:0 2px 9px; border-bottom:3px solid #243f72; }
     .team-map-concept-header .team-map-logo { width:44px; height:44px; }
@@ -857,7 +857,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.20.02</strong><br>
+        Version <strong id="appVersionLabel">2026.07.20.03</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1512,7 +1512,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.20.02";
+    const APP_VERSION = "2026.07.20.03";
 
     const K = {
       clients: "jjc_clients",
@@ -2863,6 +2863,7 @@ Sanger, CA 93657"></textarea>
       preview.classList.remove("hidden");
       preview.setAttribute("aria-hidden", "false");
       document.documentElement.classList.add("team-map-preview-open");
+      requestAnimationFrame(fitTeamMapNames);
       preview.scrollTo({ top:0, left:0 });
       setTimeout(() => document.getElementById("closeTeamMapPreviewButton").focus(), 0);
     }
@@ -2906,33 +2907,33 @@ Sanger, CA 93657"></textarea>
       document.getElementById("teamMapSheet").innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Working Genius Team Map</h1><div style="font-weight:900;">${esc(mapTitle)}</div></div></div><div class="team-map-meta">${esc(mapIdentifier)}<br>${esc(mapDate)}<br>${esc(mapSubtitle)}</div></div><div class="team-map-grid">${mapRows}</div><div class="team-map-footer"><div><strong>Jeff Jones Consulting</strong><br>Generated ${generated}</div><div>The selected team leader is represented twice in Genius and Frustration areas to reflect the leader's influence on the team environment.</div></div>`;
       const conceptRows = team.cards.map(card => teamMapConceptPanel(card, team.leader, mode)).join("");
       document.getElementById("teamMapConceptSheet").innerHTML = `<div class="team-map-concept-card"><div class="team-map-concept-header"><div style="display:flex;align-items:center;gap:10px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h2 class="team-map-concept-title">Working Genius Team Map</h2><div class="team-map-concept-subtitle">${esc(mapTitle)}${mapSubtitle && mapSubtitle !== mapTitle ? ` &bull; ${esc(mapSubtitle)}` : ""}</div></div></div><div class="team-map-meta">${esc(mapDate)}</div></div><div class="team-map-concept-layout"><div class="team-map-concept-axis-title">Stages of Work</div><div class="team-map-concept-columns"><div class="team-map-concept-column">Responsive</div><div class="team-map-concept-column">Disruptive</div></div><div class="team-map-stage-labels"><div class="team-map-stage-label">Ideation</div><div class="team-map-stage-label">Activation</div><div class="team-map-stage-label">Implementation</div></div><div class="team-map-concept-grid">${conceptRows}</div></div></div>`;
-      requestAnimationFrame(fitTeamMapNames);
+      if (!document.getElementById("teamMapPreview").classList.contains("hidden")) requestAnimationFrame(fitTeamMapNames);
     }
 
     function fitTeamMapNames() {
       const sheets = [document.getElementById("teamMapSheet"), document.getElementById("teamMapConceptSheet")];
-      const maximumSize = 15;
+      const maximumSize = 16;
       const minimumSize = 7.5;
       const step = 0.5;
       sheets.forEach(sheet => {
         const lists = [...sheet.querySelectorAll(".team-map-names")];
         const isConceptSheet = sheet.id === "teamMapConceptSheet";
         const sheetMinimumSize = isConceptSheet ? 8.5 : minimumSize;
-        let size = isConceptSheet ? 11 : maximumSize;
+        let size = isConceptSheet ? 12.5 : maximumSize;
         const setSize = () => sheet.style.setProperty("--team-map-name-size", `${size}px`);
         const listOverflows = list => {
           const column = list.closest(".team-map-column");
           if (!column) return false;
           return list.getBoundingClientRect().bottom > column.getBoundingClientRect().bottom - 3;
         };
-        renderTeamMapAnalysisSettings();
+        const beyondTwoColumnCapacity = () => lists.some(list => list.children.length > 24);
         const anyListOverflows = () => lists.some(listOverflows);
         setSize();
-        lists.filter(list => !list.classList.contains("team-map-names-two-column") && listOverflows(list)).forEach(list => {
+        lists.filter(list => list.children.length > 12).forEach(list => {
           list.classList.add("team-map-names-two-column");
-          list.style.setProperty("--team-map-name-rows", String(Math.ceil(list.children.length / 2)));
+          list.style.setProperty("--team-map-name-rows", String(list.children.length > 24 ? Math.ceil(list.children.length / 2) : 12));
         });
-        while (size > sheetMinimumSize && anyListOverflows()) {
+        while (size > sheetMinimumSize && beyondTwoColumnCapacity() && anyListOverflows()) {
           size = Math.max(sheetMinimumSize, size - step);
           setSize();
         }
@@ -2950,8 +2951,7 @@ Sanger, CA 93657"></textarea>
 
     function teamMapNameList(people, leader, mode) {
       if (!people.length) return "";
-      const useTwoColumns = people.length > 8;
-      return `<ul class="team-map-names${useTwoColumns ? " team-map-names-two-column" : ""}"${useTwoColumns ? ` style="--team-map-name-rows:${Math.ceil(people.length / 2)}"` : ""}>${people.map(person => `<li class="team-map-name${leader && person.id === leader.id ? " team-map-leader" : ""}">${esc(teamMapDisplayName(person, mode))}${leader && person.id === leader.id ? " *" : ""}</li>`).join("")}</ul>`;
+      return `<ul class="team-map-names">${people.map(person => `<li class="team-map-name${leader && person.id === leader.id ? " team-map-leader" : ""}">${esc(teamMapDisplayName(person, mode))}${leader && person.id === leader.id ? " *" : ""}</li>`).join("")}</ul>`;
     }
 
     function clearAssessmentPreview() {

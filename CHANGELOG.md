@@ -2,6 +2,14 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.20.03 — 2026-07-20
+
+- Fixed Team Map name fitting being measured while the PDF preview was hidden, which incorrectly split small groups and reduced their font size.
+- Increased page-one names to a 16px starting size and page-two names to 12.5px.
+- Increased all Team Map name weight to 600 for stronger physical printouts and clearer visual grouping.
+- Changed dense areas to fill 12 names in the first column before placing names 13–24 in the second column.
+- Delayed font reduction until a grouping exceeds the two-column capacity of 24 names.
+
 ## 2026.07.20.02 — 2026-07-20
 
 - Added a responsive global loading status for desktop and mobile with live step names, determinate startup progress, and accessible status announcements.
