@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.20.05 — 2026-07-20
+
+- Restored PDF generation and browser print/save from the Team Map preview, including unsaved consultant edits currently visible in the preview.
+- Recast Key Team Observations as six cards in W/I, D/G, E/T Team Map order.
+- Changed Consultant Analysis to a concise prose list with explicit Genius references, clearer contribution/exploration language, and no redundant Leader Influence or Recommendations fields.
+- Retained Discussion Questions as the dedicated facilitated-conversation prompts.
+
 ## 2026.07.20.04 — 2026-07-20
 
 - Adjusted page-one names to a 13px starting size and condensed-page names to 9.5px while retaining the stronger 600 weight.

@@ -6,12 +6,16 @@ Last updated: 2026-07-20
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.20.04`
-- Latest feature: measured Team Map name capacity with two-axis clipping protection
+- Current application version: `2026.07.20.05`
+- Latest feature: printable current-state Team Map previews and clearer map-ordered analysis
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Restored Team Map PDF and browser print/save directly from the open preview, using the consultant analysis currently shown even when it has not yet been saved.
+- Presented Key Team Observations in six W/I, D/G, E/T cards and Consultant Analysis as labeled prose with explicit Genius references.
+- Removed the redundant Leader Influence and Recommendations analysis fields while preserving Discussion Questions.
 
 - Tuned the thicker Team Map names to 13px on page one and 9.5px on the condensed page.
 - Made each map measure its real row capacity before flowing to column two, then fit only as needed to prevent bottom or right-edge clipping.
