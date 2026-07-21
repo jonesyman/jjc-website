@@ -6,12 +6,15 @@ Last updated: 2026-07-20
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.20.06`
-- Latest feature: fixed 11-name and 9-name Team Map column-flow thresholds
+- Current application version: `2026.07.20.07`
+- Latest feature: simplified single-page Team Map Analysis print layout
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Removed the redundant Analysis summary boxes and reduced the distribution table to Type plus actual Genius, Competency, and Frustration counts and percentages.
+- Restyled the table and corrected letter-page box sizing so Discussion Questions remain on the Analysis page when printed.
 
 - Set page-one Team Map lists to flow after 11 names and condensed lists to flow after 9, without changing their typography or other PDF behavior.
 

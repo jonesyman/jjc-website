@@ -520,12 +520,15 @@
     .team-map-names.team-map-names-two-column { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--team-map-name-rows),auto); grid-auto-flow:column; column-gap:7px; }
     .team-map-analysis-editor { max-width:900px; margin:0 auto 16px; padding:16px; border-radius:15px; background:#fff; color:#172033; }
     .team-map-analysis-editor textarea { min-height:84px; color:#172033; background:#fff; border-color:#cbd5e1; }
-    .team-map-analysis-sheet { width:8.5in; min-height:11in; margin:24px auto 0; padding:.42in .48in .34in; background:#fff; color:#172033; box-shadow:0 22px 70px rgba(0,0,0,.2); break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-analysis-sheet { box-sizing:border-box; width:8.5in; min-height:11in; margin:24px auto 0; padding:.42in .48in .34in; background:#fff; color:#172033; box-shadow:0 22px 70px rgba(0,0,0,.2); break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .analysis-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:12px 0; }
     .analysis-summary-item { padding:9px; border:1px solid #cbd5e1; border-radius:10px; background:#f8fafc; font-size:10px; }
-    .analysis-table { width:100%; border-collapse:collapse; table-layout:fixed; font-size:9px; }
-    .analysis-table th,.analysis-table td { padding:6px 5px; border-bottom:1px solid #dbe3ee; text-align:left; vertical-align:top; }
-    .analysis-table th { background:#243f72; color:#fff; }
+    .analysis-table { width:100%; margin-top:12px; border:1px solid #cbd5e1; border-radius:10px; border-spacing:0; overflow:hidden; table-layout:fixed; font-size:10px; }
+    .analysis-table th,.analysis-table td { padding:7px 10px; border-bottom:1px solid #dbe3ee; text-align:center; vertical-align:middle; }
+    .analysis-table th { background:#243f72; color:#fff; font-size:9px; letter-spacing:.03em; text-transform:uppercase; }
+    .analysis-table th:first-child,.analysis-table td:first-child { width:28%; text-align:left; }
+    .analysis-table tbody tr:nth-child(even) { background:#f8fafc; }
+    .analysis-table tbody tr:last-child td { border-bottom:0; }
     .analysis-section { margin-top:14px; break-inside:avoid; page-break-inside:avoid; }
     .analysis-section h3 { margin:0 0 7px; color:#243f72; font-size:14px; }
     .analysis-observations { margin:0; padding-left:18px; font-size:10px; line-height:1.4; }
@@ -833,7 +836,7 @@
       #teamMapPreview .team-map-sheet { width:8.5in !important; min-width:8.5in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; }
       #teamMapPreview .team-map-concept-sheet { width:8.5in !important; min-width:8.5in !important; height:11in !important; margin:0 !important; padding:.55in .5in !important; box-shadow:none !important; break-before:page; page-break-before:always; }
       #teamMapPreview .team-map-concept-card { width:7.5in !important; height:7.5in !important; box-sizing:border-box !important; }
-      #teamMapPreview .team-map-analysis-sheet { width:8.5in !important; min-width:8.5in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; break-before:page; page-break-before:always; }
+      #teamMapPreview .team-map-analysis-sheet { box-sizing:border-box !important; width:8.5in !important; min-width:8.5in !important; height:11in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; break-before:page; page-break-before:always; }
     }
   </style>
 </head>
@@ -863,7 +866,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.20.06</strong><br>
+        Version <strong id="appVersionLabel">2026.07.20.07</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1518,7 +1521,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.20.06";
+    const APP_VERSION = "2026.07.20.07";
 
     const K = {
       clients: "jjc_clients",
@@ -2890,7 +2893,7 @@ Sanger, CA 93657"></textarea>
         return `<article class="analysis-observation-card"><h4><span class="analysis-observation-abbr">${abbreviations[m.type]}</span>${esc(m.type)}</h4>${o ? `<strong>${esc(o.label)}</strong><p>${esc(o.text)}</p>` : "<p>No automatic observation rose above the configured thresholds for this type.</p>"}</article>`;
       }).join("");
       const consultantItems = Object.entries(consultantLabels).filter(([key])=>analysis[key]).map(([key,label])=>`<li><strong>${esc(label)}:</strong> ${esc(analysis[key])}</li>`).join("");
-      sheet.innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Team Map Analysis</h1><div style="font-weight:900;">${esc(title)}</div></div></div><div class="team-map-meta">${esc(date)}<br>${d.actualTeamSize} actual participants<br>Leader: ${esc(leader)}</div></div>${d.actualTeamSize<s.MinimumTeamSizeForAnalysis?`<div class="analysis-validation"><strong>Limited sample:</strong> This team is below the configured minimum of ${s.MinimumTeamSizeForAnalysis}; interpret patterns cautiously.</div>`:""}<div class="analysis-summary-grid"><div class="analysis-summary-item"><strong>Actual team</strong><br>${d.actualTeamSize} people</div><div class="analysis-summary-item"><strong>Weighted team</strong><br>${d.weightedTeamSize} influence units</div><div class="analysis-summary-item"><strong>Leader weighting</strong><br>${d.leaderWeightingApplied?"Included":"Not included"}</div><div class="analysis-summary-item"><strong>Observations</strong><br>${observations.length} prioritized</div></div><table class="analysis-table"><thead><tr><th>Type</th><th>Actual G</th><th>Actual C</th><th>Actual F</th><th>Weighted G</th><th>Weighted F</th><th>Classification</th></tr></thead><tbody>${d.metrics.map(m=>`<tr><td><strong>${esc(m.type)}</strong></td><td>${m.actualGeniusCount} (${m.actualGeniusRate}%)</td><td>${m.actualCompetencyCount} (${m.actualCompetencyRate}%)</td><td>${m.actualFrustrationCount} (${m.actualFrustrationRate}%)</td><td>${m.weightedGeniusCount} (${m.weightedGeniusRate}%)</td><td>${m.weightedFrustrationCount} (${m.weightedFrustrationRate}%)</td><td>${esc(classification(m))}</td></tr>`).join("")}</tbody></table><section class="analysis-section"><h3>Key Team Observations</h3><div class="analysis-observation-grid">${observationCards}</div></section><section class="analysis-section"><h3>Consultant Analysis</h3><ul class="analysis-consultant-list">${consultantItems}</ul></section>${questions.length?`<section class="analysis-section"><h3>Discussion Questions</h3><ul class="analysis-observations">${questions.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></section>`:""}${s.IncludeMethodologyNote?`<div class="analysis-methodology"><strong>Methodology:</strong> Actual counts represent unique people. ${d.leaderWeightingApplied?"The selected leader receives one additional influence point in each of their two Geniuses and two Frustrations; Competencies are not weighted.":"Leader weighting is disabled."} These observations are cautious discussion prompts, not definitive conclusions or diagnoses.</div>`:""}`;
+      sheet.innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Team Map Analysis</h1><div style="font-weight:900;">${esc(title)}</div></div></div><div class="team-map-meta">${esc(date)}<br>${d.actualTeamSize} actual participants<br>Leader: ${esc(leader)}</div></div>${d.actualTeamSize<s.MinimumTeamSizeForAnalysis?`<div class="analysis-validation"><strong>Limited sample:</strong> This team is below the configured minimum of ${s.MinimumTeamSizeForAnalysis}; interpret patterns cautiously.</div>`:""}<table class="analysis-table"><thead><tr><th>Working Genius Type</th><th>Genius</th><th>Competency</th><th>Frustration</th></tr></thead><tbody>${d.metrics.map(m=>`<tr><td><strong>${esc(m.type)}</strong></td><td>${m.actualGeniusCount} &nbsp; (${m.actualGeniusRate}%)</td><td>${m.actualCompetencyCount} &nbsp; (${m.actualCompetencyRate}%)</td><td>${m.actualFrustrationCount} &nbsp; (${m.actualFrustrationRate}%)</td></tr>`).join("")}</tbody></table><section class="analysis-section"><h3>Key Team Observations</h3><div class="analysis-observation-grid">${observationCards}</div></section><section class="analysis-section"><h3>Consultant Analysis</h3><ul class="analysis-consultant-list">${consultantItems}</ul></section>${questions.length?`<section class="analysis-section"><h3>Discussion Questions</h3><ul class="analysis-observations">${questions.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></section>`:""}${s.IncludeMethodologyNote?`<div class="analysis-methodology"><strong>Methodology:</strong> Actual counts represent unique people. ${d.leaderWeightingApplied?"The selected leader receives one additional influence point in each of their two Geniuses and two Frustrations; Competencies are not weighted.":"Leader weighting is disabled."} These observations are cautious discussion prompts, not definitive conclusions or diagnoses.</div>`:""}`;
     };
 
     async function openTeamMapPreview() {

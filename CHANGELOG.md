@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.20.07 — 2026-07-20
+
+- Removed the four redundant summary boxes from the Team Map Analysis page.
+- Simplified and restyled the distribution table to show only Working Genius Type and actual Genius, Competency, and Frustration count/percentage distributions.
+- Removed the weighted and classification columns while retaining leader identification in the header.
+- Corrected the Analysis page's printed box sizing to keep Discussion Questions on the same letter-size page.
+
 ## 2026.07.20.06 — 2026-07-20
 
 - Set page-one Team Map name lists to flow into column two after 11 names.

@@ -37,7 +37,7 @@ This roadmap records product capabilities rather than relying solely on historic
 
 ## Current release boundary
 
-Version `2026.07.20.06` uses fixed first-column thresholds of 11 names on page one and 9 names on the condensed Team Map, while retaining the existing clipping protection. The Team Map remains a browser-generated local print/save artifact.
+Version `2026.07.20.07` simplifies the Team Map Analysis distribution table and corrects its print sizing so the analysis remains a single letter-size page. The Team Map remains a browser-generated local print/save artifact.
 
 See `CURRENT_STATE.md` before continuing.
 
