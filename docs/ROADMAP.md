@@ -37,7 +37,7 @@ This roadmap records product capabilities rather than relying solely on historic
 
 ## Current release boundary
 
-Version `2026.07.20.03` strengthens Team Map names for physical printouts and uses 12-name column capacity before overflow, with font reduction reserved for groups beyond 24 names. The Team Map remains a browser-generated local print/save artifact.
+Version `2026.07.20.04` uses measured row capacity and two-axis clipping detection to keep thicker Team Map names fully visible on both printed graphics. The Team Map remains a browser-generated local print/save artifact.
 
 See `CURRENT_STATE.md` before continuing.
 

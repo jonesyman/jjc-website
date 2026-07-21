@@ -476,7 +476,7 @@
     .ad-hoc-zone-count { display:block; margin:3px 0 9px; color:#8C96A6; font-size:11px; }
     .ad-hoc-zone-values { display:flex; flex-wrap:wrap; gap:6px; }
     .ad-hoc-zone-value { padding:5px 8px; border-radius:999px; background:#263860; color:#F8FAFC; font-size:11px; font-weight:600; }
-    .team-map-sheet { --team-map-name-size:16px; width:min(8.5in,100%); height:11in; margin:0 auto; background:#fff; color:#172033; padding:.42in .48in .34in; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-sheet { --team-map-name-size:13px; width:min(8.5in,100%); height:11in; margin:0 auto; background:#fff; color:#172033; padding:.42in .48in .34in; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .team-map-header { display:flex; justify-content:space-between; align-items:center; gap:20px; border-bottom:4px solid #243f72; padding-bottom:12px; margin-bottom:14px; }
     .team-map-logo { width:62px; height:62px; object-fit:contain; }
     .team-map-title { color:#243f72; margin:0; font-size:27px; }
@@ -497,7 +497,7 @@
     .team-map-name { overflow:hidden; white-space:nowrap; font-weight:600; }
     .team-map-leader { font-weight:600; }
     .team-map-footer { border-top:1px solid #cbd5e1; margin-top:10px; padding-top:7px; display:flex; justify-content:space-between; gap:14px; color:#64748b; font-size:8.5px; line-height:1.35; }
-    .team-map-concept-sheet { --team-map-name-size:12.5px; width:min(8.5in,100%); height:11in; margin:24px auto 0; padding:.55in .5in; box-shadow:0 22px 70px rgba(0,0,0,.2); background:#fff; color:#172033; display:flex; align-items:center; justify-content:center; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-concept-sheet { --team-map-name-size:9.5px; width:min(8.5in,100%); height:11in; margin:24px auto 0; padding:.55in .5in; box-shadow:0 22px 70px rgba(0,0,0,.2); background:#fff; color:#172033; display:flex; align-items:center; justify-content:center; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .team-map-concept-card { width:7.5in; height:7.5in; padding:.22in; border:1px solid #cbd5e1; border-radius:16px; background:#fff; display:flex; flex-direction:column; }
     .team-map-concept-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:0 2px 9px; border-bottom:3px solid #243f72; }
     .team-map-concept-header .team-map-logo { width:44px; height:44px; }
@@ -857,7 +857,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.20.03</strong><br>
+        Version <strong id="appVersionLabel">2026.07.20.04</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1512,7 +1512,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.20.03";
+    const APP_VERSION = "2026.07.20.04";
 
     const K = {
       clients: "jjc_clients",
@@ -2912,28 +2912,37 @@ Sanger, CA 93657"></textarea>
 
     function fitTeamMapNames() {
       const sheets = [document.getElementById("teamMapSheet"), document.getElementById("teamMapConceptSheet")];
-      const maximumSize = 16;
-      const minimumSize = 7.5;
+      const maximumSize = 13;
+      const minimumSize = 8;
       const step = 0.5;
       sheets.forEach(sheet => {
         const lists = [...sheet.querySelectorAll(".team-map-names")];
         const isConceptSheet = sheet.id === "teamMapConceptSheet";
-        const sheetMinimumSize = isConceptSheet ? 8.5 : minimumSize;
-        let size = isConceptSheet ? 12.5 : maximumSize;
+        const sheetMinimumSize = isConceptSheet ? 7 : minimumSize;
+        let size = isConceptSheet ? 9.5 : maximumSize;
         const setSize = () => sheet.style.setProperty("--team-map-name-size", `${size}px`);
         const listOverflows = list => {
           const column = list.closest(".team-map-column");
           if (!column) return false;
           return list.getBoundingClientRect().bottom > column.getBoundingClientRect().bottom - 3;
         };
-        const beyondTwoColumnCapacity = () => lists.some(list => list.children.length > 24);
-        const anyListOverflows = () => lists.some(listOverflows);
         setSize();
-        lists.filter(list => list.children.length > 12).forEach(list => {
-          list.classList.add("team-map-names-two-column");
-          list.style.setProperty("--team-map-name-rows", String(list.children.length > 24 ? Math.ceil(list.children.length / 2) : 12));
+        lists.forEach(list => {
+          const column=list.closest(".team-map-column"), firstName=list.querySelector(".team-map-name");
+          if(!column||!firstName)return;
+          const styles=getComputedStyle(list), gap=parseFloat(styles.rowGap)||0;
+          const available=Math.max(1,column.getBoundingClientRect().bottom-list.getBoundingClientRect().top-3);
+          const rowHeight=Math.max(1,firstName.getBoundingClientRect().height);
+          const capacity=Math.max(1,Math.floor((available+gap)/(rowHeight+gap)));
+          list.dataset.firstColumnCapacity=String(capacity);
+          if(list.children.length>capacity){
+            list.classList.add("team-map-names-two-column");
+            list.style.setProperty("--team-map-name-rows",String(list.children.length>capacity*2?Math.ceil(list.children.length/2):capacity));
+          }
         });
-        while (size > sheetMinimumSize && beyondTwoColumnCapacity() && anyListOverflows()) {
+        const anyNameClipsRight=()=>lists.some(list=>[...list.children].some(name=>name.scrollWidth>name.clientWidth+1));
+        const anyListOverflows=()=>lists.some(listOverflows);
+        while (size > sheetMinimumSize && (anyListOverflows()||anyNameClipsRight())) {
           size = Math.max(sheetMinimumSize, size - step);
           setSize();
         }

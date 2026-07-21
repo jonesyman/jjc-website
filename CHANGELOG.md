@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.20.04 — 2026-07-20
+
+- Adjusted page-one names to a 13px starting size and condensed-page names to 9.5px while retaining the stronger 600 weight.
+- Replaced the fixed 12-row assumption with measured per-page capacity based on each box's actual visible height.
+- Preserved first-column-first flow without evenly balancing names across columns.
+- Added vertical and horizontal clipping detection so font fitting protects both the bottom and right edges.
+
 ## 2026.07.20.03 — 2026-07-20
 
 - Fixed Team Map name fitting being measured while the PDF preview was hidden, which incorrectly split small groups and reduced their font size.

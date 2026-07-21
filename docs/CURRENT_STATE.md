@@ -6,12 +6,15 @@ Last updated: 2026-07-20
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.20.03`
-- Latest feature: print-weighted Team Map names with capacity-based column flow
+- Current application version: `2026.07.20.04`
+- Latest feature: measured Team Map name capacity with two-axis clipping protection
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Tuned the thicker Team Map names to 13px on page one and 9.5px on the condensed page.
+- Made each map measure its real row capacity before flowing to column two, then fit only as needed to prevent bottom or right-edge clipping.
 
 - Corrected hidden-preview measurement so small Team Map groups no longer split or shrink incorrectly.
 - Increased and thickened names on both Team Map graphics; lists now fill 12 rows before flowing to column two and only shrink beyond 24 names.
