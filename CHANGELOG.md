@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.20.06 — 2026-07-20
+
+- Set page-one Team Map name lists to flow into column two after 11 names.
+- Set condensed Team Map name lists to flow into column two after 9 names.
+- Retained the existing font sizes, weights, and overflow-based shrinking behavior.
+
 ## 2026.07.20.05 — 2026-07-20
 
 - Restored PDF generation and browser print/save from the Team Map preview, including unsaved consultant edits currently visible in the preview.

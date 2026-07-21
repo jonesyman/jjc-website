@@ -37,7 +37,7 @@ This roadmap records product capabilities rather than relying solely on historic
 
 ## Current release boundary
 
-Version `2026.07.20.05` restores print/save from the live Team Map preview and presents the Analysis page with six map-ordered observation cards, clearer Genius-specific consultant prose, and focused discussion questions. The Team Map remains a browser-generated local print/save artifact.
+Version `2026.07.20.06` uses fixed first-column thresholds of 11 names on page one and 9 names on the condensed Team Map, while retaining the existing clipping protection. The Team Map remains a browser-generated local print/save artifact.
 
 See `CURRENT_STATE.md` before continuing.
 

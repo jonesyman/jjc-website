@@ -863,7 +863,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.20.05</strong><br>
+        Version <strong id="appVersionLabel">2026.07.20.06</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1518,7 +1518,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.20.05";
+    const APP_VERSION = "2026.07.20.06";
 
     const K = {
       clients: "jjc_clients",
@@ -2972,10 +2972,7 @@ Sanger, CA 93657"></textarea>
         lists.forEach(list => {
           const column=list.closest(".team-map-column"), firstName=list.querySelector(".team-map-name");
           if(!column||!firstName)return;
-          const styles=getComputedStyle(list), gap=parseFloat(styles.rowGap)||0;
-          const available=Math.max(1,column.getBoundingClientRect().bottom-list.getBoundingClientRect().top-3);
-          const rowHeight=Math.max(1,firstName.getBoundingClientRect().height);
-          const capacity=Math.max(1,Math.floor((available+gap)/(rowHeight+gap)));
+          const capacity=isConceptSheet?9:11;
           list.dataset.firstColumnCapacity=String(capacity);
           if(list.children.length>capacity){
             list.classList.add("team-map-names-two-column");

@@ -6,12 +6,14 @@ Last updated: 2026-07-20
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.20.05`
-- Latest feature: printable current-state Team Map previews and clearer map-ordered analysis
+- Current application version: `2026.07.20.06`
+- Latest feature: fixed 11-name and 9-name Team Map column-flow thresholds
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Set page-one Team Map lists to flow after 11 names and condensed lists to flow after 9, without changing their typography or other PDF behavior.
 
 - Restored Team Map PDF and browser print/save directly from the open preview, using the consultant analysis currently shown even when it has not yet been saved.
 - Presented Key Team Observations in six W/I, D/G, E/T cards and Consultant Analysis as labeled prose with explicit Genius references.
