@@ -6,12 +6,14 @@ Last updated: 2026-07-20
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.20.07`
-- Latest feature: simplified single-page Team Map Analysis print layout
+- Current application version: `2026.07.20.08`
+- Latest feature: three-page Team Map PDF without the Analysis methodology block
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Removed the Methodology block from the Analysis print page so the PDF ends after Discussion Questions and remains three pages.
 
 - Removed the redundant Analysis summary boxes and reduced the distribution table to Type plus actual Genius, Competency, and Frustration counts and percentages.
 - Restyled the table and corrected letter-page box sizing so Discussion Questions remain on the Analysis page when printed.

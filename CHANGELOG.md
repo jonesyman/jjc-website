@@ -2,6 +2,10 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.20.08 — 2026-07-20
+
+- Removed the Methodology block from the generated Team Map Analysis page so the PDF ends after Discussion Questions and remains a three-page document.
+
 ## 2026.07.20.07 — 2026-07-20
 
 - Removed the four redundant summary boxes from the Team Map Analysis page.

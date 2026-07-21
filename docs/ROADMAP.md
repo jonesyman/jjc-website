@@ -37,7 +37,7 @@ This roadmap records product capabilities rather than relying solely on historic
 
 ## Current release boundary
 
-Version `2026.07.20.07` simplifies the Team Map Analysis distribution table and corrects its print sizing so the analysis remains a single letter-size page. The Team Map remains a browser-generated local print/save artifact.
+Version `2026.07.20.08` removes the Analysis methodology block so the generated Team Map PDF remains three pages and ends after Discussion Questions. The Team Map remains a browser-generated local print/save artifact.
 
 See `CURRENT_STATE.md` before continuing.
 
