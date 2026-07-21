@@ -845,7 +845,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.19.05</strong><br>
+        Version <strong id="appVersionLabel">2026.07.20.01</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1499,7 +1499,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.19.05";
+    const APP_VERSION = "2026.07.20.01";
 
     const K = {
       clients: "jjc_clients",
@@ -2937,14 +2937,9 @@ Sanger, CA 93657"></textarea>
         renderTeamMapAnalysisSettings();
         const anyListOverflows = () => lists.some(listOverflows);
         setSize();
-        lists.filter(list => !isConceptSheet && !list.classList.contains("team-map-names-two-column") && listOverflows(list)).forEach(list => {
-          const column = list.closest(".team-map-column");
-          const firstName = list.querySelector(".team-map-name");
-          const availableHeight = column.getBoundingClientRect().bottom - list.getBoundingClientRect().top - 3;
-          const rowHeight = (firstName?.getBoundingClientRect().height || size * 1.18) + 3;
+        lists.filter(list => !list.classList.contains("team-map-names-two-column") && listOverflows(list)).forEach(list => {
           list.classList.add("team-map-names-two-column");
-          const firstColumnCapacity = Math.max(Math.ceil(list.children.length / 2), Math.floor(availableHeight / rowHeight));
-          list.style.setProperty("--team-map-name-rows", String(Math.max(1, firstColumnCapacity)));
+          list.style.setProperty("--team-map-name-rows", String(Math.ceil(list.children.length / 2)));
         });
         while (size > sheetMinimumSize && anyListOverflows()) {
           size = Math.max(sheetMinimumSize, size - step);
@@ -2955,16 +2950,16 @@ Sanger, CA 93657"></textarea>
     }
 
     function teamMapPanel(card, leader, mode) {
-      return `<section class="team-map-panel"><div class="team-map-panel-title">${esc(card.type)}</div><div class="team-map-columns"><div class="team-map-column team-map-genius"><h4>Genius</h4>${teamMapNameList(card.geniusWeighted, leader, mode, false)}</div><div class="team-map-column team-map-frustration"><h4>Frustration</h4>${teamMapNameList(card.frustrationWeighted, leader, mode, false)}</div></div></section>`;
+      return `<section class="team-map-panel"><div class="team-map-panel-title">${esc(card.type)}</div><div class="team-map-columns"><div class="team-map-column team-map-genius"><h4>Genius</h4>${teamMapNameList(card.geniusWeighted, leader, mode)}</div><div class="team-map-column team-map-frustration"><h4>Frustration</h4>${teamMapNameList(card.frustrationWeighted, leader, mode)}</div></div></section>`;
     }
 
     function teamMapConceptPanel(card, leader, mode) {
-      return `<section class="team-map-panel"><div class="team-map-panel-title"><span class="team-map-panel-abbr">${esc(card.abbreviation)}</span>${esc(card.type)}</div><div class="team-map-columns"><div class="team-map-column team-map-genius"><h4>Genius</h4>${teamMapNameList(card.geniusWeighted, leader, mode, true)}</div><div class="team-map-column team-map-frustration"><h4>Frustration</h4>${teamMapNameList(card.frustrationWeighted, leader, mode, true)}</div></div></section>`;
+      return `<section class="team-map-panel"><div class="team-map-panel-title"><span class="team-map-panel-abbr">${esc(card.abbreviation)}</span>${esc(card.type)}</div><div class="team-map-columns"><div class="team-map-column team-map-genius"><h4>Genius</h4>${teamMapNameList(card.geniusWeighted, leader, mode)}</div><div class="team-map-column team-map-frustration"><h4>Frustration</h4>${teamMapNameList(card.frustrationWeighted, leader, mode)}</div></div></section>`;
     }
 
-    function teamMapNameList(people, leader, mode, balanceColumns) {
+    function teamMapNameList(people, leader, mode) {
       if (!people.length) return "";
-      const useTwoColumns = balanceColumns && people.length > 8;
+      const useTwoColumns = people.length > 8;
       return `<ul class="team-map-names${useTwoColumns ? " team-map-names-two-column" : ""}"${useTwoColumns ? ` style="--team-map-name-rows:${Math.ceil(people.length / 2)}"` : ""}>${people.map(person => `<li class="team-map-name${leader && person.id === leader.id ? " team-map-leader" : ""}">${esc(teamMapDisplayName(person, mode))}${leader && person.id === leader.id ? " *" : ""}</li>`).join("")}</ul>`;
     }
 

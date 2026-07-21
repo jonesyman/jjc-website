@@ -36,7 +36,7 @@ This roadmap records product capabilities rather than relying solely on historic
 
 ## Current release boundary
 
-Version `2026.07.19.05` gives page one a larger, first-column-first name flow while preserving the condensed page-two layout and automated analysis pages. The Team Map remains a browser-generated local print/save artifact.
+Version `2026.07.20.01` aligns the name-flow behavior on Team Map pages one and two while retaining page one's larger font and taller panels. The Team Map remains a browser-generated local print/save artifact.
 
 See `CURRENT_STATE.md` before continuing.
 

@@ -53,7 +53,7 @@ The admin sidebar currently follows this order:
 - Team Maps are previewed in the application and printed or saved locally. Page one retains the original letter-size map; page two provides a square map for presentation screenshots with concise Responsive/Disruptive and stage labels; the optional third page provides editable automated analysis and may flow to an additional printed page. PDF files are not stored in Google Sheets or Drive, while consultant analysis drafts are stored in `TeamMapAnalyses`.
 - On mobile, printable previews must appear above their source dialog, keep their controls pinned to the viewport, permit touch panning across the letter-size page, and prevent the underlying application from scrolling.
 - In Team Maps, Genius names are green, Frustration names are red, and the leader is marked with an asterisk without bolding.
-- Page-one Team Map names start at 15px and fill the first column before flowing into a second column when needed. The condensed page balances dense lists across two columns independently; empty areas remain blank.
+- Both Team Map graphics use the same name ordering and balanced two-column behavior for dense lists. Page one starts at 15px and has taller panels; page two remains smaller and condensed. Empty areas remain blank.
 - Notes about workshop assessment results are a planned separate capability and are not part of roster assembly.
 
 ## Business and interface preferences

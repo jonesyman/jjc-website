@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.20.01 — 2026-07-20
+
+- Matched page one's name ordering and balanced two-column behavior to the condensed page-two Team Map.
+- Retained page one's larger 15px starting font and taller panels as the only name-layout differences.
+- Removed the page-one-only first-column-capacity calculation introduced in the previous release.
+
 ## 2026.07.19.05 — 2026-07-19
 
 - Increased page-one Team Map names to a 15px starting size.

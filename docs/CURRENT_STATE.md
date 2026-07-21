@@ -1,17 +1,19 @@
 # Current State and Handoff
 
-Last updated: 2026-07-19
+Last updated: 2026-07-20
 
 ## Repository state
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.19.05`
-- Latest feature: independent page-one Team Map name sizing and overflow flow
+- Current application version: `2026.07.20.01`
+- Latest feature: matching name-flow behavior across Team Map pages one and two
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Matched page one's name ordering and balanced two-column trigger to page two while retaining page one's 15px font and taller panels.
 
 - Increased page-one Team Map names to 15px and made each list fill its first column before flowing into a second column only when required.
 - Kept the condensed page-two layout independent, including its balanced handling of dense name lists.
