@@ -6,12 +6,15 @@ Last updated: 2026-07-22
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.22.01`
-- Latest feature: copy-ready facilitator notes and standalone condensed Team Map PNGs
+- Current application version: `2026.07.22.02`
+- Latest feature: prioritized one-per-subject facilitator highlights
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Reduced facilitator highlighting to one strongest recommendation per Genius type, stage, and Responsive/Disruptive side, with separated highlight groups and no percentage clutter.
+- Added percentages to the detailed W/I/D/G/E/T notes and strengthened all copied-note labels with bracketed uppercase callouts.
 
 - Added workshop and saved-group Slide Notes with color-coded highlight instructions followed by W/I/D/G/E/T, stage-of-work, and Responsive/Disruptive facilitator prompts.
 - Added high-resolution square PNG downloads of the condensed Team Map, with filenames based on the selected workshop or group.

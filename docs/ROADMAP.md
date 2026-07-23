@@ -38,7 +38,7 @@ This roadmap records product capabilities rather than relying solely on historic
 
 ## Current release boundary
 
-Version `2026.07.22.01` adds copy-ready facilitator analysis, standalone condensed Team Map PNGs, and contextual print/save filenames while retaining the established three-page Team Map PDF.
+Version `2026.07.22.02` prioritizes a single strongest facilitator highlight per Genius type, stage, and Responsive/Disruptive side, with grouped copy-ready notes and detailed percentages.
 
 See `CURRENT_STATE.md` before continuing.
 

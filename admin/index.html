@@ -545,6 +545,9 @@
     .analysis-validation { margin:10px 0; padding:10px; border:1px solid #dc2626; border-radius:10px; color:#991b1b; background:#fef2f2; }
     .facilitator-analysis-dialog { width:min(900px,calc(100vw - 32px)); max-height:min(90vh,920px); overflow:auto; }
     .facilitator-highlight-list { display:flex; flex-wrap:wrap; gap:7px; margin:12px 0; }
+    .facilitator-highlight-group { display:flex; flex-wrap:wrap; gap:7px; width:100%; padding-top:10px; border-top:1px solid #526077; }
+    .facilitator-highlight-group:first-child { padding-top:0; border-top:0; }
+    .facilitator-highlight-group-title { width:100%; color:#e2e8f0; font-size:11px; font-weight:900; letter-spacing:.05em; text-transform:uppercase; }
     .facilitator-highlight { padding:6px 9px; border:2px solid currentColor; border-radius:10px; background:#fff; color:#334155; font-size:11px; font-weight:800; }
     .facilitator-highlight.green { color:#15803d; background:#f0fdf4; }
     .facilitator-highlight.red { color:#dc2626; background:#fef2f2; }
@@ -873,7 +876,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.22.01</strong><br>
+        Version <strong id="appVersionLabel">2026.07.22.02</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1532,7 +1535,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/googleSheets.js?v=10"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
-  <script src="../assets/js/teamMapAnalysis.js?v=2"></script>
+  <script src="../assets/js/teamMapAnalysis.js?v=3"></script>
   <script src="../assets/js/assessmentLibrary.js?v=6"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
@@ -1540,7 +1543,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.22.01";
+    const APP_VERSION = "2026.07.22.02";
 
     const K = {
       clients: "jjc_clients",
@@ -2591,9 +2594,8 @@ Sanger, CA 93657"></textarea>
       facilitatorAnalysisReturnFocus = document.activeElement;
       document.getElementById("facilitatorAnalysisTitle").textContent = `${payload.title} — Slide Notes`;
       document.getElementById("facilitatorAnalysisMeta").textContent = "Suggested outlines appear first, followed by a copyable W/I/D/G/E/T, stages, and Responsive/Disruptive walkthrough.";
-      document.getElementById("facilitatorHighlightList").innerHTML = analysis.highlights.length
-        ? analysis.highlights.map(item => `<span class="facilitator-highlight ${esc(item.color)}">${esc(item.color.toUpperCase())}: ${esc(item.target)}</span>`).join("")
-        : '<span class="tiny muted">No highlight rose above the configured thresholds.</span>';
+      const highlightGroup=(label,items)=>`<div class="facilitator-highlight-group"><div class="facilitator-highlight-group-title">${esc(label)}</div>${items.length?items.map(item=>`<span class="facilitator-highlight ${esc(item.color)}">${esc(item.subject)}: outline ${esc(item.area)} in ${esc(item.color[0].toUpperCase()+item.color.slice(1))}</span>`).join(""):'<span class="tiny muted">No highlight recommended.</span>'}</div>`;
+      document.getElementById("facilitatorHighlightList").innerHTML = highlightGroup("Working Geniuses",analysis.highlightGroups.types)+highlightGroup("Stages of Work",analysis.highlightGroups.stages)+highlightGroup("Responsive / Disruptive",analysis.highlightGroups.orientations);
       document.getElementById("facilitatorNotesText").value = TeamMapAnalysis.facilitatorNotesText(distribution, payload.title);
       document.getElementById("facilitatorAnalysisBackdrop").classList.add("open");
       setTimeout(() => document.getElementById("closeFacilitatorAnalysisButton").focus(), 0);

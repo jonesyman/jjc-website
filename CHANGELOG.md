@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.22.02 — 2026-07-22
+
+- Limited facilitator recommendations to the single most prominent highlight for each Working Genius type, stage of work, and Responsive/Disruptive orientation.
+- Grouped suggested highlights into Working Geniuses, Stages of Work, and Responsive/Disruptive sections with the concise `Type: outline Area in Color` wording.
+- Moved percentages into the six detailed Working Genius notes and made all type, stage, and orientation labels prominent with bracketed uppercase callouts.
+
 ## 2026.07.22.01 — 2026-07-22
 
 - Added copy-ready Team Map slide notes for workshops and saved groups, including explicit highlight recommendations, W/I/D/G/E/T facilitator prompts, all three stages of work, and Responsive/Disruptive balance.

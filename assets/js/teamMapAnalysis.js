@@ -89,16 +89,14 @@ window.TeamMapAnalysis = (() => {
   function facilitatorTypeAnalysis(metric,settings) {
     const content=FACILITATOR_CONTENT[metric.type], genius=distributionDirection(metric.weightedGeniusRate,settings.UnderrepresentedGeniusThresholdPercent,settings.HighlyRepresentedGeniusThresholdPercent), frustration=distributionDirection(metric.weightedFrustrationRate,settings.UnderrepresentedGeniusThresholdPercent,settings.HighFrustrationThresholdPercent);
     const competencyHeavy=metric.actualCompetencyRate>=settings.CompetencyHeavyThresholdPercent&&genius!=="high"&&frustration!=="high";
-    const highlights=[];
-    let status="Balance",note=content.balanced;
-    if(competencyHeavy){ status="Competency-heavy"; note=content.competency; highlights.push({color:"yellow",target:`${metric.type} Competency`,reason:`${metric.actualCompetencyRate}% of the team`}); }
-    else {
-      if(genius==="high"){ status="Overuse"; note=content.geniusHigh; highlights.push({color:"green",target:`${metric.type} Genius`,reason:`overrepresented at ${metric.weightedGeniusRate}%`}); }
-      else if(genius==="low"){ status="Missing / low Genius"; note=content.geniusLow; highlights.push({color:"green",target:`${metric.type} Genius`,reason:`low at ${metric.weightedGeniusRate}%`}); }
-      if(frustration==="high"){ status=status==="Balance"?"High Frustration":`${status}; high Frustration`; note=`${note} ${content.frustrationHigh}`; highlights.push({color:"red",target:`${metric.type} Frustration`,reason:`overrepresented at ${metric.weightedFrustrationRate}%`}); }
-      else if(frustration==="low"){ if(status==="Balance"){status="Low Frustration";note=content.frustrationLow;} highlights.push({color:"red",target:`${metric.type} Frustration`,reason:`low at ${metric.weightedFrustrationRate}%`}); }
-    }
-    return {type:metric.type,abbreviation:metric.type[0],status,note,highlights,rates:{genius:metric.weightedGeniusRate,competency:metric.actualCompetencyRate,frustration:metric.weightedFrustrationRate}};
+    const candidates=[];
+    if(genius==="high")candidates.push({subject:metric.type,area:"Genius",color:"green",status:"Overuse",note:content.geniusHigh,rate:metric.weightedGeniusRate,severity:Math.abs(metric.weightedGeniusRate-33)});
+    else if(genius==="low")candidates.push({subject:metric.type,area:"Genius",color:"green",status:"Missing / low Genius",note:content.geniusLow,rate:metric.weightedGeniusRate,severity:Math.abs(metric.weightedGeniusRate-33)});
+    if(frustration==="high")candidates.push({subject:metric.type,area:"Frustration",color:"red",status:"High Frustration",note:content.frustrationHigh,rate:metric.weightedFrustrationRate,severity:Math.abs(metric.weightedFrustrationRate-33)});
+    else if(frustration==="low")candidates.push({subject:metric.type,area:"Frustration",color:"red",status:"Low Frustration",note:content.frustrationLow,rate:metric.weightedFrustrationRate,severity:Math.abs(metric.weightedFrustrationRate-33)});
+    if(competencyHeavy)candidates.push({subject:metric.type,area:"Competency",color:"yellow",status:"Competency-heavy",note:content.competency,rate:metric.actualCompetencyRate,severity:Math.abs(metric.actualCompetencyRate-33)});
+    const highlight=candidates.sort((a,b)=>b.severity-a.severity)[0]||null;
+    return {type:metric.type,abbreviation:metric.type[0],status:highlight?.status||"Balance",note:highlight?.note||content.balanced,highlights:highlight?[highlight]:[],rates:{genius:metric.weightedGeniusRate,competency:metric.actualCompetencyRate,frustration:metric.weightedFrustrationRate}};
   }
   function aggregateDimension(distribution,label,types,shareTarget) {
     const metrics=distribution.metrics.filter(metric=>types.includes(metric.type)), denominator=Math.max(1,distribution.weightedTeamSize*2);
@@ -114,21 +112,27 @@ window.TeamMapAnalysis = (() => {
       aggregateDimension(distribution,"Responsive",["Wonder","Discernment","Enablement"],50),
       aggregateDimension(distribution,"Disruptive",["Invention","Galvanizing","Tenacity"],50)
     ];
-    const highlights=typeAnalyses.flatMap(item=>item.highlights);
-    stages.forEach(stage=>{
-      if(stage.geniusStatus!=="balanced")highlights.push({color:"green",target:`${stage.label} stage`,reason:`Genius is ${stage.geniusStatus} at ${stage.geniusRate}%`});
-      if(stage.frustrationStatus!=="balanced")highlights.push({color:"red",target:`${stage.label} stage`,reason:`Frustration is ${stage.frustrationStatus} at ${stage.frustrationRate}%`});
-    });
-    return {valid:true,highlights,typeAnalyses,stages,orientations};
+    const typeHighlights=typeAnalyses.flatMap(item=>item.highlights);
+    const strongestDimensionHighlight=(item,target=33)=>{
+      const candidates=[];
+      if(item.geniusStatus!=="balanced")candidates.push({subject:item.label,area:"Genius",color:"green",rate:item.geniusRate,severity:Math.abs(item.geniusRate-target)});
+      if(item.frustrationStatus!=="balanced")candidates.push({subject:item.label,area:"Frustration",color:"red",rate:item.frustrationRate,severity:Math.abs(item.frustrationRate-target)});
+      return candidates.sort((a,b)=>b.severity-a.severity)[0]||null;
+    };
+    const stageHighlights=stages.map(stage=>strongestDimensionHighlight(stage)).filter(Boolean);
+    const orientationHighlights=orientations.map(item=>strongestDimensionHighlight(item,50)).filter(Boolean);
+    const highlightGroups={types:typeHighlights,stages:stageHighlights,orientations:orientationHighlights};
+    return {valid:true,highlights:[...typeHighlights,...stageHighlights,...orientationHighlights],highlightGroups,typeAnalyses,stages,orientations};
   }
   function facilitatorNotesText(distribution,title="Team") {
     const analysis=generateFacilitatorAnalysis(distribution);
     if(!analysis.valid)return `Unable to generate facilitator notes for ${title}:\n${analysis.errors.join("\n")}`;
-    const highlightLines=analysis.highlights.length?analysis.highlights.map(item=>`- ${item.color[0].toUpperCase()+item.color.slice(1)}: outline ${item.target} — ${item.reason}`):["- No highlight rose above the configured thresholds."];
-    const typeLines=analysis.typeAnalyses.map(item=>`${item.abbreviation} — ${item.status}: ${item.note}`);
-    const stageLines=analysis.stages.map(stage=>`${stage.label} (${stage.types.map(type=>type[0]).join("/")}): Genius ${stage.geniusStatus} (${stage.geniusRate}%); Frustration ${stage.frustrationStatus} (${stage.frustrationRate}%). Watch how the team handles ${stage.purpose}.`);
-    const orientationLines=analysis.orientations.map(item=>`${item.label} (${item.types.map(type=>type[0]).join("/")}): Genius ${item.geniusStatus} (${item.geniusRate}%); Frustration ${item.frustrationStatus} (${item.frustrationRate}%).`);
-    return [`${title} — Team Map Facilitation Notes`,"","SUGGESTED HIGHLIGHTS",...highlightLines,"","SIX WORKING GENIUSES",...typeLines,"","STAGES OF WORK",...stageLines,"","RESPONSIVE / DISRUPTIVE",...orientationLines].join("\n");
+    const highlightLine=item=>`- ${item.subject}: outline ${item.area} in ${item.color[0].toUpperCase()+item.color.slice(1)}`;
+    const highlightSection=(label,items)=>[label,...(items.length?items.map(highlightLine):["- No highlight recommended."])];
+    const typeLines=analysis.typeAnalyses.map(item=>`[${item.abbreviation}] ${item.type.toUpperCase()} — ${item.status}: ${item.note} Distribution: ${item.rates.genius}% Genius, ${item.rates.competency}% Competency, ${item.rates.frustration}% Frustration.`);
+    const stageLines=analysis.stages.map(stage=>`[${stage.label.toUpperCase()}] (${stage.types.map(type=>type[0]).join("/")}): Genius ${stage.geniusStatus} (${stage.geniusRate}%); Frustration ${stage.frustrationStatus} (${stage.frustrationRate}%). Watch how the team handles ${stage.purpose}.`);
+    const orientationLines=analysis.orientations.map(item=>`[${item.label.toUpperCase()}] (${item.types.map(type=>type[0]).join("/")}): Genius ${item.geniusStatus} (${item.geniusRate}%); Frustration ${item.frustrationStatus} (${item.frustrationRate}%).`);
+    return [`${title} — Team Map Facilitation Notes`,"","SUGGESTED HIGHLIGHTS",...highlightSection("Working Geniuses",analysis.highlightGroups.types),"",...highlightSection("Stages of Work",analysis.highlightGroups.stages),"",...highlightSection("Responsive / Disruptive",analysis.highlightGroups.orientations),"","SIX WORKING GENIUSES",...typeLines,"","STAGES OF WORK",...stageLines,"","RESPONSIVE / DISRUPTIVE",...orientationLines].join("\n");
   }
   return {TYPES,DEFAULTS,CONTENT,FACILITATOR_CONTENT,STAGES,normalizeSettings,deriveParticipantCompetencies,validateTeamMapAnalysisData,calculateTeamMapDistribution,classifyGeniusDistribution,generateTeamObservations,generateGeniusDiagnostic,generateConsultantQuestions,rankAnalysisObservations,suggestedAnalysis,generateFacilitatorAnalysis,facilitatorNotesText};
 })();
