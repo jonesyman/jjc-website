@@ -38,7 +38,7 @@ This roadmap records product capabilities rather than relying solely on historic
 
 ## Current release boundary
 
-Version `2026.07.22.02` prioritizes a single strongest facilitator highlight per Genius type, stage, and Responsive/Disruptive side, with grouped copy-ready notes and detailed percentages.
+Version `2026.07.22.03` uses comparative dominance for aggregate highlights: at most one overrepresented stage is highlighted, while Responsive/Disruptive requires an unusually strong concentration.
 
 See `CURRENT_STATE.md` before continuing.
 

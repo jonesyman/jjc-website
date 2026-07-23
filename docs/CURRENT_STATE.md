@@ -6,12 +6,15 @@ Last updated: 2026-07-22
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.22.02`
-- Latest feature: prioritized one-per-subject facilitator highlights
+- Current application version: `2026.07.22.03`
+- Latest feature: dominance-based stage and Responsive/Disruptive highlights
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Limited stage highlighting to the one most dominant overrepresented concentration across Ideation, Activation, and Implementation.
+- Reserved Responsive/Disruptive highlights for unusually dominant concentrations; LVCC now recommends only the green Implementation Genius highlight across those aggregate sections.
 
 - Reduced facilitator highlighting to one strongest recommendation per Genius type, stage, and Responsive/Disruptive side, with separated highlight groups and no percentage clutter.
 - Added percentages to the detailed W/I/D/G/E/T notes and strengthened all copied-note labels with bracketed uppercase callouts.

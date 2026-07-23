@@ -113,14 +113,16 @@ window.TeamMapAnalysis = (() => {
       aggregateDimension(distribution,"Disruptive",["Invention","Galvanizing","Tenacity"],50)
     ];
     const typeHighlights=typeAnalyses.flatMap(item=>item.highlights);
-    const strongestDimensionHighlight=(item,target=33)=>{
+    const dominantDimensionHighlight=(items,minimum,target)=>{
       const candidates=[];
-      if(item.geniusStatus!=="balanced")candidates.push({subject:item.label,area:"Genius",color:"green",rate:item.geniusRate,severity:Math.abs(item.geniusRate-target)});
-      if(item.frustrationStatus!=="balanced")candidates.push({subject:item.label,area:"Frustration",color:"red",rate:item.frustrationRate,severity:Math.abs(item.frustrationRate-target)});
-      return candidates.sort((a,b)=>b.severity-a.severity)[0]||null;
+      items.forEach(item=>{
+        if(item.geniusRate>=minimum)candidates.push({subject:item.label,area:"Genius",color:"green",rate:item.geniusRate,severity:item.geniusRate-target});
+        if(item.frustrationRate>=minimum)candidates.push({subject:item.label,area:"Frustration",color:"red",rate:item.frustrationRate,severity:item.frustrationRate-target});
+      });
+      return candidates.sort((a,b)=>b.severity-a.severity).slice(0,1);
     };
-    const stageHighlights=stages.map(stage=>strongestDimensionHighlight(stage)).filter(Boolean);
-    const orientationHighlights=orientations.map(item=>strongestDimensionHighlight(item,50)).filter(Boolean);
+    const stageHighlights=dominantDimensionHighlight(stages,50,33);
+    const orientationHighlights=dominantDimensionHighlight(orientations,75,50);
     const highlightGroups={types:typeHighlights,stages:stageHighlights,orientations:orientationHighlights};
     return {valid:true,highlights:[...typeHighlights,...stageHighlights,...orientationHighlights],highlightGroups,typeAnalyses,stages,orientations};
   }

@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.22.03 — 2026-07-22
+
+- Changed stage recommendations to highlight only the single strongest overrepresented Genius or Frustration concentration across all three stages.
+- Removed underrepresentation-based stage highlights.
+- Reserved Responsive/Disruptive highlights for unusually dominant concentrations, preventing LVCC's 52/48 Genius and 30/70 Frustration split from being unnecessarily highlighted.
+
 ## 2026.07.22.02 — 2026-07-22
 
 - Limited facilitator recommendations to the single most prominent highlight for each Working Genius type, stage of work, and Responsive/Disruptive orientation.
