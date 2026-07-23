@@ -443,7 +443,7 @@ function renderAssessmentGroups() {
     const members = assessmentLibraryMemberships().filter(item => String(item.GroupID) === String(group.GroupID));
     const leaderMembership = members.find(item => String(item.IsLeader).toLowerCase() === "true");
     const leader = leaderMembership ? assessmentPersonById(leaderMembership.PersonID) : null;
-    return `<article class="record-card"><button class="record-title record-title-button" type="button" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">${esc(group.GroupName)}</button><div class="tiny muted">${esc(group.Organization || "Independent group")} • ${members.length} ${members.length === 1 ? "person" : "people"}</div>${group.Description ? `<div class="small">${esc(group.Description)}</div>` : ""}<div class="small"><strong>Leader:</strong> ${leader ? esc(assessmentPersonName(leader)) : '<span class="muted">Not selected</span>'}</div><div class="actions group-card-actions"><button class="button secondary small-btn" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">Load Group to Edit</button><button class="button small-btn" onclick="previewAssessmentGroup('${jsEsc(group.GroupID)}')">Create Team Map</button><button class="button danger small-btn" onclick="deleteAssessmentGroup('${jsEsc(group.GroupID)}')">Delete Group</button></div></article>`;
+    return `<article class="record-card"><button class="record-title record-title-button" type="button" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">${esc(group.GroupName)}</button><div class="tiny muted">${esc(group.Organization || "Independent group")} • ${members.length} ${members.length === 1 ? "person" : "people"}</div>${group.Description ? `<div class="small">${esc(group.Description)}</div>` : ""}<div class="small"><strong>Leader:</strong> ${leader ? esc(assessmentPersonName(leader)) : '<span class="muted">Not selected</span>'}</div><div class="actions group-card-actions"><button class="button secondary small-btn" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">Load Group to Edit</button><button class="button small-btn" onclick="previewAssessmentGroup('${jsEsc(group.GroupID)}')">Create Team Map</button><button class="button secondary small-btn" onclick="openAssessmentGroupFacilitatorAnalysis('${jsEsc(group.GroupID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadAssessmentGroupCondensedMap('${jsEsc(group.GroupID)}',this)">Download Map</button><button class="button danger small-btn" onclick="deleteAssessmentGroup('${jsEsc(group.GroupID)}')">Delete Group</button></div></article>`;
   }).join("");
 }
 
@@ -472,15 +472,11 @@ function deleteCurrentAssessmentGroup() {
   deleteAssessmentGroup(groupId);
 }
 
-function previewAssessmentGroup(groupId) {
+function assessmentGroupTeamMapPayload(groupId) {
   const group = assessmentLibraryGroups().find(item => String(item.GroupID) === String(groupId));
   const memberships = assessmentLibraryMemberships().filter(item => String(item.GroupID) === String(groupId));
   const leaderId = String(memberships.find(item => String(item.IsLeader).toLowerCase() === "true")?.PersonID || "");
-  if (!group || !memberships.length) return toast("This group does not have any members.");
-  if (!leaderId) {
-    editAssessmentGroup(groupId);
-    return toast("Select a leader, then use Save & Create Team Map.");
-  }
+  if (!group || !memberships.length) throw new Error("This group does not have any members.");
   const results = memberships.map(item => assessmentPersonById(item.PersonID)).filter(Boolean).map(person => ({
     AssessmentResultID: person.PersonID,
     PersonID: person.PersonID,
@@ -495,10 +491,36 @@ function previewAssessmentGroup(groupId) {
     Frustration1: person.Frustration1,
     Frustration2: person.Frustration2
   }));
-  currentAssessmentData = { import: { GroupName: group.GroupName, LeaderAssessmentResultID: leaderId }, results };
+  return {
+    assessment:{ import:{GroupName:group.GroupName,LeaderAssessmentResultID:leaderId},results },
+    workshopId:"",
+    title:group.GroupName,
+    context:{groupId:group.GroupID,title:group.GroupName,organization:group.Organization||"",identifier:"Custom Group",dateLabel:""}
+  };
+}
+
+function previewAssessmentGroup(groupId) {
+  let payload;
+  try { payload=assessmentGroupTeamMapPayload(groupId); }
+  catch(error) { return toast(error.message); }
+  if (!payload.assessment.import.LeaderAssessmentResultID) {
+    editAssessmentGroup(groupId);
+    return toast("Select a leader, then use Save & Create Team Map.");
+  }
+  currentAssessmentData = payload.assessment;
   assessmentWorkshopId = "";
-  teamMapContext = { groupId: group.GroupID, title: group.GroupName, organization: group.Organization || "", identifier: "Custom Group", dateLabel: "" };
+  teamMapContext = payload.context;
   openTeamMapPreview();
+}
+
+function openAssessmentGroupFacilitatorAnalysis(groupId) {
+  try { showFacilitatorAnalysis(assessmentGroupTeamMapPayload(groupId)); }
+  catch(error) { toast(error.message||"Unable to create slide notes."); }
+}
+
+function downloadAssessmentGroupCondensedMap(groupId,button) {
+  try { downloadCondensedTeamMap(assessmentGroupTeamMapPayload(groupId),button); }
+  catch(error) { toast(error.message||"Unable to download the condensed Team Map."); }
 }
 
 async function deleteAssessmentGroup(groupId) {

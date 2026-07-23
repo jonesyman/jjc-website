@@ -34,10 +34,11 @@ This roadmap records product capabilities rather than relying solely on historic
 - A Google Sheets-backed plain-text Email Template Library with once-only starter content, workshop personalization, preview, clipboard copying, and full archive lifecycle.
 - Automated Team Map Analysis with validated actual/weighted distributions, configurable diagnostics, consultant editing, persistence, and print safeguards.
 - Responsive global loading progress with operation steps, learned duration estimates, and parallelized core startup requests.
+- Facilitator-ready Team Map slide notes and standalone condensed-map PNG downloads for workshops and saved groups.
 
 ## Current release boundary
 
-Version `2026.07.20.08` removes the Analysis methodology block so the generated Team Map PDF remains three pages and ends after Discussion Questions. The Team Map remains a browser-generated local print/save artifact.
+Version `2026.07.22.01` adds copy-ready facilitator analysis, standalone condensed Team Map PNGs, and contextual print/save filenames while retaining the established three-page Team Map PDF.
 
 See `CURRENT_STATE.md` before continuing.
 

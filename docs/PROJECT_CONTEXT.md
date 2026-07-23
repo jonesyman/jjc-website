@@ -50,10 +50,11 @@ The admin sidebar currently follows this order:
 - Saved groups can be chosen from the manager at the top of Group Builder, loaded for maintenance, deleted when genuinely unnecessary, restored from Recently Deleted Groups, or opened directly in Team Map preview.
 - Adding another group copies its current person references; groups are not nested.
 - Leader status belongs to a specific workshop or group, not permanently to the person.
-- Team Maps are previewed in the application and printed or saved locally. Page one retains the original letter-size map; page two provides a square map for presentation screenshots with concise Responsive/Disruptive and stage labels; the optional third page provides editable automated analysis and may flow to an additional printed page. PDF files are not stored in Google Sheets or Drive, while consultant analysis drafts are stored in `TeamMapAnalyses`.
+- Team Maps are previewed in the application and printed or saved locally. Page one retains the original letter-size map; page two provides a square map with concise Responsive/Disruptive and stage labels; page three provides editable automated analysis and ends after Discussion Questions. The condensed page can also be downloaded as a standalone square PNG named for its workshop or group. PDF files are not stored in Google Sheets or Drive, while consultant analysis drafts are stored in `TeamMapAnalyses`.
+- Workshops and saved groups provide copy-ready facilitator slide notes with color-coded highlight suggestions, W/I/D/G/E/T prompts, stage-of-work analysis, and Responsive/Disruptive balance.
 - On mobile, printable previews must appear above their source dialog, keep their controls pinned to the viewport, permit touch panning across the letter-size page, and prevent the underlying application from scrolling.
 - In Team Maps, Genius names are green, Frustration names are red, and the leader is marked with an asterisk without bolding.
-- Both Team Map graphics preserve list order and measure the number of full-size rows their actual box height can hold before flowing into column two. Page one starts at 13px; page two starts at 9.5px; both use 600 weight and reduce only as needed to prevent vertical or horizontal clipping. Empty areas remain blank.
+- Both Team Map graphics preserve list order. Page one starts at 13px and flows after 11 names; page two starts at 9.5px and flows after 9 names. Both use 600 weight and reduce only as needed to prevent vertical or horizontal clipping. Empty areas remain blank.
 - Notes about workshop assessment results are a planned separate capability and are not part of roster assembly.
 
 ## Business and interface preferences

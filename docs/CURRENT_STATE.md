@@ -1,17 +1,21 @@
 # Current State and Handoff
 
-Last updated: 2026-07-20
+Last updated: 2026-07-22
 
 ## Repository state
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.20.08`
-- Latest feature: three-page Team Map PDF without the Analysis methodology block
+- Current application version: `2026.07.22.01`
+- Latest feature: copy-ready facilitator notes and standalone condensed Team Map PNGs
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Added workshop and saved-group Slide Notes with color-coded highlight instructions followed by W/I/D/G/E/T, stage-of-work, and Responsive/Disruptive facilitator prompts.
+- Added high-resolution square PNG downloads of the condensed Team Map, with filenames based on the selected workshop or group.
+- Added contextual filenames to browser print/save workflows and slightly increased Analysis-page font weight without changing the three-page PDF structure.
 
 - Removed the Methodology block from the Analysis print page so the PDF ends after Discussion Questions and remains three pages.
 

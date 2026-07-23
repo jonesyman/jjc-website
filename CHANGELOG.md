@@ -2,6 +2,14 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.22.01 — 2026-07-22
+
+- Added copy-ready Team Map slide notes for workshops and saved groups, including explicit highlight recommendations, W/I/D/G/E/T facilitator prompts, all three stages of work, and Responsive/Disruptive balance.
+- Added standalone high-resolution square PNG downloads of the condensed Team Map, named from the workshop or group.
+- Added Slide Notes and Download Map actions beside workshop assessment controls and on every saved-group card.
+- Added contextual browser print/save names, including workshop assessment PDFs, group Team Maps, estimates, and invoices.
+- Slightly increased the Team Map Analysis page font weight without changing its three-page PDF structure.
+
 ## 2026.07.20.08 — 2026-07-20
 
 - Removed the Methodology block from the generated Team Map Analysis page so the PDF ends after Discussion Questions and remains a three-page document.

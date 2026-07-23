@@ -19,6 +19,19 @@ window.TeamMapAnalysis = (() => {
     Enablement:{ healthy:"providing practical, responsive support", missing:"Initiatives may stall when collaboration or timely support is unavailable.", overuse:"Support may spread too thin or keeping everyone satisfied may outrank strategic priorities.", competency:"The team may depend on capable helpers whose support work is not consistently energizing.", question:"How does the team decide what to support and what not to support?" },
     Tenacity:{ healthy:"driving work to completion with standards and accountability", missing:"Projects may remain incomplete or follow-through may depend on external pressure.", overuse:"Execution may begin before ideas are sufficiently explored, or completion may override needed input.", competency:"Finishing work may be possible for many people without being a sustainable source of energy.", question:"What helps this team carry its most important work all the way through completion?" }
   };
+  const FACILITATOR_CONTENT = {
+    Wonder:{ balanced:"The team appears able to notice needs and possibilities without remaining in question mode too long.", geniusHigh:"A strong pull toward Wonder may keep the team exploring needs or reopening settled questions.", geniusLow:"The team may move forward without pausing long enough to notice unmet needs, risks, or opportunities.", frustrationHigh:"Questioning assumptions may be resisted, so important concerns can be missed or surfaced too late.", frustrationLow:"Few people are drained by Wonder, which can make reflective questioning broadly accessible.", competency:"Wonder is available when needed, but the team may not have much natural energy or strong resistance around it." },
+    Invention:{ balanced:"The team appears to have workable access to new ideas without continually reinventing solutions.", geniusHigh:"A strong pull toward Invention may generate more ideas than the team can evaluate or implement.", geniusLow:"The team may revisit the same problems, rely on familiar answers, or remain stuck in the status quo.", frustrationHigh:"Creating original options may be difficult to sustain, increasing the risk of recycling familiar solutions.", frustrationLow:"Few people are drained by generating ideas, so invention may be accessible even when it is not prominent.", competency:"Invention is available as a capability, but repeatedly asking for new ideas may consume more energy than it creates." },
+    Discernment:{ balanced:"The team appears able to evaluate ideas without allowing judgment to dominate forward movement.", geniusHigh:"A strong pull toward Discernment can create analysis paralysis, unexplained judgment, or slow decisions.", geniusLow:"Ideas may advance without enough intuitive evaluation, pattern recognition, or refinement.", frustrationHigh:"The team may avoid evaluation or experience judgment as friction, allowing weak ideas to travel too far.", frustrationLow:"Few people are drained by evaluation, which may make careful judgment easier to access.", competency:"Discernment is broadly available, but sustained evaluation may become tiring if the team relies on it too heavily." },
+    Galvanizing:{ balanced:"The team appears able to build commitment without creating unnecessary urgency around every initiative.", geniusHigh:"A strong pull toward Galvanizing may mobilize the team before sufficient alignment or prioritization exists.", geniusLow:"Good ideas may struggle to gain sponsorship, enthusiasm, or visible momentum.", frustrationHigh:"Rallying others may be avoided or exhausting, leaving initiatives without the energy needed to move.", frustrationLow:"Few people are drained by mobilizing others, so momentum-building may be relatively accessible.", competency:"Galvanizing can be supplied when needed, but repeatedly carrying group energy may not be sustainable." },
+    Enablement:{ balanced:"The team appears able to provide support while maintaining reasonable boundaries and priorities.", geniusHigh:"A strong pull toward Enablement may spread support too thin or place responsiveness ahead of strategic priorities.", geniusLow:"Plans may stall because timely support, collaboration, or practical help is not naturally supplied.", frustrationHigh:"Requests for help may meet resistance or fatigue, creating bottlenecks when execution requires collaboration.", frustrationLow:"Few people are drained by helping, which may make support readily available across the team.", competency:"Enablement is available as a skill, but frequent support demands may quietly deplete the people providing it." },
+    Tenacity:{ balanced:"The team appears able to finish work without allowing execution pressure to dominate every decision.", geniusHigh:"The team may rush to tactics and execution early or overemphasize projects at the expense of the team.", geniusLow:"Work may lose momentum near completion, and accountability may depend on outside pressure.", frustrationHigh:"Sustained follow-through may be draining, increasing the risk that projects remain unfinished.", frustrationLow:"Few people are drained by completion work, which may make follow-through easier to distribute.", competency:"Tenacity is available when required, but repeated execution and finishing demands may not be energizing." }
+  };
+  const STAGES = [
+    {name:"Ideation",types:["Wonder","Invention"],purpose:"noticing needs and creating new options"},
+    {name:"Activation",types:["Discernment","Galvanizing"],purpose:"evaluating ideas and building commitment"},
+    {name:"Implementation",types:["Enablement","Tenacity"],purpose:"supporting the work and carrying it through completion"}
+  ];
   const bool = (value, fallback) => value === undefined || value === "" ? fallback : ![false,"false",0,"0","no"].includes(typeof value === "string" ? value.toLowerCase() : value);
   const num = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
   function normalizeSettings(source={}) { const out={}; Object.entries(DEFAULTS).forEach(([key,value]) => out[key]=typeof value === "boolean" ? bool(source[key],value) : num(source[key],value)); return out; }
@@ -72,5 +85,50 @@ window.TeamMapAnalysis = (() => {
   function generateTeamObservations(distribution) { return rankAnalysisObservations(distribution.metrics.map(generateGeniusDiagnostic).filter(Boolean)).slice(0,distribution.settings.MaximumAutomaticObservations); }
   function generateConsultantQuestions(distribution) { if(!distribution.settings.IncludeConsultantQuestions)return[]; const types=generateTeamObservations(distribution).slice(0,4).map(x=>x.type); return [...new Set(types)].map(type=>CONTENT[type].question).slice(0,4); }
   function suggestedAnalysis(distribution) { const obs=generateTeamObservations(distribution), contribution=obs.find(x=>/represented|overuse/i.test(x.label)), risk=obs[0], competency=obs.find(x=>/competency/i.test(x.label)); return { OverallTeamPattern:obs.slice(0,2).map(x=>`${x.type}: ${x.label}`).join("; "), MostSignificantStrength:contribution?`${contribution.type}: ${contribution.text}`:"No single Working Genius contribution rose above the configured thresholds; consider exploring where the team experiences its most reliable energy.", MostSignificantRisk:risk?`${risk.type}: ${risk.text}`:"No major automatic area to explore rose above the configured thresholds.", CompetencySustainabilityObservation:competency?`${competency.type}: ${competency.text}`:"No single competency-heavy type rose above the configured thresholds. Review whether frequently requested competency work is sustainable for the people providing it.", AdditionalConsultantNotes:"" }; }
-  return {TYPES,DEFAULTS,CONTENT,normalizeSettings,deriveParticipantCompetencies,validateTeamMapAnalysisData,calculateTeamMapDistribution,classifyGeniusDistribution,generateTeamObservations,generateGeniusDiagnostic,generateConsultantQuestions,rankAnalysisObservations,suggestedAnalysis};
+  function distributionDirection(rate,low,high) { return rate<low?"low":rate>=high?"high":"balanced"; }
+  function facilitatorTypeAnalysis(metric,settings) {
+    const content=FACILITATOR_CONTENT[metric.type], genius=distributionDirection(metric.weightedGeniusRate,settings.UnderrepresentedGeniusThresholdPercent,settings.HighlyRepresentedGeniusThresholdPercent), frustration=distributionDirection(metric.weightedFrustrationRate,settings.UnderrepresentedGeniusThresholdPercent,settings.HighFrustrationThresholdPercent);
+    const competencyHeavy=metric.actualCompetencyRate>=settings.CompetencyHeavyThresholdPercent&&genius!=="high"&&frustration!=="high";
+    const highlights=[];
+    let status="Balance",note=content.balanced;
+    if(competencyHeavy){ status="Competency-heavy"; note=content.competency; highlights.push({color:"yellow",target:`${metric.type} Competency`,reason:`${metric.actualCompetencyRate}% of the team`}); }
+    else {
+      if(genius==="high"){ status="Overuse"; note=content.geniusHigh; highlights.push({color:"green",target:`${metric.type} Genius`,reason:`overrepresented at ${metric.weightedGeniusRate}%`}); }
+      else if(genius==="low"){ status="Missing / low Genius"; note=content.geniusLow; highlights.push({color:"green",target:`${metric.type} Genius`,reason:`low at ${metric.weightedGeniusRate}%`}); }
+      if(frustration==="high"){ status=status==="Balance"?"High Frustration":`${status}; high Frustration`; note=`${note} ${content.frustrationHigh}`; highlights.push({color:"red",target:`${metric.type} Frustration`,reason:`overrepresented at ${metric.weightedFrustrationRate}%`}); }
+      else if(frustration==="low"){ if(status==="Balance"){status="Low Frustration";note=content.frustrationLow;} highlights.push({color:"red",target:`${metric.type} Frustration`,reason:`low at ${metric.weightedFrustrationRate}%`}); }
+    }
+    return {type:metric.type,abbreviation:metric.type[0],status,note,highlights,rates:{genius:metric.weightedGeniusRate,competency:metric.actualCompetencyRate,frustration:metric.weightedFrustrationRate}};
+  }
+  function aggregateDimension(distribution,label,types,shareTarget) {
+    const metrics=distribution.metrics.filter(metric=>types.includes(metric.type)), denominator=Math.max(1,distribution.weightedTeamSize*2);
+    const geniusRate=Math.round(metrics.reduce((sum,metric)=>sum+metric.weightedGeniusCount,0)/denominator*100), frustrationRate=Math.round(metrics.reduce((sum,metric)=>sum+metric.weightedFrustrationCount,0)/denominator*100);
+    const margin=shareTarget===50?10:8, classify=rate=>rate<shareTarget-margin?"underrepresented":rate>shareTarget+margin?"overrepresented":"balanced";
+    return {label,types,geniusRate,frustrationRate,geniusStatus:classify(geniusRate),frustrationStatus:classify(frustrationRate)};
+  }
+  function generateFacilitatorAnalysis(distribution) {
+    if(!distribution?.validation?.valid)return {valid:false,errors:distribution?.validation?.errors||["Team Map data is invalid."]};
+    const typeAnalyses=distribution.metrics.map(metric=>facilitatorTypeAnalysis(metric,distribution.settings));
+    const stages=STAGES.map(stage=>({...aggregateDimension(distribution,stage.name,stage.types,33),purpose:stage.purpose}));
+    const orientations=[
+      aggregateDimension(distribution,"Responsive",["Wonder","Discernment","Enablement"],50),
+      aggregateDimension(distribution,"Disruptive",["Invention","Galvanizing","Tenacity"],50)
+    ];
+    const highlights=typeAnalyses.flatMap(item=>item.highlights);
+    stages.forEach(stage=>{
+      if(stage.geniusStatus!=="balanced")highlights.push({color:"green",target:`${stage.label} stage`,reason:`Genius is ${stage.geniusStatus} at ${stage.geniusRate}%`});
+      if(stage.frustrationStatus!=="balanced")highlights.push({color:"red",target:`${stage.label} stage`,reason:`Frustration is ${stage.frustrationStatus} at ${stage.frustrationRate}%`});
+    });
+    return {valid:true,highlights,typeAnalyses,stages,orientations};
+  }
+  function facilitatorNotesText(distribution,title="Team") {
+    const analysis=generateFacilitatorAnalysis(distribution);
+    if(!analysis.valid)return `Unable to generate facilitator notes for ${title}:\n${analysis.errors.join("\n")}`;
+    const highlightLines=analysis.highlights.length?analysis.highlights.map(item=>`- ${item.color[0].toUpperCase()+item.color.slice(1)}: outline ${item.target} — ${item.reason}`):["- No highlight rose above the configured thresholds."];
+    const typeLines=analysis.typeAnalyses.map(item=>`${item.abbreviation} — ${item.status}: ${item.note}`);
+    const stageLines=analysis.stages.map(stage=>`${stage.label} (${stage.types.map(type=>type[0]).join("/")}): Genius ${stage.geniusStatus} (${stage.geniusRate}%); Frustration ${stage.frustrationStatus} (${stage.frustrationRate}%). Watch how the team handles ${stage.purpose}.`);
+    const orientationLines=analysis.orientations.map(item=>`${item.label} (${item.types.map(type=>type[0]).join("/")}): Genius ${item.geniusStatus} (${item.geniusRate}%); Frustration ${item.frustrationStatus} (${item.frustrationRate}%).`);
+    return [`${title} — Team Map Facilitation Notes`,"","SUGGESTED HIGHLIGHTS",...highlightLines,"","SIX WORKING GENIUSES",...typeLines,"","STAGES OF WORK",...stageLines,"","RESPONSIVE / DISRUPTIVE",...orientationLines].join("\n");
+  }
+  return {TYPES,DEFAULTS,CONTENT,FACILITATOR_CONTENT,STAGES,normalizeSettings,deriveParticipantCompetencies,validateTeamMapAnalysisData,calculateTeamMapDistribution,classifyGeniusDistribution,generateTeamObservations,generateGeniusDiagnostic,generateConsultantQuestions,rankAnalysisObservations,suggestedAnalysis,generateFacilitatorAnalysis,facilitatorNotesText};
 })();

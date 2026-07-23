@@ -520,7 +520,7 @@
     .team-map-names.team-map-names-two-column { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--team-map-name-rows),auto); grid-auto-flow:column; column-gap:7px; }
     .team-map-analysis-editor { max-width:900px; margin:0 auto 16px; padding:16px; border-radius:15px; background:#fff; color:#172033; }
     .team-map-analysis-editor textarea { min-height:84px; color:#172033; background:#fff; border-color:#cbd5e1; }
-    .team-map-analysis-sheet { box-sizing:border-box; width:8.5in; min-height:11in; margin:24px auto 0; padding:.42in .48in .34in; background:#fff; color:#172033; box-shadow:0 22px 70px rgba(0,0,0,.2); break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-analysis-sheet { box-sizing:border-box; width:8.5in; min-height:11in; margin:24px auto 0; padding:.42in .48in .34in; background:#fff; color:#172033; font-weight:500; box-shadow:0 22px 70px rgba(0,0,0,.2); break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .analysis-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:12px 0; }
     .analysis-summary-item { padding:9px; border:1px solid #cbd5e1; border-radius:10px; background:#f8fafc; font-size:10px; }
     .analysis-table { width:100%; margin-top:12px; border:1px solid #cbd5e1; border-radius:10px; border-spacing:0; overflow:hidden; table-layout:fixed; font-size:10px; }
@@ -543,6 +543,13 @@
     .analysis-consultant-item { padding:8px; border:1px solid #dbe3ee; border-radius:9px; font-size:9px; line-height:1.35; break-inside:avoid; }
     .analysis-methodology { margin-top:12px; padding:8px 10px; border-radius:9px; background:#eef2f7; color:#526077; font-size:8px; line-height:1.35; }
     .analysis-validation { margin:10px 0; padding:10px; border:1px solid #dc2626; border-radius:10px; color:#991b1b; background:#fef2f2; }
+    .facilitator-analysis-dialog { width:min(900px,calc(100vw - 32px)); max-height:min(90vh,920px); overflow:auto; }
+    .facilitator-highlight-list { display:flex; flex-wrap:wrap; gap:7px; margin:12px 0; }
+    .facilitator-highlight { padding:6px 9px; border:2px solid currentColor; border-radius:10px; background:#fff; color:#334155; font-size:11px; font-weight:800; }
+    .facilitator-highlight.green { color:#15803d; background:#f0fdf4; }
+    .facilitator-highlight.red { color:#dc2626; background:#fef2f2; }
+    .facilitator-highlight.yellow { color:#a16207; background:#fefce8; }
+    #facilitatorNotesText { min-height:52vh; resize:vertical; white-space:pre-wrap; font-family:Arial,Helvetica,sans-serif; line-height:1.45; }
     .analysis-settings-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
     .analysis-setting { padding:12px; border:1px solid #364152; border-radius:12px; background:#1E2936; }
     .analysis-setting .tiny { display:block; margin-top:5px; }
@@ -866,7 +873,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.20.08</strong><br>
+        Version <strong id="appVersionLabel">2026.07.22.01</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1443,6 +1450,18 @@ Sanger, CA 93657"></textarea>
     </div>
   </div>
 
+  <div id="facilitatorAnalysisBackdrop" class="dialog-backdrop no-print">
+    <div class="send-dialog facilitator-analysis-dialog" role="dialog" aria-modal="true" aria-labelledby="facilitatorAnalysisTitle">
+      <div class="section-title">
+        <div><h2 id="facilitatorAnalysisTitle">Team Map Slide Notes</h2><p id="facilitatorAnalysisMeta" class="tiny muted">Copy these prompts into your presentation notes.</p></div>
+        <button id="closeFacilitatorAnalysisButton" class="button ghost small-btn" onclick="closeFacilitatorAnalysisDialog()">Close</button>
+      </div>
+      <div id="facilitatorHighlightList" class="facilitator-highlight-list" aria-label="Suggested Team Map highlights"></div>
+      <div class="field"><label for="facilitatorNotesText">Copyable facilitator notes</label><textarea id="facilitatorNotesText" readonly></textarea></div>
+      <div class="send-dialog-actions"><button class="button secondary" onclick="closeFacilitatorAnalysisDialog()">Close</button><button class="button" onclick="copyFacilitatorNotes(this)">Copy Slide Notes</button></div>
+    </div>
+  </div>
+
   <!-- PRINT VIEW -->
   <div id="teamMapPreview" class="print-view hidden" aria-hidden="true">
     <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="changeTeamMapLeader()">Change Leader</button><button class="button small-btn" onclick="printTeamMapPdf()">Print / Save as PDF</button></div></div>
@@ -1457,7 +1476,7 @@ Sanger, CA 93657"></textarea>
       <strong id="printPreviewLabel">Printable invoice preview</strong>
       <div class="actions" style="margin:0;">
         <button class="button secondary small-btn" onclick="closePrintView()">Close</button>
-        <button class="button small-btn" onclick="printTeamMapPdf()">Print / Save PDF</button>
+        <button class="button small-btn" onclick="printCurrentDocumentPreview()">Print / Save PDF</button>
       </div>
     </div>
     <div class="invoice-sheet">
@@ -1513,15 +1532,15 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/googleSheets.js?v=10"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
-  <script src="../assets/js/teamMapAnalysis.js?v=1"></script>
-  <script src="../assets/js/assessmentLibrary.js?v=5"></script>
+  <script src="../assets/js/teamMapAnalysis.js?v=2"></script>
+  <script src="../assets/js/assessmentLibrary.js?v=6"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
   <script src="../assets/js/invoices.js?v=2"></script>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.20.08";
+    const APP_VERSION = "2026.07.22.01";
 
     const K = {
       clients: "jjc_clients",
@@ -1548,6 +1567,8 @@ Sanger, CA 93657"></textarea>
     let suggestedTeamMapAnalysis = null;
     let teamMapAnalysisFieldModes = {};
     let teamMapAnalysisStale = true;
+    let facilitatorAnalysisReturnFocus = null;
+    let currentPrintFileName = "Jeff Jones Consulting Document";
     let estimates = [];
     let invoices = [];
     let settings = {};
@@ -2230,7 +2251,7 @@ Sanger, CA 93657"></textarea>
         const el = document.createElement("div");
         el.className = "record-card";
         const workshopWhen = w.WorkshopDate ? formatDate(w.WorkshopDate) : (w.DateDescription || "Date not recorded");
-        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
+        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button><button class="button secondary small-btn" onclick="openWorkshopFacilitatorAnalysis('${jsEsc(w.WorkshopID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadWorkshopCondensedTeamMap('${jsEsc(w.WorkshopID)}',this)">Download Map</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
         if (!isArchived(w)) {
           const emailButton = document.createElement("button");
           emailButton.className = "button secondary small-btn";
@@ -2238,7 +2259,7 @@ Sanger, CA 93657"></textarea>
           emailButton.textContent = "Use Email Template";
           emailButton.addEventListener("click", () => openWorkshopEmailTemplates(w.WorkshopID));
           const actions = el.querySelector(".actions");
-          actions.insertBefore(emailButton, actions.children[2] || null);
+          actions.insertBefore(emailButton, actions.children[4] || null);
         }
         wrap.appendChild(el);
       });
@@ -2543,6 +2564,66 @@ Sanger, CA 93657"></textarea>
       updateAnalyticsWorkshopOptions();
       document.getElementById("analyticsWorkshop").value = "";
       renderAssessmentAnalytics();
+    }
+
+    async function workshopTeamMapPayload(workshopId) {
+      const workshop = workshops.find(item => String(item.WorkshopID) === String(workshopId));
+      if (!workshop) throw new Error("Workshop not found.");
+      const assessment = await Database.getWorkshopAssessment(workshopId);
+      if (!assessment?.import || !assessment?.results?.length) throw new Error(`No assessment results are available for ${workshop.Organization || workshopId}.`);
+      return {
+        assessment,
+        workshopId,
+        title: workshop.Organization || assessment.import.GroupName || workshopId,
+        context: {
+          title: workshop.Organization || assessment.import.GroupName || "Team",
+          organization: workshop.Organization || assessment.import.GroupName || "",
+          identifier: workshopId,
+          dateLabel: workshop.WorkshopDate ? formatDate(workshop.WorkshopDate) : workshop.DateDescription || ""
+        }
+      };
+    }
+
+    function showFacilitatorAnalysis(payload) {
+      const distribution = TeamMapAnalysis.calculateTeamMapDistribution(payload.assessment.results, payload.assessment.import.LeaderAssessmentResultID, settings);
+      const analysis = TeamMapAnalysis.generateFacilitatorAnalysis(distribution);
+      if (!analysis.valid) return toast(analysis.errors.join(" "));
+      facilitatorAnalysisReturnFocus = document.activeElement;
+      document.getElementById("facilitatorAnalysisTitle").textContent = `${payload.title} — Slide Notes`;
+      document.getElementById("facilitatorAnalysisMeta").textContent = "Suggested outlines appear first, followed by a copyable W/I/D/G/E/T, stages, and Responsive/Disruptive walkthrough.";
+      document.getElementById("facilitatorHighlightList").innerHTML = analysis.highlights.length
+        ? analysis.highlights.map(item => `<span class="facilitator-highlight ${esc(item.color)}">${esc(item.color.toUpperCase())}: ${esc(item.target)}</span>`).join("")
+        : '<span class="tiny muted">No highlight rose above the configured thresholds.</span>';
+      document.getElementById("facilitatorNotesText").value = TeamMapAnalysis.facilitatorNotesText(distribution, payload.title);
+      document.getElementById("facilitatorAnalysisBackdrop").classList.add("open");
+      setTimeout(() => document.getElementById("closeFacilitatorAnalysisButton").focus(), 0);
+    }
+
+    async function openWorkshopFacilitatorAnalysis(workshopId) {
+      try { showFacilitatorAnalysis(await workshopTeamMapPayload(workshopId)); }
+      catch (error) { toast(error.message || "Unable to create slide notes."); }
+    }
+
+    function closeFacilitatorAnalysisDialog() {
+      document.getElementById("facilitatorAnalysisBackdrop").classList.remove("open");
+      if (facilitatorAnalysisReturnFocus?.focus) facilitatorAnalysisReturnFocus.focus();
+      facilitatorAnalysisReturnFocus = null;
+    }
+
+    async function copyFacilitatorNotes(button) {
+      const field = document.getElementById("facilitatorNotesText"), text = field.value;
+      try {
+        let copied=false;
+        if (navigator.clipboard?.writeText) {
+          try { await navigator.clipboard.writeText(text); copied=true; } catch {}
+        }
+        if(!copied){ field.focus(); field.select(); copied=document.execCommand("copy"); }
+        if(!copied)throw new Error("Clipboard access was denied.");
+        const original = button.textContent;
+        button.textContent = "Copied";
+        setTimeout(() => button.textContent = original, 1400);
+        toast("Slide notes copied.");
+      } catch (error) { toast("Unable to copy automatically. Select the notes and copy them manually."); }
     }
 
     async function openAssessmentDialog(workshopId) {
@@ -2857,7 +2938,21 @@ Sanger, CA 93657"></textarea>
     function resetTeamMapAnalysisToSuggestions(){ if(!suggestedTeamMapAnalysis)return generateTeamMapAnalysisSuggestions(true); if(confirm("Reset all fields to the current suggested analysis?")){ fillAnalysisEditor(suggestedTeamMapAnalysis,Object.fromEntries(Object.keys(suggestedTeamMapAnalysis).map(key=>[key,"auto"]))); currentTeamMapAnalysis={...suggestedTeamMapAnalysis}; teamMapAnalysisStale=true; updateTeamMapAnalysisStatus(); renderTeamMapAnalysisPage(); } }
     async function loadCurrentTeamMapAnalysis(){ const key=teamMapAnalysisContextKey(), fingerprint=teamMapAnalysisFingerprint(); let saved=null; try{saved=await Database.getTeamMapAnalysis(key);}catch(err){console.warn("Unable to load saved Team Map analysis.",err);} suggestedTeamMapAnalysis=TeamMapAnalysis.suggestedAnalysis(currentTeamMapDistribution); if(saved){ const values={}; Object.keys(suggestedTeamMapAnalysis).forEach(k=>values[k]=saved[k]||""); let modes={}; try{modes=JSON.parse(saved.FieldModes||"{}");}catch{} fillAnalysisEditor(values,modes); currentTeamMapAnalysis=values; teamMapAnalysisStale=String(saved.SourceFingerprint)!==fingerprint; }else{ fillAnalysisEditor(suggestedTeamMapAnalysis,Object.fromEntries(Object.keys(suggestedTeamMapAnalysis).map(k=>[k,"auto"]))); currentTeamMapAnalysis={...suggestedTeamMapAnalysis}; teamMapAnalysisStale=true; } updateTeamMapAnalysisStatus(); }
     async function saveCurrentTeamMapAnalysis(button){ if(!currentTeamMapDistribution?.validation?.valid)return toast("Correct the invalid participant results before saving analysis."); const finish=beginSave(button,"Saving Analysis..."); try{ const values=analysisFromEditor(), key=teamMapAnalysisContextKey(), now=new Date().toISOString(); const payload={ContextKey:key,ContextType:teamMapContext?.groupId?"AssessmentGroup":"Workshop",ContextID:teamMapContext?.groupId||assessmentWorkshopId||currentAssessmentData?.import?.AssessmentImportID||"",...values,FieldModes:JSON.stringify(teamMapAnalysisFieldModes),SourceFingerprint:teamMapAnalysisFingerprint(),LastGeneratedDate:now}; await Database.saveTeamMapAnalysis(payload); currentTeamMapAnalysis=values; teamMapAnalysisStale=false; updateTeamMapAnalysisStatus(); renderTeamMapAnalysisPage(); toast("Team Map analysis saved."); return true;}catch(err){toast(err.message||"Unable to save Team Map analysis.");return false;}finally{finish();} }
-    function printTeamMapPdf(){ if(currentTeamMapDistribution?.settings?.AnalysisEnabled===false)return window.print(); if(!currentTeamMapDistribution?.validation?.valid)return toast("Correct the invalid participant results before generating the PDF."); currentTeamMapAnalysis=analysisFromEditor(); renderTeamMapAnalysisPage(); window.print(); }
+    function safeDownloadName(value) { return String(value || "Jeff Jones Consulting Document").replace(/[<>:"/\\|?*\u0000-\u001f]/g," ").replace(/\s+/g," ").trim().replace(/[. ]+$/,"") || "Jeff Jones Consulting Document"; }
+    function printWithContextName(name) {
+      const previousTitle = document.title;
+      document.title = safeDownloadName(name);
+      const restore = () => { document.title = previousTitle; window.removeEventListener("afterprint",restore); };
+      window.addEventListener("afterprint",restore,{once:true});
+      window.print();
+    }
+    function teamMapPrintName() {
+      const workshop = workshops.find(item=>String(item.WorkshopID)===String(assessmentWorkshopId));
+      const title = teamMapContext?.title || workshop?.Organization || currentAssessmentData?.import?.GroupName || "Team";
+      return teamMapContext?.groupId ? `${title} - Team Map` : `${title} - Assessment Results`;
+    }
+    function printTeamMapPdf(){ if(currentTeamMapDistribution?.settings?.AnalysisEnabled===false)return printWithContextName(teamMapPrintName()); if(!currentTeamMapDistribution?.validation?.valid)return toast("Correct the invalid participant results before generating the PDF."); currentTeamMapAnalysis=analysisFromEditor(); renderTeamMapAnalysisPage(); printWithContextName(teamMapPrintName()); }
+    function printCurrentDocumentPreview(){ printWithContextName(currentPrintFileName); }
     function renderTeamMapAnalysisPage(){ const sheet=document.getElementById("teamMapAnalysisSheet"); if(!sheet||!currentTeamMapDistribution)return; const d=currentTeamMapDistribution,s=d.settings; if(!s.AnalysisEnabled){sheet.classList.add("hidden");return;} sheet.classList.remove("hidden"); if(!d.validation.valid){sheet.innerHTML=`<div class="team-map-header"><h1 class="team-map-title">Team Map Analysis</h1></div><div class="analysis-validation"><strong>Analysis cannot be generated.</strong><ul>${d.validation.errors.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;return;} const observations=TeamMapAnalysis.generateTeamObservations(d), questions=TeamMapAnalysis.generateConsultantQuestions(d), analysis=currentTeamMapAnalysis||TeamMapAnalysis.suggestedAnalysis(d), workshop=workshops.find(w=>w.WorkshopID===assessmentWorkshopId)||{}, title=teamMapContext?.title||workshop.Organization||currentAssessmentData?.import?.GroupName||"Team", date=teamMapContext?.dateLabel||(workshop.WorkshopDate?formatDate(workshop.WorkshopDate):workshop.DateDescription||""), leader=d.leader?`${d.leader.FirstName||d.leader.firstName||""} ${d.leader.LastName||d.leader.lastName||""}`.trim():"Not selected"; const classification=m=>m.classifications[0]||"Monitor"; sheet.innerHTML=`<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Team Map Analysis</h1><div style="font-weight:900;">${esc(title)}</div></div></div><div class="team-map-meta">${esc(date)}<br>${d.actualTeamSize} actual participants<br>Leader: ${esc(leader)}</div></div>${d.actualTeamSize<s.MinimumTeamSizeForAnalysis?`<div class="analysis-validation"><strong>Limited sample:</strong> This team is below the configured minimum of ${s.MinimumTeamSizeForAnalysis}; interpret patterns cautiously.</div>`:""}<div class="analysis-summary-grid"><div class="analysis-summary-item"><strong>Actual team</strong><br>${d.actualTeamSize} people</div><div class="analysis-summary-item"><strong>Weighted team</strong><br>${d.weightedTeamSize} influence units</div><div class="analysis-summary-item"><strong>Leader weighting</strong><br>${d.leaderWeightingApplied?"Included":"Not included"}</div><div class="analysis-summary-item"><strong>Observations</strong><br>${observations.length} prioritized</div></div><table class="analysis-table"><thead><tr><th>Type</th><th>Actual G</th><th>Actual C</th><th>Actual F</th><th>Weighted G</th><th>Weighted F</th><th>Classification</th></tr></thead><tbody>${d.metrics.map(m=>`<tr><td><strong>${esc(m.type)}</strong></td><td>${m.actualGeniusCount} (${m.actualGeniusRate}%)</td><td>${m.actualCompetencyCount} (${m.actualCompetencyRate}%)</td><td>${m.actualFrustrationCount} (${m.actualFrustrationRate}%)</td><td>${m.weightedGeniusCount} (${m.weightedGeniusRate}%)</td><td>${m.weightedFrustrationCount} (${m.weightedFrustrationRate}%)</td><td>${esc(classification(m))}</td></tr>`).join("")}</tbody></table><section class="analysis-section"><h3>Key Team Observations</h3><ul class="analysis-observations">${observations.map(o=>`<li><strong>${esc(o.type)} - ${esc(o.label)}:</strong> ${esc(o.text)}</li>`).join("")||"<li>No automatic observation rose above the configured thresholds.</li>"}</ul></section><section class="analysis-section"><h3>Consultant Analysis</h3><div class="analysis-consultant-grid">${Object.entries(analysis).filter(([,v])=>v).map(([k,v])=>`<div class="analysis-consultant-item"><strong>${esc(k.replace(/([a-z])([A-Z])/g,"$1 $2"))}</strong><br>${esc(v)}</div>`).join("")}</div></section>${questions.length?`<section class="analysis-section"><h3>Discussion Questions</h3><ul class="analysis-observations">${questions.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></section>`:""}${s.IncludeMethodologyNote?`<div class="analysis-methodology"><strong>Methodology:</strong> Actual counts represent unique people. ${d.leaderWeightingApplied?"The selected leader receives one additional influence point in each of their two Geniuses and two Frustrations; Competencies are not weighted.":"Leader weighting is disabled."} These observations are cautious discussion prompts, not definitive conclusions or diagnoses.</div>`:""}`; }
 
     // The analysis print page uses the Team Map order and a prose-first consultant summary.
@@ -2953,6 +3048,85 @@ Sanger, CA 93657"></textarea>
       const conceptRows = team.cards.map(card => teamMapConceptPanel(card, team.leader, mode)).join("");
       document.getElementById("teamMapConceptSheet").innerHTML = `<div class="team-map-concept-card"><div class="team-map-concept-header"><div style="display:flex;align-items:center;gap:10px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h2 class="team-map-concept-title">Working Genius Team Map</h2><div class="team-map-concept-subtitle">${esc(mapTitle)}${mapSubtitle && mapSubtitle !== mapTitle ? ` &bull; ${esc(mapSubtitle)}` : ""}</div></div></div><div class="team-map-meta">${esc(mapDate)}</div></div><div class="team-map-concept-layout"><div class="team-map-concept-axis-title">Stages of Work</div><div class="team-map-concept-columns"><div class="team-map-concept-column">Responsive</div><div class="team-map-concept-column">Disruptive</div></div><div class="team-map-stage-labels"><div class="team-map-stage-label">Ideation</div><div class="team-map-stage-label">Activation</div><div class="team-map-stage-label">Implementation</div></div><div class="team-map-concept-grid">${conceptRows}</div></div></div>`;
       if (!document.getElementById("teamMapPreview").classList.contains("hidden")) requestAnimationFrame(fitTeamMapNames);
+    }
+
+    function canvasRoundRect(context,x,y,width,height,radius,fill,stroke,lineWidth=2) {
+      context.beginPath(); context.roundRect(x,y,width,height,radius);
+      if(fill){context.fillStyle=fill;context.fill();}
+      if(stroke){context.strokeStyle=stroke;context.lineWidth=lineWidth;context.stroke();}
+    }
+
+    async function condensedTeamMapPngBlob(payload) {
+      await document.fonts?.ready;
+      const canvas=document.createElement("canvas"), size=1800, context=canvas.getContext("2d");
+      canvas.width=size; canvas.height=size; context.fillStyle="#ffffff"; context.fillRect(0,0,size,size);
+      canvasRoundRect(context,28,28,size-56,size-56,32,"#ffffff","#cbd5e1",3);
+      const team=Assessments.deriveTeamView(payload.assessment.results,payload.assessment.import.LeaderAssessmentResultID), mode=document.getElementById("teamMapNameMode").value;
+      try {
+        const logo=new Image(); logo.src=new URL("../assets/images/JJC_Logo.png",document.baseURI).href;
+        await logo.decode(); context.drawImage(logo,82,72,92,92);
+      } catch {}
+      context.fillStyle="#243f72"; context.font="700 48px Montserrat, Arial, sans-serif"; context.fillText("Working Genius Team Map",205,115);
+      context.fillStyle="#526077"; context.font="500 22px Montserrat, Arial, sans-serif";
+      const subtitle=[payload.title,payload.context?.organization].filter((value,index,array)=>value&&array.indexOf(value)===index).join(" • ");
+      context.fillText(subtitle,205,151);
+      context.textAlign="right"; context.fillText(payload.context?.dateLabel||"",1715,113); context.textAlign="left";
+      context.fillStyle="#243f72"; context.fillRect(78,185,1644,7);
+
+      const labelX=78, labelWidth=142, gridX=240, gridWidth=1482, columnGap=24, columnWidth=(gridWidth-columnGap)/2, headerY=220, headerHeight=86;
+      canvasRoundRect(context,gridX,headerY,columnWidth,headerHeight,18,"#eaf0f9");
+      canvasRoundRect(context,gridX+columnWidth+columnGap,headerY,columnWidth,headerHeight,18,"#f3ecf8");
+      context.font="800 29px Montserrat, Arial, sans-serif"; context.textAlign="center"; context.textBaseline="middle";
+      context.fillStyle="#243f72"; context.fillText("Responsive",gridX+columnWidth/2,headerY+headerHeight/2);
+      context.fillStyle="#6b3f78"; context.fillText("Disruptive",gridX+columnWidth+columnGap+columnWidth/2,headerY+headerHeight/2);
+
+      const gridY=328, rowGap=24, gridHeight=1392, rowHeight=(gridHeight-rowGap*2)/3, stageNames=["Ideation","Activation","Implementation"];
+      stageNames.forEach((stage,row)=>{
+        const y=gridY+row*(rowHeight+rowGap);
+        canvasRoundRect(context,labelX,y,labelWidth,rowHeight,18,"#eef2f7");
+        context.save(); context.translate(labelX+labelWidth/2,y+rowHeight/2); context.rotate(-Math.PI/2); context.fillStyle="#334155"; context.font="800 24px Montserrat, Arial, sans-serif"; context.textAlign="center"; context.fillText(stage,0,0); context.restore();
+      });
+      context.save(); context.translate(52,headerY+headerHeight/2); context.rotate(-Math.PI/2); context.fillStyle="#64748b"; context.font="800 17px Montserrat, Arial, sans-serif"; context.textAlign="center"; context.fillText("STAGES OF WORK",0,0); context.restore();
+
+      team.cards.forEach((card,index)=>{
+        const row=Math.floor(index/2),col=index%2,x=gridX+col*(columnWidth+columnGap),y=gridY+row*(rowHeight+rowGap),panelHeader=65,half=columnWidth/2;
+        canvasRoundRect(context,x,y,columnWidth,rowHeight,20,"#f8fafc","#b8c7dc",3);
+        context.save(); context.beginPath(); context.roundRect(x,y,columnWidth,rowHeight,20); context.clip(); context.fillStyle="#29497f"; context.fillRect(x,y,columnWidth,panelHeader); context.restore();
+        context.fillStyle="#ffffff"; context.beginPath(); context.arc(x+columnWidth/2-80,y+panelHeader/2,22,0,Math.PI*2); context.fill();
+        context.fillStyle="#29497f"; context.font="800 24px Montserrat, Arial, sans-serif"; context.textAlign="center"; context.textBaseline="middle"; context.fillText(card.abbreviation,x+columnWidth/2-80,y+panelHeader/2+1);
+        context.fillStyle="#ffffff"; context.font="800 29px Montserrat, Arial, sans-serif"; context.fillText(card.type,x+columnWidth/2+22,y+panelHeader/2+1);
+        context.strokeStyle="#cbd5e1"; context.lineWidth=2; context.beginPath(); context.moveTo(x+half,y+panelHeader); context.lineTo(x+half,y+rowHeight); context.stroke();
+        context.font="800 22px Montserrat, Arial, sans-serif"; context.fillStyle="#15803d"; context.fillText("Genius",x+half/2,y+panelHeader+40); context.fillStyle="#dc2626"; context.fillText("Frustration",x+half+half/2,y+panelHeader+40);
+        const drawNames=(people,startX,color)=>{
+          const labels=people.map(person=>`${teamMapDisplayName(person,mode)}${team.leader&&person.id===team.leader.id?" *":""}`), columns=labels.length>9?2:1, rowsPerColumn=labels.length>18?Math.ceil(labels.length/2):9, columnInnerWidth=(half-32)/columns, lineHeight=Math.min(32,286/rowsPerColumn);
+          let fontSize=Math.min(23,lineHeight-3); context.font=`600 ${fontSize}px Montserrat, Arial, sans-serif`;
+          while(fontSize>16&&labels.some(label=>context.measureText(label).width>columnInnerWidth-8)){fontSize--;context.font=`600 ${fontSize}px Montserrat, Arial, sans-serif`;}
+          context.fillStyle=color; context.textAlign="left"; context.textBaseline="alphabetic";
+          labels.forEach((label,nameIndex)=>{const nameColumn=Math.floor(nameIndex/rowsPerColumn),nameRow=nameIndex%rowsPerColumn;context.fillText(label,startX+16+nameColumn*columnInnerWidth,y+panelHeader+85+nameRow*lineHeight,columnInnerWidth-7);});
+        };
+        drawNames(card.geniusWeighted,x,"#15803d"); drawNames(card.frustrationWeighted,x+half,"#dc2626");
+      });
+      return await new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error("The PNG could not be created.")),"image/png"));
+    }
+
+    async function downloadCondensedTeamMap(payload, button) {
+      const originalText=button?.textContent||"Download Map";
+      if(button){button.disabled=true;button.textContent="Preparing PNG...";}
+      try {
+        const blob=await condensedTeamMapPngBlob(payload);
+        const link=document.createElement("a"), url=URL.createObjectURL(blob);
+        link.href=url; link.download=`${safeDownloadName(payload.title)} - Condensed Team Map.png`; document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+        toast("Condensed Team Map downloaded.");
+      } catch(error) { toast(error.message||"Unable to download the condensed Team Map."); }
+      finally {
+        if(button){button.disabled=false;button.textContent=originalText;}
+      }
+    }
+
+    async function downloadWorkshopCondensedTeamMap(workshopId,button) {
+      try { await downloadCondensedTeamMap(await workshopTeamMapPayload(workshopId),button); }
+      catch(error){ if(button)button.disabled=false; toast(error.message||"Unable to download the condensed Team Map."); }
     }
 
     function fitTeamMapNames() {
@@ -3655,6 +3829,8 @@ Sanger, CA 93657"></textarea>
 
     function showDocumentPreview(doc, type = "Invoice") {
       previewReturnFocus = document.activeElement;
+      const documentSubject = type === "Invoice" ? (doc.clientName || doc.invoiceNo || "Invoice") : (doc.name || doc.clientName || doc.id || "Estimate");
+      currentPrintFileName = `${documentSubject} - ${type}`;
       const docProfile = { ...profile, ...(doc.profile || {}) };
       document.getElementById("printPreviewLabel").textContent = `Printable ${type.toLowerCase()} preview`;
       document.getElementById("printDocumentTitle").textContent = type;
