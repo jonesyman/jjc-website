@@ -1,17 +1,26 @@
 # Current State and Handoff
 
-Last updated: 2026-07-22
+Last updated: 2026-07-25
 
 ## Repository state
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.22.03`
-- Latest feature: dominance-based stage and Responsive/Disruptive highlights
+- Current application version: `2026.07.25.01`
+- Latest feature: initial JJP 3D-printing operations module
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
+
+- Added a separate green JJP admin console under the protected admin route.
+- Added mobile-friendly clients, projects, filament, additional-cost, quotes, invoices, settings, and dashboard views.
+- Translated the Android cost model into itemized web calculations with material, machine time, labor, failure buffer, discount, tax, shipping, and custom costs.
+- Added a separate JJP Apps Script backend for the dedicated spreadsheet and generated-document folder.
+- Added idempotent sheet/folder initialization, stable numbering, quote-to-invoice conversion, and branded Drive PDF generation.
+- Reused the layered-filament JJP logo from the source ZIP.
+- Added a Consulting-to-JJP link while keeping business records and endpoints separate.
+- Recorded Consulting spreadsheet and Drive cleanup as the follow-up after JJP completion.
 
 - Limited stage highlighting to the one most dominant overrepresented concentration across Ideation, Activation, and Implementation.
 - Reserved Responsive/Disruptive highlights for unusually dominant concentrations; LVCC now recommends only the green Implementation Genius highlight across those aggregate sections.

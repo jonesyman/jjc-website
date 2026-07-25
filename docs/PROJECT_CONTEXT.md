@@ -6,6 +6,8 @@ This application supports Jeff Jones Consulting from the first client conversati
 
 The public site explains the consulting offering. The private `/admin/` area is the operational console and is protected at the hosting layer.
 
+The protected admin area also links to a separate Jeff Jones Prints console at `/admin/jjp.html`. JJP mirrors the Consulting console's usability patterns but uses green branding and an independent Google Sheet, Apps Script deployment, and Drive document tree.
+
 ## Primary workflow
 
 The normal engagement sequence is:
@@ -71,6 +73,10 @@ The admin sidebar currently follows this order:
 - The primary mobile reference is a Samsung Galaxy Ultra-class phone. Test practical CSS viewports such as approximately `412 × 915` portrait and `915 × 412` landscape; physical screen resolution is not the CSS viewport.
 - Printed estimates, invoices, and Team Maps must retain a clean US Letter layout independent of screen size.
 - Desktop and mobile admin operations expose a global loading status. Startup uses real completed-step percentages; individual backend calls use learned approximate time remaining and never present an invented exact percentage.
+- JJP remains visually and operationally separate from Working Genius Consulting while feeling like a companion application.
+- JJP uses the recovered layered-filament logo and a forest/emerald/sage palette.
+- JJP quotes itemize filament, machine time, labor, failure buffer, reusable additional costs, discount, tax, and shipping.
+- After JJP is complete, Consulting spreadsheet and Drive-folder organization should be reviewed as a separate cleanup project.
 
 ## Terminology
 

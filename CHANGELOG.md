@@ -2,6 +2,16 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.25.01 — 2026-07-25
+
+- Added a separate green, mobile-friendly Jeff Jones Prints admin console.
+- Added JJP clients, projects, filament and additional-cost libraries, quotes, invoices, settings, and dashboard workflows.
+- Added an independent JJP Apps Script backend and Google Sheet schema with stable numbering and quote-to-invoice conversion.
+- Added branded quote and invoice PDF generation into separate JJP Drive folders.
+- Recovered and reused the JJP layered-filament logo from the Android app.
+- Linked the Consulting and JJP consoles without mixing their data.
+- Recorded Consulting database and Drive organization cleanup as a separate post-JJP task.
+
 ## 2026.07.22.03 — 2026-07-22
 
 - Changed stage recommendations to highlight only the single strongest overrepresented Genius or Frustration concentration across all three stages.

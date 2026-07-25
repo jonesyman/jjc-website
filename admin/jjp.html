@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10281f">
+  <title>JJP 3D Printing Admin</title>
+  <link rel="stylesheet" href="../assets/css/jjp-admin.css?v=2026072501">
+</head>
+<body>
+  <div id="loadingStatus" class="loading-status hidden" role="status" aria-live="polite">
+    <div class="loading-status-head"><strong id="loadingLabel">Loading JJP</strong><span id="loadingPercent"></span></div>
+    <div class="loading-track"><span id="loadingBar"></span></div>
+    <div id="loadingDetail" class="loading-detail">Preparing your printing workspace…</div>
+  </div>
+
+  <div class="app-shell">
+    <aside id="sidebar" class="sidebar">
+      <div class="brand">
+        <img src="../assets/images/JJP_Logo.png" alt="JJP logo">
+        <div><strong>JJP Admin</strong><span>3D Printing Studio</span></div>
+      </div>
+      <nav id="navigation" aria-label="JJP sections">
+        <button class="active" data-view="dashboard">Dashboard</button>
+        <button data-view="clients">Clients</button>
+        <button data-view="projects">Projects</button>
+        <button data-view="quotes">Quotes</button>
+        <button data-view="invoices">Invoices</button>
+        <button data-view="filaments">Filament Library</button>
+        <button data-view="costs">Additional Costs</button>
+        <button data-view="settings">Settings</button>
+      </nav>
+      <div class="sidebar-footer"><a href="./index.html">← Consulting Admin</a><span>JJP Version 2026.07.25.01</span></div>
+    </aside>
+    <button id="sidebarBackdrop" class="sidebar-backdrop" aria-label="Close navigation"></button>
+
+    <div class="main">
+      <header class="topbar">
+        <button id="menuButton" class="icon-button" aria-label="Open navigation">☰</button>
+        <div><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">3D printing operations at a glance</p></div>
+        <button class="button secondary" id="refreshButton">Refresh</button>
+      </header>
+
+      <main>
+        <div id="connectionNotice" class="notice hidden"></div>
+
+        <section id="view-dashboard" class="view active">
+          <div id="metrics" class="metrics"></div>
+          <div class="grid two">
+            <article class="card"><div class="section-head"><h2>Recent Quotes</h2><button class="link-button" data-go="quotes">View all</button></div><div id="recentQuotes" class="record-list"></div></article>
+            <article class="card"><div class="section-head"><h2>Active Projects</h2><button class="link-button" data-go="projects">View all</button></div><div id="activeProjects" class="record-list"></div></article>
+          </div>
+          <article class="card">
+            <div class="section-head"><div><h2>Quick Start</h2><p>Create a client and project, confirm material costs, then prepare the quote.</p></div></div>
+            <div class="quick-actions"><button class="button" data-new="client">New Client</button><button class="button" data-new="project">New Project</button><button class="button accent" data-new="quote">New Quote</button></div>
+          </article>
+        </section>
+
+        <section id="view-clients" class="view">
+          <div class="section-head page-head"><div><h2>Clients</h2><p>Customer contact and delivery information</p></div><button class="button" data-new="client">New Client</button></div>
+          <div id="clientsList" class="record-grid"></div>
+        </section>
+
+        <section id="view-projects" class="view">
+          <div class="section-head page-head"><div><h2>Projects</h2><p>Track each print job from request through delivery</p></div><button class="button" data-new="project">New Project</button></div>
+          <div id="projectsList" class="record-grid"></div>
+        </section>
+
+        <section id="view-quotes" class="view">
+          <div class="section-head page-head"><div><h2>Quotes</h2><p>Itemized estimates based on material, machine time, labor, and extras</p></div><button class="button accent" data-new="quote">New Quote</button></div>
+          <div id="quotesList" class="record-grid"></div>
+        </section>
+
+        <section id="view-invoices" class="view">
+          <div class="section-head page-head"><div><h2>Invoices</h2><p>Convert accepted quotes and track balances</p></div><button class="button" data-new="invoice">New Invoice</button></div>
+          <div id="invoicesList" class="record-grid"></div>
+        </section>
+
+        <section id="view-filaments" class="view">
+          <div class="section-head page-head"><div><h2>Filament Library</h2><p>Spool pricing automatically determines material cost per gram</p></div><button class="button" data-new="filament">Add Filament</button></div>
+          <div id="filamentsList" class="record-grid"></div>
+        </section>
+
+        <section id="view-costs" class="view">
+          <div class="section-head page-head"><div><h2>Additional Costs</h2><p>Reusable magnets, hardware, finishing, packaging, design, and rush charges</p></div><button class="button" data-new="cost">Add Cost</button></div>
+          <div id="costsList" class="record-grid"></div>
+        </section>
+
+        <section id="view-settings" class="view">
+          <div class="section-head page-head"><div><h2>Settings</h2><p>Business identity and default pricing behavior</p></div></div>
+          <form id="settingsForm" class="card form-card">
+            <div class="form-grid">
+              <label>Business name<input name="BusinessName"></label>
+              <label>Business email<input name="BusinessEmail" type="email"></label>
+              <label>Business phone<input name="BusinessPhone"></label>
+              <label>Default labor rate<input name="DefaultLaborRate" type="number" min="0" step=".01"></label>
+              <label>Default machine rate<input name="DefaultMachineRate" type="number" min="0" step=".01"></label>
+              <label>Default failure buffer %<input name="DefaultFailureBufferPercent" type="number" min="0" step=".1"></label>
+              <label>Default tax %<input name="DefaultTaxPercent" type="number" min="0" step=".1"></label>
+              <label>Quote validity days<input name="QuoteValidityDays" type="number" min="1" step="1"></label>
+              <label class="wide">Business address<textarea name="BusinessAddress"></textarea></label>
+              <label class="wide">Payment instructions<textarea name="PaymentInstructions"></textarea></label>
+              <label class="wide">PDF logo Drive file ID<input name="LogoFileID" placeholder="Optional; use a PNG stored in Google Drive"></label>
+            </div>
+            <div class="actions"><button class="button" type="submit">Save Settings</button></div>
+          </form>
+          <article class="card follow-up"><h3>Future organization task</h3><p>After the JJP printing module is complete, review and clean up the Consulting database and Google Drive folder organization. Keep this separate from JJP implementation.</p></article>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="dialogBackdrop" class="dialog-backdrop hidden">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+      <div class="section-head"><h2 id="dialogTitle">Edit Record</h2><button id="closeDialog" class="icon-button" aria-label="Close">×</button></div>
+      <form id="recordForm"></form>
+    </div>
+  </div>
+
+  <div id="documentBackdrop" class="dialog-backdrop hidden">
+    <div class="dialog document-dialog" role="dialog" aria-modal="true" aria-labelledby="documentTitle">
+      <div class="section-head"><div><h2 id="documentTitle">New Quote</h2><p id="documentNumberHint">The number is assigned when saved.</p></div><button id="closeDocument" class="icon-button" aria-label="Close">×</button></div>
+      <form id="documentForm">
+        <input name="DocumentID" type="hidden"><input name="Type" type="hidden">
+        <div class="form-grid">
+          <label>Client<select name="ClientID" required></select></label>
+          <label>Project<select name="ProjectID"></select></label>
+          <label>Status<select name="Status"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Declined</option><option>Paid</option><option>Void</option></select></label>
+          <label>Issue date<input name="IssueDate" type="date"></label>
+          <label class="quote-only">Valid until<input name="ValidUntil" type="date"></label>
+          <label class="invoice-only">Due date<input name="DueDate" type="date"></label>
+        </div>
+        <div class="line-builder">
+          <div class="section-head"><h3>Cost Items</h3><div class="actions compact"><button type="button" class="button secondary" data-add-line="filament">Filament</button><button type="button" class="button secondary" data-add-line="machine">Machine Time</button><button type="button" class="button secondary" data-add-line="labor">Labor</button><button type="button" class="button secondary" data-add-line="extra">Additional Cost</button><button type="button" class="button secondary" data-add-line="custom">Custom</button></div></div>
+          <div id="documentLines"></div>
+        </div>
+        <div class="document-bottom">
+          <div class="form-grid">
+            <label>Failure buffer %<input name="FailureBufferPercent" type="number" min="0" step=".1"></label>
+            <label>Discount<input name="Discount" type="number" min="0" step=".01"></label>
+            <label>Tax %<input name="TaxPercent" type="number" min="0" step=".1"></label>
+            <label>Shipping<input name="Shipping" type="number" min="0" step=".01"></label>
+            <label class="wide">Notes<textarea name="Notes"></textarea></label>
+          </div>
+          <div id="documentTotals" class="totals"></div>
+        </div>
+        <div class="actions end"><button type="button" class="button secondary" id="cancelDocument">Cancel</button><button class="button accent" type="submit">Save Document</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="../assets/js/jjpApi.js?v=2026072501"></script>
+  <script src="../assets/js/jjpAdmin.js?v=2026072501"></script>
+</body>
+</html>

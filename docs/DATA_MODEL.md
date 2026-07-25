@@ -11,6 +11,30 @@
 - Dates are stored as sheet values or ISO strings and normalized by the frontend.
 - Header changes are additive. Do not reorder or delete existing production columns casually.
 
+## JJP 3D printing database
+
+JJP is stored in its own Google Spreadsheet and is not mixed with the Consulting sheets.
+
+### JJP Clients and Projects
+
+Clients use stable `CLI-` IDs and store contact, delivery, notes, active state, and timestamps. Projects use `PRJ-` IDs, belong to a client, and store name, description, production status, target date, notes, active state, and timestamps.
+
+### Filaments and AdditionalCosts
+
+Filaments use `FIL-` IDs and store name, material, color, spool weight, spool cost, derived cost per gram, supplier, and active state. Apps Script recalculates cost per gram on save.
+
+Additional costs use `CST-` IDs and support reusable magnets, hardware, finishing, packaging, design, delivery, rush, and custom charges with a unit type and default unit price.
+
+### JJP Documents and DocumentItems
+
+Quotes and invoices share the Documents table with `JJP-Q-` and `JJP-INV-` IDs. The record stores client/project relationships, lifecycle status, dates, buffer, discount, tax, shipping, totals, payment balance, quote source, PDF metadata, active state, and timestamps.
+
+DocumentItems use UUID IDs and belong to one document. Types include filament, machine time, labor, additional cost, and custom. Each item stores its optional library reference, description, quantity, unit, unit cost, amount, and sort order.
+
+### JJP Settings and Counters
+
+Settings are key/value rows for business branding and pricing defaults. Counters allocate stable business IDs only during saves; opening a form never consumes a number.
+
 ### TeamMapAnalyses
 
 Primary key: `ContextKey` (`workshop:<id>` or `group:<id>`).

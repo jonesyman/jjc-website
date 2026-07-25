@@ -35,16 +35,20 @@ This roadmap records product capabilities rather than relying solely on historic
 - Automated Team Map Analysis with validated actual/weighted distributions, configurable diagnostics, consultant editing, persistence, and print safeguards.
 - Responsive global loading progress with operation steps, learned duration estimates, and parallelized core startup requests.
 - Facilitator-ready Team Map slide notes and standalone condensed-map PNG downloads for workshops and saved groups.
+- A separate JJP 3D-printing admin console, data schema, pricing engine, quote/invoice workflow, and Drive PDF backend.
 
 ## Current release boundary
 
-Version `2026.07.22.03` uses comparative dominance for aggregate highlights: at most one overrepresented stage is highlighted, while Responsive/Disruptive requires an unusually strong concentration.
+Version `2026.07.25.01` adds the initial JJP printing module while preserving the Consulting behavior and data boundary.
 
 See `CURRENT_STATE.md` before continuing.
 
 ## Recommended next work
 
 ### Immediate validation
+
+- Deploy and authorize the separate JJP Apps Script, connect its web-app URL, and complete live read/write/PDF verification.
+- After JJP production verification, review and clean up the Consulting database and Google Drive folder organization as a separate effort.
 
 - Deploy the Apps Script update, open Email Templates, and confirm the sheet and three starter rows are created exactly once.
 - Exercise the complete template lifecycle and confirm every no-cors write through a refreshed read.
