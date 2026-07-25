@@ -2,6 +2,16 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.25.02 — 2026-07-25
+
+- Expanded JJP projects with notes, model links, design-file references, and client sketch/image uploads.
+- Changed the filament library to one brand, product line, and material record with a reusable color list; seeded the 30 current Bambu Lab PLA Basic colors.
+- Added structured filament and additional-cost selectors to quotes and invoices, including multi-color usage details and compact PDF filament subtotals.
+- Added per-item mass-production quoting that multiplies filament, machine time, post-processing, and additional costs by the production quantity.
+- Set the standard machine wear rate to $2 per hour and fixed filament amounts to be stored and displayed as grams.
+- Added the JJP logo to generated quotes and invoices automatically, with an optional private Drive logo override.
+- Removed the internal Consulting-organization reminder from the JJP Settings screen.
+
 ## 2026.07.25.01 — 2026-07-25
 
 - Added a separate green, mobile-friendly Jeff Jones Prints admin console.

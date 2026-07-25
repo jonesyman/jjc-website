@@ -6,13 +6,18 @@ Last updated: 2026-07-25
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.25.01`
-- Latest feature: initial JJP 3D-printing operations module
+- Current application version: `2026.07.25.02`
+- Latest feature: expanded JJP project resources and production-aware quote builder
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Expanded JJP projects with notes, model links, design-file references, and client sketch/image uploads stored in project-specific Drive folders.
+- Consolidated filament inventory into brand/product/material records with reusable color lists and seeded all 30 current Bambu Lab PLA Basic colors.
+- Added structured quote/invoice inputs for filament colors and grams, $2/hour machine wear, post-processing, reusable additional costs, and custom costs.
+- Added per-item mass-production quantities that multiply all selected production inputs while keeping PDFs compact.
+- Added automatic JJP logo loading for generated PDFs and removed the internal future-task reminder from JJP Settings.
 - Added a separate green JJP admin console under the protected admin route.
 - Added mobile-friendly clients, projects, filament, additional-cost, quotes, invoices, settings, and dashboard views.
 - Translated the Android cost model into itemized web calculations with material, machine time, labor, failure buffer, discount, tax, shipping, and custom costs.

@@ -15,6 +15,20 @@
 
 JJP is stored in its own Google Spreadsheet and is not mixed with the Consulting sheets.
 
+### JJP Clients, Projects, and ProjectFiles
+
+Projects link to clients and store status, due date, notes, model links, and design-file references. Uploaded client sketches are indexed in `ProjectFiles` and stored in project-specific folders beneath the JJP generated-document folder.
+
+### JJP Filaments and AdditionalCosts
+
+Each filament row represents a reusable `Brand` + `ProductLine` + `MaterialType` combination. `ColorsJson` stores the available color choices, while spool weight and spool cost determine cost per gram. Quotes store the selected filament record, colors, and grams in the line's `DetailsJson`.
+
+Additional costs remain reusable library records with a unit and unit cost so items such as magnets can be selected and multiplied by quantity.
+
+### JJP Documents and DocumentItems
+
+Quotes and invoices share `Documents`. `ProductionQuantity` records the number of identical items being produced. Each item records `PerUnit` and `DetailsJson`; per-unit filament, machine, labor, additional, and custom costs are multiplied by the production quantity exactly once. Filament remains detailed in storage but is grouped into one compact Filament line in generated PDFs.
+
 ### JJP Clients and Projects
 
 Clients use stable `CLI-` IDs and store contact, delivery, notes, active state, and timestamps. Projects use `PRJ-` IDs, belong to a client, and store name, description, production status, target date, notes, active state, and timestamps.

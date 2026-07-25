@@ -16,9 +16,9 @@ Keep both resources private and owned by the Google account that deploys the JJP
 5. Replace the manifest with `apps-script-jjp/appsscript.json`.
 6. Save the project.
 7. Select and run `initializeJjpDatabase`.
-8. Approve the requested Sheets, Drive, and Documents permissions.
+8. Approve the requested Sheets, Drive, Documents, and external-request permissions. The external request lets generated PDFs load the public JJP logo automatically.
 
-The initializer is safe to run again. It creates missing tabs and columns, seeds starter pricing records only when their libraries are empty, and creates Quotes, Invoices, Project Files, and Archived Documents folders under **JJP Generated Documents**.
+The initializer is safe to run again. It creates missing tabs and columns, adds the ProjectFiles index, seeds the Bambu Lab PLA Basic color library and starter costs without duplicating them, and creates Quotes, Invoices, Project Files, and Archived Documents folders under **JJP Generated Documents**.
 
 ## Add the logo to generated PDFs
 
@@ -28,7 +28,7 @@ The website uses the JJP logo recovered from the Android ZIP. To use it in Apps 
 2. Copy the image's Google Drive file ID.
 3. In JJP **Settings**, save it under **PDF logo Drive file ID**.
 
-PDF generation works without a logo file ID and uses the business name as the primary branding.
+The public website logo is now used automatically. A private Drive logo file ID remains available as an optional override.
 
 ## Deploy the JJP web app
 
@@ -45,10 +45,12 @@ Create a new deployment version after every JJP Apps Script change.
 
 - Confirm all database tabs and four document subfolders exist.
 - Create a test client and project.
-- Confirm the starter filament and additional-cost records.
-- Create a quote with filament, machine time, labor, and an additional cost.
+- Confirm the Bambu Lab PLA Basic color list and additional-cost records.
+- Upload a small client sketch to a saved project and confirm its Drive link appears.
+- Create a quote with multiple filament colors, machine time, labor, and an additional cost.
+- Enable mass production, set a quantity greater than one, and confirm every per-item production input multiplies once.
 - Convert it to an invoice.
-- Generate both PDFs and confirm their Drive locations.
+- Generate both PDFs and confirm the logo, compact filament detail, totals, and Drive locations.
 - Check desktop, mobile portrait, and mobile landscape layouts.
 
 ## Deferred Consulting organization task

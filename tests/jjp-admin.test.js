@@ -36,6 +36,25 @@ test("quote calculations and conversion are present", () => {
   assert.ok(backend.includes("convertQuote_"));
 });
 
+test("expanded projects, filament colors, and production quantities are wired", () => {
+  ["ModelLinks", "FileReferences", "Notes", "uploadProjectFile"].forEach(field => {
+    assert.ok(admin.includes(field) || backend.includes(field));
+  });
+  ["Brand", "ProductLine", "MaterialType", "ColorsJson"].forEach(field => assert.ok(backend.includes(field)));
+  assert.ok(backend.includes("Jade White (10100)"));
+  assert.ok(backend.includes("Black (10101)"));
+  assert.ok(admin.includes("ProductionQuantity"));
+  assert.ok(backend.includes("ProductionQuantity"));
+  assert.ok(backend.includes('DefaultMachineRate: ["2.00"'));
+});
+
+test("PDFs group filament detail and load the JJP logo automatically", () => {
+  assert.ok(backend.includes('rows.push(["Filament\\n"'));
+  assert.ok(backend.includes("insertLogo_"));
+  assert.ok(backend.includes("https://jeffjonesconsulting.com/assets/images/JJP_Logo.png"));
+  assert.ok(fs.readFileSync("apps-script-jjp/appsscript.json", "utf8").includes("script.external_request"));
+});
+
 test("mobile navigation and JJP branding are present", () => {
   assert.match(html, /JJP_Logo\.png/);
   assert.match(html, /viewport-fit=cover/);
