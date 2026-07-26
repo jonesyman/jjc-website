@@ -6,13 +6,14 @@ Last updated: 2026-07-25
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.25.03`
-- Latest feature: private JJP pricing workbench and simplified customer quote
+- Current application version: `2026.07.25.04`
+- Latest feature: consistent, non-overlapping condensed Team Map headers for workshop and group downloads
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Corrected the shared condensed Team Map PNG renderer so each letter badge and type name are measured and centered together without overlap.
 - Added a private pricing workbench that calculates production cost, failure allowance, suggested markup, recommended price, desired-price adjustment, unit price, and gross margin.
 - Simplified generated customer PDFs to description, quantity, unit price, and total while retaining filament, machine, labor, and hardware calculations privately.
 - Corrected PDF logo loading with an automatic private Drive cache, Bill To ordering, project-name display, order-quantity prominence, one-page flow, and item-table styling.

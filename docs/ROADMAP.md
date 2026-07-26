@@ -35,6 +35,7 @@ This roadmap records product capabilities rather than relying solely on historic
 - Automated Team Map Analysis with validated actual/weighted distributions, configurable diagnostics, consultant editing, persistence, and print safeguards.
 - Responsive global loading progress with operation steps, learned duration estimates, and parallelized core startup requests.
 - Facilitator-ready Team Map slide notes and standalone condensed-map PNG downloads for workshops and saved groups.
+- Consistent measured letter-and-name headers across workshop and saved-group condensed Team Map downloads.
 - A separate JJP 3D-printing admin console, data schema, pricing engine, quote/invoice workflow, and Drive PDF backend.
 
 ## Current release boundary

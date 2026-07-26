@@ -877,7 +877,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.25.03</strong><br>
+        Version <strong id="appVersionLabel">2026.07.25.04</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1544,7 +1544,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.25.03";
+    const APP_VERSION = "2026.07.25.04";
 
     const K = {
       clients: "jjc_clients",
@@ -3095,9 +3095,19 @@ Sanger, CA 93657"></textarea>
         const row=Math.floor(index/2),col=index%2,x=gridX+col*(columnWidth+columnGap),y=gridY+row*(rowHeight+rowGap),panelHeader=65,half=columnWidth/2;
         canvasRoundRect(context,x,y,columnWidth,rowHeight,20,"#f8fafc","#b8c7dc",3);
         context.save(); context.beginPath(); context.roundRect(x,y,columnWidth,rowHeight,20); context.clip(); context.fillStyle="#29497f"; context.fillRect(x,y,columnWidth,panelHeader); context.restore();
-        context.fillStyle="#ffffff"; context.beginPath(); context.arc(x+columnWidth/2-80,y+panelHeader/2,22,0,Math.PI*2); context.fill();
-        context.fillStyle="#29497f"; context.font="800 24px Montserrat, Arial, sans-serif"; context.textAlign="center"; context.textBaseline="middle"; context.fillText(card.abbreviation,x+columnWidth/2-80,y+panelHeader/2+1);
-        context.fillStyle="#ffffff"; context.font="800 29px Montserrat, Arial, sans-serif"; context.fillText(card.type,x+columnWidth/2+22,y+panelHeader/2+1);
+        const badgeDiameter=44,headerGap=14,headerMaxWidth=columnWidth-36;
+        let headerFontSize=29;
+        context.font=`800 ${headerFontSize}px Montserrat, Arial, sans-serif`;
+        while(headerFontSize>23&&badgeDiameter+headerGap+context.measureText(card.type).width>headerMaxWidth){
+          headerFontSize--;
+          context.font=`800 ${headerFontSize}px Montserrat, Arial, sans-serif`;
+        }
+        const headerGroupWidth=badgeDiameter+headerGap+context.measureText(card.type).width;
+        const headerStart=x+(columnWidth-headerGroupWidth)/2;
+        const badgeCenterX=headerStart+badgeDiameter/2;
+        context.fillStyle="#ffffff"; context.beginPath(); context.arc(badgeCenterX,y+panelHeader/2,22,0,Math.PI*2); context.fill();
+        context.fillStyle="#29497f"; context.font="800 24px Montserrat, Arial, sans-serif"; context.textAlign="center"; context.textBaseline="middle"; context.fillText(card.abbreviation,badgeCenterX,y+panelHeader/2+1);
+        context.fillStyle="#ffffff"; context.font=`800 ${headerFontSize}px Montserrat, Arial, sans-serif`; context.textAlign="left"; context.fillText(card.type,headerStart+badgeDiameter+headerGap,y+panelHeader/2+1);
         context.strokeStyle="#cbd5e1"; context.lineWidth=2; context.beginPath(); context.moveTo(x+half,y+panelHeader); context.lineTo(x+half,y+rowHeight); context.stroke();
         context.font="800 22px Montserrat, Arial, sans-serif"; context.fillStyle="#15803d"; context.fillText("Genius",x+half/2,y+panelHeader+40); context.fillStyle="#dc2626"; context.fillText("Frustration",x+half+half/2,y+panelHeader+40);
         const drawNames=(people,startX,color)=>{

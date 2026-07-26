@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.25.04 — 2026-07-25
+
+- Centered each condensed Team Map letter badge and Working Genius name as one measured header group.
+- Prevented longer group-map headers, including Discernment, Galvanizing, and Enablement, from overlapping their letter badges.
+- Kept workshop and saved-group condensed PNG downloads on the same consistent header layout.
+
 ## 2026.07.25.03 — 2026-07-25
 
 - Reworked JJP quoting into a private production-cost calculator with a configurable suggested markup, desired-price override, implied adjustment, per-item price, margin, and cost-coverage guidance.
