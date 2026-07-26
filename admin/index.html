@@ -885,7 +885,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.25.09</strong><br>
+        Version <strong id="appVersionLabel">2026.07.25.10</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1555,7 +1555,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.25.09";
+    const APP_VERSION = "2026.07.25.10";
 
     const K = {
       clients: "jjc_clients",
@@ -2512,7 +2512,11 @@ Sanger, CA 93657"></textarea>
         dataset.values.forEach((value,index)=>{const angle=angles[index],distance=radius*Math.min(100,Math.max(0,value))/100,x=centerX+Math.cos(angle)*distance,y=centerY+Math.sin(angle)*distance;context.beginPath();context.arc(x,y,10,0,Math.PI*2);context.fillStyle="#ffffff";context.fill();context.strokeStyle=dataset.color;context.lineWidth=6;context.stroke();});
       });
       types.forEach((type,index)=>{
-        const angle=angles[index],labelRadius=radius+45,x=centerX+Math.cos(angle)*labelRadius,y=centerY+Math.sin(angle)*labelRadius;
+        const angle=angles[index],labelRadius=radius+45;
+        let x=centerX+Math.cos(angle)*labelRadius,y=centerY+Math.sin(angle)*labelRadius;
+        if(index===2)x-=70;
+        if(index===4)x+=70;
+        if(index===0)y-=30;
         context.textAlign=Math.cos(angle)>.2?"left":Math.cos(angle)<-.2?"right":"center"; context.fillStyle="#17345f"; context.font="800 28px Montserrat, Arial, sans-serif"; context.fillText(`${type[0]} · ${type}`,x,y);
         if(datasets.length===1){context.fillStyle=datasets[0].color;context.font="800 24px Montserrat, Arial, sans-serif";context.fillText(`${datasets[0].values[index]}%`,x,y+34);}
         else {

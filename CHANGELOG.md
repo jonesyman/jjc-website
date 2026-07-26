@@ -2,6 +2,11 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.25.10 — 2026-07-25
+
+- Added dedicated inward offsets for the Discernment and Enablement labels on all three Genius-distribution graphics.
+- Moved the Wonder label and its percentage/difference annotation upward for better spacing.
+
 ## 2026.07.25.09 — 2026-07-25
 
 - Pulled the six radar-chart labels inward so Enablement, Discernment, and the other axis labels remain fully inside downloaded PNGs.
