@@ -20,6 +20,7 @@ This roadmap records product capabilities rather than relying solely on historic
 - Square downloadable Genius-distribution graphics with overall, workshop/group, and comparison-overlay views.
 - Signed selected-versus-overall percentage-point annotations on unclipped comparison graphics.
 - Dedicated safe-area positioning for the longer radar-chart labels.
+- Additional vertical separation between the lower Discernment/Enablement labels and the radar graph.
 - Tutorial and Best Practices page.
 - Dark Working Genius-inspired visual refresh.
 - Mobile portrait/landscape layouts, compact filters, and expandable record actions.

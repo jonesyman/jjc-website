@@ -6,13 +6,14 @@ Last updated: 2026-07-25
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.25.10`
-- Latest feature: dedicated safe positioning for all Genius-distribution chart labels
+- Current application version: `2026.07.25.11`
+- Latest feature: added graph separation for Discernment and Enablement labels
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Moved only Discernment and Enablement downward to keep those two labels clear of the radar graph.
 - Pulled Discernment and Enablement farther inside the square image and moved Wonder with its annotation upward.
 - Moved all six distribution-chart labels safely inside the square PNG boundary and annotated the overlay with selected-minus-overall differences.
 - Added square radar-style Assessment Analytics graphics: blue overall portal distribution, orange workshop/group distribution, and a combined overlay.
