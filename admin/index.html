@@ -319,7 +319,13 @@
       margin-bottom: 14px;
     }
     .assessment-filters { display:grid; grid-template-columns:minmax(180px,1fr) repeat(3,minmax(130px,.55fr)) auto; gap:10px; margin-bottom:14px; }
-    .analytics-filters { display:grid; grid-template-columns:minmax(180px,1fr) repeat(5,minmax(125px,.55fr)) auto; gap:10px; margin-bottom:16px; }
+    .analytics-filters { display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:10px; margin-bottom:16px; }
+    .analytics-chart-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:14px 0 22px; }
+    .analytics-chart-grid.single { grid-template-columns:minmax(280px,640px); justify-content:center; }
+    .analytics-chart-card { min-width:0; padding:14px; border:1px solid rgba(79,143,234,.24); border-radius:18px; background:linear-gradient(180deg,#263646,#232F3E); }
+    .analytics-chart-card canvas { display:block; width:100%; aspect-ratio:1; border-radius:12px; background:#fff; }
+    .analytics-chart-actions { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:11px; }
+    .analytics-chart-label { min-width:0; color:#F8FAFC; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .genius-metrics { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; margin:16px 0; }
     .genius-metric { border:1px solid rgba(96,165,250,.24); border-radius:16px; padding:15px; background:linear-gradient(180deg,rgba(30,41,59,.92),rgba(15,23,42,.82)); }
     button.genius-metric, button.pairing-metric { width:100%; color:inherit; font:inherit; text-align:left; cursor:pointer; transition:border-color .16s ease,transform .16s ease,box-shadow .16s ease; }
@@ -643,6 +649,7 @@
       }
       .genius-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .pairing-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .analytics-chart-grid { grid-template-columns:1fr; }
       .library-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); }
       .tutorial-intro, .practice-grid { grid-template-columns:1fr; }
 
@@ -737,6 +744,7 @@
       .simple-list-filters { grid-template-columns:1fr; }
       .analytics-results { grid-template-columns:1fr; }
       .pairing-metrics { grid-template-columns:1fr; }
+      .analytics-chart-grid, .analytics-chart-grid.single { grid-template-columns:1fr; }
       .analytics-drilldown-dialog { width:100%; height:100dvh; max-height:100dvh; border-radius:0; border-left:0; border-right:0; padding:14px; }
       .analytics-drilldown-backdrop { padding:0; }
       .analytics-drilldown-header { position:sticky; top:-14px; z-index:4; background:#232F3E; padding:14px 0 12px; }
@@ -877,7 +885,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.25.07</strong><br>
+        Version <strong id="appVersionLabel">2026.07.25.08</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1036,13 +1044,16 @@
               <div class="list-filter-panel"><button class="button secondary small-btn list-filter-toggle" onclick="toggleListFilters(this)">Analytics Filters</button><div class="list-filter-controls analytics-filters">
                 <input id="analyticsSearch" placeholder="Search people or organizations..." oninput="renderAssessmentAnalytics()">
                 <select id="analyticsClient" onchange="updateAnalyticsWorkshopOptions(); renderAssessmentAnalytics()"><option value="">All clients</option></select>
-                <select id="analyticsWorkshop" onchange="renderAssessmentAnalytics()"><option value="">All workshops</option></select>
+                <select id="analyticsWorkshop" onchange="handleAnalyticsWorkshopChange()"><option value="">All workshops</option></select>
+                <select id="analyticsGroup" onchange="handleAnalyticsGroupChange()"><option value="">All saved groups</option></select>
                 <input id="analyticsStartDate" type="date" aria-label="Start date" onchange="renderAssessmentAnalytics()">
                 <input id="analyticsEndDate" type="date" aria-label="End date" onchange="renderAssessmentAnalytics()">
                 <select id="analyticsGenius" onchange="renderAssessmentAnalytics()"><option value="">All Geniuses</option><option>Wonder</option><option>Invention</option><option>Discernment</option><option>Galvanizing</option><option>Enablement</option><option>Tenacity</option></select>
                 <button class="button ghost small-btn" onclick="clearAnalyticsFilters()">Clear Filters</button>
               </div></div>
               <div class="client-detail-summary"><div class="metric"><div class="metric-label">People Served</div><div id="analyticsPeopleCount" class="metric-value">0</div><div class="metric-note">Unique people in this view</div></div><div class="metric"><div class="metric-label">Workshops</div><div id="analyticsWorkshopCount" class="metric-value">0</div><div class="metric-note">Represented in this view</div></div><div class="metric"><div class="metric-label">Genius Selections</div><div id="analyticsGeniusCount" class="metric-value">0</div><div class="metric-note">Two per person</div></div></div>
+              <div class="section-title"><div><h3>Genius Distribution Graphics</h3><p class="tiny muted">Square slide-ready graphics. Select a workshop or saved group to compare it with everyone in the portal.</p></div></div>
+              <div id="analyticsDistributionCharts" class="analytics-chart-grid single"></div>
               <div class="section-title"><div><h3>Individual Genius Distribution</h3><p class="tiny muted">Count and percentage of people with each Genius in the filtered list</p></div></div>
               <div id="analyticsGeniusMetrics" class="genius-metrics"></div>
               <div class="section-title"><div><h3>Genius Pairing Distribution</h3><p class="tiny muted">Each person counts once. Pair order is treated as the same combination.</p></div><span id="analyticsPairingTotal" class="tiny muted"></span></div>
@@ -1275,7 +1286,7 @@
               <details class="tutorial-step"><summary><span class="tutorial-number">7</span><span>Select the leader and review the Team View</span></summary><div class="tutorial-body">Choose and save the team leader, then review all six Team View cards. The leader is intentionally represented twice in Genius and Frustration lists to reflect leadership influence; the person’s stored result is not duplicated.</div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">8</span><span>Preview and save the Team Map</span></summary><div class="tutorial-body">Preview the Team Map, choose the preferred name format, and check all six Genius and Frustration sections.<ul><li>Use Print / Save as PDF to store the map locally.</li><li>Team Map PDFs are not stored in Google Sheets or Google Drive by the app.</li></ul></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">9</span><span>Add individuals and maintain reusable groups</span></summary><div class="tutorial-body">Use Assessments & Groups to add an individual result received outside a workshop, or combine individuals and complete workshop rosters without duplicating anyone’s assessment.<ul><li>For an ad hoc result, enter the person’s name and assign all six cards to Genius, Competency, or Frustration.</li><li>At the top of Group Builder, choose a saved group and use Load Group to edit its members, leader, name, or description.</li><li>Choose a group-specific leader, then use Save &amp; Create Team Map for a direct preview.</li><li>Delete Group is available in the saved-group manager and on every saved-group card.</li><li>If a group is deleted by mistake, use Restore Group under Recently Deleted Groups.</li><li>Review possible duplicate names when assessment data conflicts.</li></ul><button class="button secondary small-btn" onclick="showView('assessment-library')">Open Assessments & Groups</button></div></details>
-              <details class="tutorial-step"><summary><span class="tutorial-number">10</span><span>Review Assessment Analytics</span></summary><div class="tutorial-body">Use the analytics page to review unique people served, individual Genius distribution, and all 15 Genius pairings. Filter by client, workshop, dates, Genius, or participant search; every count and percentage updates with the filtered list.<ul><li>A person appearing in multiple workshops counts once within the filtered view.</li><li>Each person has two Geniuses, so the six individual percentages normally total approximately 200%.</li><li>Each person has one pairing, and reversed order such as WI and IW is counted together.</li></ul><button class="button secondary small-btn" onclick="showView('assessments')">Open Assessment Analytics</button></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">10</span><span>Review Assessment Analytics</span></summary><div class="tutorial-body">Use the analytics page to review unique people served, individual Genius distribution, and all 15 Genius pairings. Filter by client, workshop, saved group, dates, Genius, or participant search; every count and percentage updates with the filtered list.<ul><li>A person appearing in multiple workshops counts once within the filtered view.</li><li>Each person has two Geniuses, so the six individual percentages normally total approximately 200%.</li><li>Select a workshop or saved group to generate square overall, selected-group, and overlay graphics; download each PNG for a slide deck.</li><li>Each person has one pairing, and reversed order such as WI and IW is counted together.</li></ul><button class="button secondary small-btn" onclick="showView('assessments')">Open Assessment Analytics</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">11</span><span>Complete follow-up and maintain records</span></summary><div class="tutorial-body">Update the workshop status, follow-up date, invoice status, and notes after the engagement.<ul><li>Archive inactive business records to reduce clutter while preserving history.</li><li>Use permanent deletion only for genuine mistakes or test records.</li><li>Assessment removal leaves the workshop and financial documents intact and retains inactive import history.</li></ul><button class="button secondary small-btn" onclick="showView('dashboard')">Review Dashboard</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">12</span><span>Use reusable email templates</span></summary><div class="tutorial-body">Use Email Templates whenever you need a recurring workshop message. Select a template, personalize its placeholders, review unresolved values, and copy the plain-text result into your email provider.<ul><li>From a workshop card, Use Email Template prefills available organization, contact, schedule, location, participant count, and leader details.</li><li>Templates never send email; you remain in control of the final recipient and message.</li><li>Archive old templates to preserve them without cluttering the active library.</li></ul><button class="button secondary small-btn" onclick="showView('email-templates')">Open Email Templates</button></div></details>
             </div>
@@ -1544,7 +1555,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.25.07";
+    const APP_VERSION = "2026.07.25.08";
 
     const K = {
       clients: "jjc_clients",
@@ -2367,8 +2378,12 @@ Sanger, CA 93657"></textarea>
       loading.classList.remove("hidden");
       content.classList.add("hidden");
       try {
-        const rows = await Database.getAllActiveAssessmentResults();
+        const [rows, workspace] = await Promise.all([
+          Database.getAllActiveAssessmentResults(),
+          assessmentLibraryState ? Promise.resolve(assessmentLibraryState) : Database.getAssessmentWorkspace()
+        ]);
         assessmentAnalyticsResults = Array.isArray(rows) ? rows : [];
+        assessmentLibraryState = workspace || assessmentLibraryState;
         assessmentAnalyticsLoaded = true;
         populateAnalyticsFilters();
         renderAssessmentAnalytics();
@@ -2399,7 +2414,26 @@ Sanger, CA 93657"></textarea>
         .filter(client => clientIds.has(String(client.ClientID)))
         .sort((a,b) => String(a.Organization || "").localeCompare(String(b.Organization || "")))
         .map(client => `<option value="${esc(client.ClientID)}">${esc(client.Organization || client.ClientID)}</option>`).join("");
+      const groupSelect = document.getElementById("analyticsGroup");
+      const previousGroup = groupSelect.value;
+      const groups = assessmentLibraryGroups().slice().sort((a,b) => String(a.GroupName || "").localeCompare(String(b.GroupName || "")));
+      groupSelect.innerHTML = '<option value="">All saved groups</option>' + groups.map(group => `<option value="${esc(group.GroupID)}">${esc(group.GroupName || group.GroupID)}</option>`).join("");
+      groupSelect.value = groups.some(group => String(group.GroupID) === previousGroup) ? previousGroup : "";
       updateAnalyticsWorkshopOptions();
+    }
+
+    function handleAnalyticsWorkshopChange() {
+      if (document.getElementById("analyticsWorkshop").value) document.getElementById("analyticsGroup").value = "";
+      renderAssessmentAnalytics();
+    }
+
+    function handleAnalyticsGroupChange() {
+      if (document.getElementById("analyticsGroup").value) {
+        document.getElementById("analyticsClient").value = "";
+        updateAnalyticsWorkshopOptions();
+        document.getElementById("analyticsWorkshop").value = "";
+      }
+      renderAssessmentAnalytics();
     }
 
     function updateAnalyticsWorkshopOptions() {
@@ -2417,6 +2451,8 @@ Sanger, CA 93657"></textarea>
       const query = String(document.getElementById("analyticsSearch").value || "").trim().toLowerCase();
       const clientId = document.getElementById("analyticsClient").value;
       const workshopId = document.getElementById("analyticsWorkshop").value;
+      const groupId = document.getElementById("analyticsGroup").value;
+      const groupPersonIds = groupId ? new Set(assessmentLibraryMemberships().filter(item => String(item.GroupID) === groupId).map(item => String(item.PersonID))) : null;
       const start = document.getElementById("analyticsStartDate").value;
       const end = document.getElementById("analyticsEndDate").value;
       const genius = document.getElementById("analyticsGenius").value;
@@ -2425,10 +2461,85 @@ Sanger, CA 93657"></textarea>
         return (!query || searchable.includes(query))
           && (!clientId || String(row.clientId) === clientId)
           && (!workshopId || String(row.WorkshopID) === workshopId)
+          && (!groupPersonIds || groupPersonIds.has(String(row.PersonID || row.AssessmentResultID)))
           && (!start || row.workshopDate >= start)
           && (!end || row.workshopDate <= end)
           && (!genius || row.Genius1 === genius || row.Genius2 === genius);
       });
+    }
+
+    function uniqueAnalyticsPeople(sourceRows) {
+      const unique = new Map();
+      (sourceRows || []).map(analyticsRecord).forEach(row => {
+        const key = String(row.PersonID || row.AssessmentResultID || `${row.FirstName}|${row.LastName}`);
+        if (!unique.has(key)) unique.set(key,row);
+      });
+      return Array.from(unique.values());
+    }
+
+    function analyticsGeniusDistribution(rows) {
+      const types = ["Wonder","Invention","Discernment","Galvanizing","Enablement","Tenacity"];
+      return types.map(type => {
+        const count = rows.filter(row => row.Genius1 === type || row.Genius2 === type).length;
+        return {type,abbr:type[0],count,percent:rows.length ? Math.round(count/rows.length*100) : 0};
+      });
+    }
+
+    function analyticsComparisonContext() {
+      const workshopSelect = document.getElementById("analyticsWorkshop"), groupSelect = document.getElementById("analyticsGroup");
+      if (workshopSelect.value) return {kind:"Workshop",label:workshopSelect.options[workshopSelect.selectedIndex]?.text || "Selected Workshop"};
+      if (groupSelect.value) return {kind:"Group",label:groupSelect.options[groupSelect.selectedIndex]?.text || "Selected Group"};
+      return null;
+    }
+
+    function drawAnalyticsRadarChart(canvas,title,subtitle,datasets) {
+      const size=1200,context=canvas.getContext("2d"),centerX=600,centerY=630,radius=390,angles=[-Math.PI/2,-Math.PI/6,Math.PI/6,Math.PI/2,5*Math.PI/6,7*Math.PI/6],types=["Wonder","Invention","Discernment","Galvanizing","Enablement","Tenacity"];
+      canvas.width=size; canvas.height=size;
+      context.clearRect(0,0,size,size); context.fillStyle="#ffffff"; context.fillRect(0,0,size,size);
+      context.fillStyle="#17345f"; context.textAlign="center"; context.textBaseline="middle"; context.font="800 48px Montserrat, Arial, sans-serif"; context.fillText(title,centerX,62,1080);
+      context.fillStyle="#64748b"; context.font="600 25px Montserrat, Arial, sans-serif"; context.fillText(subtitle,centerX,108,1080);
+      [25,50,75,100].forEach(level=>{
+        context.beginPath();
+        angles.forEach((angle,index)=>{const x=centerX+Math.cos(angle)*radius*level/100,y=centerY+Math.sin(angle)*radius*level/100;index?context.lineTo(x,y):context.moveTo(x,y);});
+        context.closePath(); context.strokeStyle=level===100?"#aab8ca":"#dce3ec"; context.lineWidth=level===100?3:2; context.stroke();
+        context.fillStyle="#94a3b8"; context.font="600 18px Montserrat, Arial, sans-serif"; context.textAlign="left"; context.fillText(`${level}%`,centerX+8,centerY-radius*level/100);
+      });
+      angles.forEach(angle=>{context.beginPath();context.moveTo(centerX,centerY);context.lineTo(centerX+Math.cos(angle)*radius,centerY+Math.sin(angle)*radius);context.strokeStyle="#d1d9e5";context.lineWidth=2;context.stroke();});
+      datasets.forEach(dataset=>{
+        context.beginPath();
+        dataset.values.forEach((value,index)=>{const angle=angles[index],distance=radius*Math.min(100,Math.max(0,value))/100,x=centerX+Math.cos(angle)*distance,y=centerY+Math.sin(angle)*distance;index?context.lineTo(x,y):context.moveTo(x,y);});
+        context.closePath(); context.fillStyle=dataset.fill; context.fill(); context.strokeStyle=dataset.color; context.lineWidth=7; context.lineJoin="round"; context.stroke();
+        dataset.values.forEach((value,index)=>{const angle=angles[index],distance=radius*Math.min(100,Math.max(0,value))/100,x=centerX+Math.cos(angle)*distance,y=centerY+Math.sin(angle)*distance;context.beginPath();context.arc(x,y,10,0,Math.PI*2);context.fillStyle="#ffffff";context.fill();context.strokeStyle=dataset.color;context.lineWidth=6;context.stroke();});
+      });
+      types.forEach((type,index)=>{
+        const angle=angles[index],labelRadius=radius+82,x=centerX+Math.cos(angle)*labelRadius,y=centerY+Math.sin(angle)*labelRadius;
+        context.textAlign=Math.cos(angle)>.2?"left":Math.cos(angle)<-.2?"right":"center"; context.fillStyle="#17345f"; context.font="800 28px Montserrat, Arial, sans-serif"; context.fillText(`${type[0]} · ${type}`,x,y);
+        if(datasets.length===1){context.fillStyle=datasets[0].color;context.font="800 24px Montserrat, Arial, sans-serif";context.fillText(`${datasets[0].values[index]}%`,x,y+34);}
+      });
+      if(datasets.length>1){
+        const legendY=1130,totalWidth=datasets.length*270,gap=30,startX=centerX-(totalWidth+gap*(datasets.length-1))/2;
+        datasets.forEach((dataset,index)=>{const x=startX+index*(270+gap);context.fillStyle=dataset.color;context.fillRect(x,legendY-8,38,16);context.textAlign="left";context.fillStyle="#334155";context.font="700 22px Montserrat, Arial, sans-serif";context.fillText(dataset.label,x+52,legendY);});
+      }
+    }
+
+    function renderAnalyticsDistributionCharts(filteredRows) {
+      const container=document.getElementById("analyticsDistributionCharts"),overallRows=uniqueAnalyticsPeople(assessmentAnalyticsResults),context=analyticsComparisonContext(),overall=analyticsGeniusDistribution(overallRows),selected=analyticsGeniusDistribution(filteredRows);
+      const blue={label:"Everyone in portal",color:"#29497f",fill:"rgba(41,73,127,.20)",values:overall.map(item=>item.percent)};
+      const orange={label:context?.label||"Selected group",color:"#e87524",fill:"rgba(232,117,36,.18)",values:selected.map(item=>item.percent)};
+      const charts=context?[
+        {id:"analyticsOverallChart",label:"Everyone in Portal",title:"Overall Genius Distribution",subtitle:`${overallRows.length} people · percentage with each Genius`,datasets:[blue]},
+        {id:"analyticsSelectedChart",label:context.label,title:`${context.kind} Distribution`,subtitle:`${context.label} · ${filteredRows.length} people`,datasets:[orange]},
+        {id:"analyticsOverlayChart",label:`${context.label} Comparison`,title:"Distribution Comparison",subtitle:"Overall portal distribution compared with selected group",datasets:[blue,orange]}
+      ]:[{id:"analyticsOverallChart",label:"Everyone in Portal",title:"Overall Genius Distribution",subtitle:`${overallRows.length} people · percentage with each Genius`,datasets:[blue]}];
+      container.classList.toggle("single",charts.length===1);
+      container.innerHTML=charts.map(chart=>`<article class="analytics-chart-card"><canvas id="${chart.id}" aria-label="${esc(chart.title)}"></canvas><div class="analytics-chart-actions"><span class="analytics-chart-label">${esc(chart.label)}</span><button class="button secondary small-btn" type="button" onclick="downloadAnalyticsChart('${chart.id}','${jsEsc(chart.label)}')">Download PNG</button></div></article>`).join("");
+      charts.forEach(chart=>drawAnalyticsRadarChart(document.getElementById(chart.id),chart.title,chart.subtitle,chart.datasets));
+    }
+
+    function downloadAnalyticsChart(canvasId,label) {
+      const canvas=document.getElementById(canvasId);
+      if(!canvas)return toast("Distribution graphic is not available.");
+      canvas.toBlob(blob=>{if(!blob)return toast("Unable to prepare the distribution graphic.");const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download=`${safeDownloadName(label)} - Genius Distribution.png`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast("Distribution graphic downloaded.");},"image/png");
     }
 
     function renderAssessmentAnalytics() {
@@ -2460,6 +2571,7 @@ Sanger, CA 93657"></textarea>
       });
       const rows = Array.from(uniquePeople.values()).sort((a,b) => `${a.LastName}|${a.FirstName}`.localeCompare(`${b.LastName}|${b.FirstName}`));
       currentAssessmentAnalyticsRows = rows;
+      renderAnalyticsDistributionCharts(rows);
       document.getElementById("analyticsPeopleCount").textContent = rows.length;
       document.getElementById("analyticsWorkshopCount").textContent = workshopCount;
       document.getElementById("analyticsGeniusCount").textContent = rows.length * 2;
@@ -2489,12 +2601,14 @@ Sanger, CA 93657"></textarea>
       const search = document.getElementById("analyticsSearch").value.trim();
       const client = document.getElementById("analyticsClient");
       const workshop = document.getElementById("analyticsWorkshop");
+      const group = document.getElementById("analyticsGroup");
       const start = document.getElementById("analyticsStartDate").value;
       const end = document.getElementById("analyticsEndDate").value;
       const genius = document.getElementById("analyticsGenius").value;
       if (search) summary.push(`Search: ${search}`);
       if (client.value) summary.push(`Client: ${client.selectedOptions[0]?.textContent || client.value}`);
       if (workshop.value) summary.push(`Workshop: ${workshop.selectedOptions[0]?.textContent || workshop.value}`);
+      if (group.value) summary.push(`Group: ${group.selectedOptions[0]?.textContent || group.value}`);
       if (start && end) summary.push(`Date range: ${formatDate(start)} through ${formatDate(end)}`);
       else if (start) summary.push(`Starting: ${formatDate(start)}`);
       else if (end) summary.push(`Through: ${formatDate(end)}`);
@@ -2565,6 +2679,7 @@ Sanger, CA 93657"></textarea>
       ["analyticsSearch","analyticsStartDate","analyticsEndDate"].forEach(id => { document.getElementById(id).value = ""; });
       document.getElementById("analyticsClient").value = "";
       document.getElementById("analyticsGenius").value = "";
+      document.getElementById("analyticsGroup").value = "";
       updateAnalyticsWorkshopOptions();
       document.getElementById("analyticsWorkshop").value = "";
       renderAssessmentAnalytics();

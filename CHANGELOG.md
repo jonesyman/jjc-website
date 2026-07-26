@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.25.08 — 2026-07-25
+
+- Added square six-axis Genius-distribution graphics to Assessment Analytics.
+- Shows one blue overall-portal graphic by default and, when a workshop or saved group is selected, adds an orange selected-group graphic and a blue/orange overlay.
+- Added saved-group analytics filtering and individual PNG downloads with context-aware filenames for all three graphics.
+- Kept the chart layout responsive across desktop and mobile.
+
 ## 2026.07.25.07 — 2026-07-25
 
 - Added unanimous yellow Competency highlighting for Responsive and Disruptive when all three associated types are yellow.

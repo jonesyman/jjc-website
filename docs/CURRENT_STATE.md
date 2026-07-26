@@ -6,13 +6,15 @@ Last updated: 2026-07-25
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.25.07`
-- Latest feature: unanimous yellow orientation highlights and centered condensed-map subheaders
+- Current application version: `2026.07.25.08`
+- Latest feature: downloadable overall, selected-group, and overlay Genius-distribution graphics
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Added square radar-style Assessment Analytics graphics: blue overall portal distribution, orange workshop/group distribution, and a combined overlay.
+- Added a saved-group analytics filter and context-aware PNG downloads suitable for slide decks.
 - Added yellow Responsive/Disruptive suggestions when all three associated types independently carry yellow Competency highlights.
 - Re-centered the Genius and Frustration subheaders in standalone condensed Team Map downloads.
 - Limited Responsive and Disruptive highlight suggestions to cases where all three associated types independently share the same green or red highlight.
