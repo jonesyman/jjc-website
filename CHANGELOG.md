@@ -2,6 +2,11 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.25.09 — 2026-07-25
+
+- Pulled the six radar-chart labels inward so Enablement, Discernment, and the other axis labels remain fully inside downloaded PNGs.
+- Added signed percentage-point differences for every Genius on the comparison graphic, calculated as selected workshop/group minus the overall portal distribution.
+
 ## 2026.07.25.08 — 2026-07-25
 
 - Added square six-axis Genius-distribution graphics to Assessment Analytics.

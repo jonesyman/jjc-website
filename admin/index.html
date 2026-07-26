@@ -885,7 +885,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.25.08</strong><br>
+        Version <strong id="appVersionLabel">2026.07.25.09</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1555,7 +1555,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.25.08";
+    const APP_VERSION = "2026.07.25.09";
 
     const K = {
       clients: "jjc_clients",
@@ -2512,9 +2512,13 @@ Sanger, CA 93657"></textarea>
         dataset.values.forEach((value,index)=>{const angle=angles[index],distance=radius*Math.min(100,Math.max(0,value))/100,x=centerX+Math.cos(angle)*distance,y=centerY+Math.sin(angle)*distance;context.beginPath();context.arc(x,y,10,0,Math.PI*2);context.fillStyle="#ffffff";context.fill();context.strokeStyle=dataset.color;context.lineWidth=6;context.stroke();});
       });
       types.forEach((type,index)=>{
-        const angle=angles[index],labelRadius=radius+82,x=centerX+Math.cos(angle)*labelRadius,y=centerY+Math.sin(angle)*labelRadius;
+        const angle=angles[index],labelRadius=radius+45,x=centerX+Math.cos(angle)*labelRadius,y=centerY+Math.sin(angle)*labelRadius;
         context.textAlign=Math.cos(angle)>.2?"left":Math.cos(angle)<-.2?"right":"center"; context.fillStyle="#17345f"; context.font="800 28px Montserrat, Arial, sans-serif"; context.fillText(`${type[0]} · ${type}`,x,y);
         if(datasets.length===1){context.fillStyle=datasets[0].color;context.font="800 24px Montserrat, Arial, sans-serif";context.fillText(`${datasets[0].values[index]}%`,x,y+34);}
+        else {
+          const difference=datasets[1].values[index]-datasets[0].values[index],differenceLabel=`${difference>0?"+":""}${difference}% vs overall`;
+          context.fillStyle=difference===0?"#64748b":"#c55f16"; context.font="800 22px Montserrat, Arial, sans-serif"; context.fillText(differenceLabel,x,y+34);
+        }
       });
       if(datasets.length>1){
         const legendY=1130,totalWidth=datasets.length*270,gap=30,startX=centerX-(totalWidth+gap*(datasets.length-1))/2;

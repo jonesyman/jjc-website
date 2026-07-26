@@ -18,6 +18,7 @@ This roadmap records product capabilities rather than relying solely on historic
 - Team View, leader weighting, and printable local Team Maps.
 - Assessment Analytics with filter-responsive individual Genius counts, all 15 named pairings, and unique-person totals.
 - Square downloadable Genius-distribution graphics with overall, workshop/group, and comparison-overlay views.
+- Signed selected-versus-overall percentage-point annotations on unclipped comparison graphics.
 - Tutorial and Best Practices page.
 - Dark Working Genius-inspired visual refresh.
 - Mobile portrait/landscape layouts, compact filters, and expandable record actions.
