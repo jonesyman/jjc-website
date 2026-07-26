@@ -6,13 +6,15 @@ Last updated: 2026-07-25
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.25.04`
-- Latest feature: consistent, non-overlapping condensed Team Map headers for workshop and group downloads
+- Current application version: `2026.07.25.05`
+- Latest feature: mathematically normalized slide-note distributions and corrected Frustration highlights
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Normalized each Working Genius slide-note distribution to one denominator and exactly 100%, including leader-weighted teams.
+- Reserved red type highlights for high Frustration so a 0% Frustration result is never presented as a red risk.
 - Corrected the shared condensed Team Map PNG renderer so each letter badge and type name are measured and centered together without overlap.
 - Added a private pricing workbench that calculates production cost, failure allowance, suggested markup, recommended price, desired-price adjustment, unit price, and gross margin.
 - Simplified generated customer PDFs to description, quantity, unit price, and total while retaining filament, machine, labor, and hardware calculations privately.

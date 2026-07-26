@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.25.05 — 2026-07-25
+
+- Corrected facilitator-note type distributions so Genius, Competency, and Frustration use one normalized denominator and total exactly 100%.
+- Prevented absent or low Frustration from generating a red suggested highlight; red is now reserved for high Frustration.
+- Added regression coverage for leader-weighted distributions and zero-Frustration Tenacity.
+
 ## 2026.07.25.04 — 2026-07-25
 
 - Centered each condensed Team Map letter badge and Working Genius name as one measured header group.

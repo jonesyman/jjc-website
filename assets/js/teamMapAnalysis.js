@@ -86,17 +86,25 @@ window.TeamMapAnalysis = (() => {
   function generateConsultantQuestions(distribution) { if(!distribution.settings.IncludeConsultantQuestions)return[]; const types=generateTeamObservations(distribution).slice(0,4).map(x=>x.type); return [...new Set(types)].map(type=>CONTENT[type].question).slice(0,4); }
   function suggestedAnalysis(distribution) { const obs=generateTeamObservations(distribution), contribution=obs.find(x=>/represented|overuse/i.test(x.label)), risk=obs[0], competency=obs.find(x=>/competency/i.test(x.label)); return { OverallTeamPattern:obs.slice(0,2).map(x=>`${x.type}: ${x.label}`).join("; "), MostSignificantStrength:contribution?`${contribution.type}: ${contribution.text}`:"No single Working Genius contribution rose above the configured thresholds; consider exploring where the team experiences its most reliable energy.", MostSignificantRisk:risk?`${risk.type}: ${risk.text}`:"No major automatic area to explore rose above the configured thresholds.", CompetencySustainabilityObservation:competency?`${competency.type}: ${competency.text}`:"No single competency-heavy type rose above the configured thresholds. Review whether frequently requested competency work is sustainable for the people providing it.", AdditionalConsultantNotes:"" }; }
   function distributionDirection(rate,low,high) { return rate<low?"low":rate>=high?"high":"balanced"; }
+  function normalizedInfluenceRates(metric) {
+    const counts=[metric.weightedGeniusCount,metric.actualCompetencyCount,metric.weightedFrustrationCount].map(value=>Math.max(0,Number(value)||0));
+    const total=counts.reduce((sum,value)=>sum+value,0);
+    if(!total)return {genius:0,competency:0,frustration:0};
+    const raw=counts.map(value=>value/total*100), rounded=raw.map(Math.floor);
+    let remaining=100-rounded.reduce((sum,value)=>sum+value,0);
+    raw.map((value,index)=>({index,remainder:value-rounded[index]})).sort((a,b)=>b.remainder-a.remainder||a.index-b.index).forEach(item=>{if(remaining>0){rounded[item.index]++;remaining--;}});
+    return {genius:rounded[0],competency:rounded[1],frustration:rounded[2]};
+  }
   function facilitatorTypeAnalysis(metric,settings) {
-    const content=FACILITATOR_CONTENT[metric.type], genius=distributionDirection(metric.weightedGeniusRate,settings.UnderrepresentedGeniusThresholdPercent,settings.HighlyRepresentedGeniusThresholdPercent), frustration=distributionDirection(metric.weightedFrustrationRate,settings.UnderrepresentedGeniusThresholdPercent,settings.HighFrustrationThresholdPercent);
-    const competencyHeavy=metric.actualCompetencyRate>=settings.CompetencyHeavyThresholdPercent&&genius!=="high"&&frustration!=="high";
+    const content=FACILITATOR_CONTENT[metric.type], rates=normalizedInfluenceRates(metric), genius=distributionDirection(rates.genius,settings.UnderrepresentedGeniusThresholdPercent,settings.HighlyRepresentedGeniusThresholdPercent), frustration=distributionDirection(rates.frustration,settings.UnderrepresentedGeniusThresholdPercent,settings.HighFrustrationThresholdPercent);
+    const competencyHeavy=rates.competency>=settings.CompetencyHeavyThresholdPercent&&genius!=="high"&&frustration!=="high";
     const candidates=[];
-    if(genius==="high")candidates.push({subject:metric.type,area:"Genius",color:"green",status:"Overuse",note:content.geniusHigh,rate:metric.weightedGeniusRate,severity:Math.abs(metric.weightedGeniusRate-33)});
-    else if(genius==="low")candidates.push({subject:metric.type,area:"Genius",color:"green",status:"Missing / low Genius",note:content.geniusLow,rate:metric.weightedGeniusRate,severity:Math.abs(metric.weightedGeniusRate-33)});
-    if(frustration==="high")candidates.push({subject:metric.type,area:"Frustration",color:"red",status:"High Frustration",note:content.frustrationHigh,rate:metric.weightedFrustrationRate,severity:Math.abs(metric.weightedFrustrationRate-33)});
-    else if(frustration==="low")candidates.push({subject:metric.type,area:"Frustration",color:"red",status:"Low Frustration",note:content.frustrationLow,rate:metric.weightedFrustrationRate,severity:Math.abs(metric.weightedFrustrationRate-33)});
-    if(competencyHeavy)candidates.push({subject:metric.type,area:"Competency",color:"yellow",status:"Competency-heavy",note:content.competency,rate:metric.actualCompetencyRate,severity:Math.abs(metric.actualCompetencyRate-33)});
+    if(genius==="high")candidates.push({subject:metric.type,area:"Genius",color:"green",status:"Overuse",note:content.geniusHigh,rate:rates.genius,severity:Math.abs(rates.genius-33)});
+    else if(genius==="low")candidates.push({subject:metric.type,area:"Genius",color:"green",status:"Missing / low Genius",note:content.geniusLow,rate:rates.genius,severity:Math.abs(rates.genius-33)});
+    if(frustration==="high")candidates.push({subject:metric.type,area:"Frustration",color:"red",status:"High Frustration",note:content.frustrationHigh,rate:rates.frustration,severity:Math.abs(rates.frustration-33)});
+    if(competencyHeavy)candidates.push({subject:metric.type,area:"Competency",color:"yellow",status:"Competency-heavy",note:content.competency,rate:rates.competency,severity:Math.abs(rates.competency-33)});
     const highlight=candidates.sort((a,b)=>b.severity-a.severity)[0]||null;
-    return {type:metric.type,abbreviation:metric.type[0],status:highlight?.status||"Balance",note:highlight?.note||content.balanced,highlights:highlight?[highlight]:[],rates:{genius:metric.weightedGeniusRate,competency:metric.actualCompetencyRate,frustration:metric.weightedFrustrationRate}};
+    return {type:metric.type,abbreviation:metric.type[0],status:highlight?.status||"Balance",note:highlight?.note||content.balanced,highlights:highlight?[highlight]:[],rates};
   }
   function aggregateDimension(distribution,label,types,shareTarget) {
     const metrics=distribution.metrics.filter(metric=>types.includes(metric.type)), denominator=Math.max(1,distribution.weightedTeamSize*2);
@@ -136,5 +144,5 @@ window.TeamMapAnalysis = (() => {
     const orientationLines=analysis.orientations.map(item=>`[${item.label.toUpperCase()}] (${item.types.map(type=>type[0]).join("/")}): Genius ${item.geniusStatus} (${item.geniusRate}%); Frustration ${item.frustrationStatus} (${item.frustrationRate}%).`);
     return [`${title} — Team Map Facilitation Notes`,"","SUGGESTED HIGHLIGHTS",...highlightSection("Working Geniuses",analysis.highlightGroups.types),"",...highlightSection("Stages of Work",analysis.highlightGroups.stages),"",...highlightSection("Responsive / Disruptive",analysis.highlightGroups.orientations),"","SIX WORKING GENIUSES",...typeLines,"","STAGES OF WORK",...stageLines,"","RESPONSIVE / DISRUPTIVE",...orientationLines].join("\n");
   }
-  return {TYPES,DEFAULTS,CONTENT,FACILITATOR_CONTENT,STAGES,normalizeSettings,deriveParticipantCompetencies,validateTeamMapAnalysisData,calculateTeamMapDistribution,classifyGeniusDistribution,generateTeamObservations,generateGeniusDiagnostic,generateConsultantQuestions,rankAnalysisObservations,suggestedAnalysis,generateFacilitatorAnalysis,facilitatorNotesText};
+  return {TYPES,DEFAULTS,CONTENT,FACILITATOR_CONTENT,STAGES,normalizeSettings,deriveParticipantCompetencies,validateTeamMapAnalysisData,calculateTeamMapDistribution,classifyGeniusDistribution,generateTeamObservations,generateGeniusDiagnostic,generateConsultantQuestions,rankAnalysisObservations,suggestedAnalysis,normalizedInfluenceRates,generateFacilitatorAnalysis,facilitatorNotesText};
 })();
