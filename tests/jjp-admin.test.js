@@ -48,11 +48,23 @@ test("expanded projects, filament colors, and production quantities are wired", 
   assert.ok(backend.includes('DefaultMachineRate: ["2.00"'));
 });
 
-test("PDFs group filament detail and load the JJP logo automatically", () => {
-  assert.ok(backend.includes('rows.push(["Filament\\n"'));
+test("PDFs simplify customer pricing and load the JJP logo automatically", () => {
+  assert.ok(backend.includes('["DESCRIPTION", "QTY", "UNIT PRICE", "AMOUNT"]'));
   assert.ok(backend.includes("insertLogo_"));
-  assert.ok(backend.includes("https://jeffjonesconsulting.com/assets/images/JJP_Logo.png"));
+  assert.ok(backend.includes("ensureLogoFile_"));
+  assert.ok(backend.includes('parent.createFile(blob)'));
+  assert.ok(backend.includes("raw.githubusercontent.com/jonesyman/jjc-website"));
   assert.ok(fs.readFileSync("apps-script-jjp/appsscript.json", "utf8").includes("script.external_request"));
+});
+
+test("private pricing workbench drives a sparse customer PDF", () => {
+  ["PublicDescription", "PricingMarkupPercent", "RecommendedSubtotal", "TargetSubtotal", "PricingAdjustment"].forEach(field => {
+    assert.ok(admin.includes(field) || backend.includes(field));
+  });
+  assert.ok(backend.includes('body.appendParagraph("ORDER QUANTITY")'));
+  assert.ok(!backend.includes('project.Description || ""'));
+  assert.ok(admin.includes("Estimated gross margin"));
+  assert.ok(admin.includes("does not cover the calculated production cost"));
 });
 
 test("mobile navigation and JJP branding are present", () => {

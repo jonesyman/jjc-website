@@ -2,6 +2,15 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.25.03 — 2026-07-25
+
+- Reworked JJP quoting into a private production-cost calculator with a configurable suggested markup, desired-price override, implied adjustment, per-item price, margin, and cost-coverage guidance.
+- Simplified customer PDFs to one polished line containing the public description, quantity, unit price, and amount while retaining all production details privately.
+- Moved order quantity into a prominent centered PDF treatment and limited the Project block to the project name.
+- Corrected Bill To ordering so the address precedes the phone number.
+- Strengthened automatic PDF logo loading by caching the public GitHub asset in the private JJP Drive folder and using that Drive file for documents.
+- Set deliberate customer-table column widths and removed the overflowing footer so sparse quotes remain on one page.
+
 ## 2026.07.25.02 — 2026-07-25
 
 - Expanded JJP projects with notes, model links, design-file references, and client sketch/image uploads.

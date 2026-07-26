@@ -27,7 +27,9 @@ Additional costs remain reusable library records with a unit and unit cost so it
 
 ### JJP Documents and DocumentItems
 
-Quotes and invoices share `Documents`. `ProductionQuantity` records the number of identical items being produced. Each item records `PerUnit` and `DetailsJson`; per-unit filament, machine, labor, additional, and custom costs are multiplied by the production quantity exactly once. Filament remains detailed in storage but is grouped into one compact Filament line in generated PDFs.
+Quotes and invoices share `Documents`. `ProductionQuantity` records the customer quantity. `PublicDescription` is the customer-facing line description. `PricingMarkupPercent`, `RecommendedSubtotal`, `TargetSubtotal`, and `PricingAdjustment` preserve the private pricing decision.
+
+Each item records `PerUnit` and `DetailsJson`; per-unit filament, machine, labor, additional, and custom costs are multiplied by the production quantity exactly once. All production items remain private in `DocumentItems`. Generated customer PDFs show only the public description, quantity, calculated unit price, and final amount.
 
 ### JJP Clients and Projects
 

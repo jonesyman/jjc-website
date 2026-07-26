@@ -305,8 +305,10 @@
     form.elements.IssueDate.value = record.IssueDate || today();
     form.elements.ValidUntil.value = record.ValidUntil || addDays(today(), settings.QuoteValidityDays || 30);
     form.elements.DueDate.value = record.DueDate || addDays(today(), 14);
+    form.elements.PublicDescription.value = record.PublicDescription || findProject(record.ProjectID || projectId)?.ProjectName || "";
+    form.elements.PricingMarkupPercent.value = record.PricingMarkupPercent ?? settings.DefaultMarkupPercent ?? 60;
+    form.elements.TargetSubtotal.value = record.TargetSubtotal || "";
     form.elements.FailureBufferPercent.value = record.FailureBufferPercent ?? settings.DefaultFailureBufferPercent ?? 10;
-    form.elements.Discount.value = record.Discount || 0;
     form.elements.TaxPercent.value = record.TaxPercent ?? settings.DefaultTaxPercent ?? 0;
     form.elements.Shipping.value = record.Shipping || 0;
     form.elements.Notes.value = record.Notes || "";
@@ -324,7 +326,7 @@
     byId("laborRate").value = labor.UnitCost ?? settings.DefaultLaborRate ?? 30;
     const productionQuantity = Math.max(1, Number(record.ProductionQuantity || 1));
     form.elements.ProductionQuantity.value = productionQuantity;
-    byId("massProduction").checked = productionQuantity > 1;
+    byId("massProduction").checked = savedItems.some(item => String(item.PerUnit).toLowerCase() !== "false") && productionQuantity > 1;
     updateProductionMode();
     if (!state.lines.some(item => item.ItemType === "FILAMENT")) addStructuredLine("filament", false);
     byId("documentTitle").textContent = `${id ? "Edit" : "New"} ${type === "QUOTE" ? "Quote" : "Invoice"}`;
@@ -352,18 +354,18 @@
       if (line.ItemType !== "FILAMENT") return "";
       const filament = state.filaments.find(record => record.FilamentID === line.ReferenceID) || active("filaments")[0] || {};
       const colors = parseColors(filament), selected = line.Details?.colors || [];
-      return `<div class="structured-row filament-row" data-line="${index}"><div class="structured-fields"><label>Filament<select data-field="ReferenceID" data-filament-select>${filamentOptions}</select></label><label>Grams used<input data-field="Quantity" type="number" min="0" step=".1" value="${esc(line.Quantity)}"></label><label>Cost / gram<input data-field="UnitCost" type="number" min="0" step=".000001" value="${esc(line.UnitCost)}" readonly></label></div><fieldset class="color-picker"><legend>Colors used</legend>${colors.map(color => `<label><input type="checkbox" data-line-color value="${esc(color)}" ${selected.includes(color) ? "checked" : ""}>${esc(color)}</label>`).join("") || "<span class='muted'>Add colors to this filament library record first.</span>"}</fieldset><div class="structured-footer"><strong>${money(Number(line.Quantity) * Number(line.UnitCost) * productionQuantity())}</strong><button type="button" class="remove-line" data-remove-line="${index}">Remove</button></div></div>`;
+      return `<div class="structured-row filament-row" data-line="${index}"><div class="structured-fields"><label>Filament<select data-field="ReferenceID" data-filament-select>${filamentOptions}</select></label><label>Grams used<input data-field="Quantity" type="number" min="0" step=".1" value="${esc(line.Quantity)}"></label><label>Cost / gram<input data-field="UnitCost" type="number" min="0" step=".000001" value="${esc(line.UnitCost)}" readonly></label></div><fieldset class="color-picker"><legend>Colors used</legend>${colors.map(color => `<label><input type="checkbox" data-line-color value="${esc(color)}" ${selected.includes(color) ? "checked" : ""}>${esc(color)}</label>`).join("") || "<span class='muted'>Add colors to this filament library record first.</span>"}</fieldset><div class="structured-footer"><strong>${money(Number(line.Quantity) * Number(line.UnitCost) * costMultiplier())}</strong><button type="button" class="remove-line" data-remove-line="${index}">Remove</button></div></div>`;
     }).join("") || empty("Add a filament to this document.");
     document.querySelectorAll("[data-filament-select]").forEach(select => { select.value = state.lines[Number(select.closest("[data-line]").dataset.line)]?.ReferenceID || ""; });
 
     const costOptions = active("additionalCosts").map(record => `<option value="${esc(record.CostID)}">${esc(record.Name)} · ${money(record.DefaultUnitCost)} / ${esc(record.UnitType || "each")}</option>`).join("");
     byId("additionalUsageList").innerHTML = state.lines.map((line, index) => {
       if (line.ItemType !== "EXTRA") return "";
-      return `<div class="structured-row compact-row" data-line="${index}"><label>Cost<select data-field="ReferenceID" data-cost-select>${costOptions}</select></label><label>Quantity<input data-field="Quantity" type="number" min="0" step=".01" value="${esc(line.Quantity)}"></label><label>Unit<input data-field="Unit" value="${esc(line.Unit)}" readonly></label><label>Unit cost<input data-field="UnitCost" type="number" min="0" step=".01" value="${esc(line.UnitCost)}" readonly></label><strong>${money(Number(line.Quantity) * Number(line.UnitCost) * productionQuantity())}</strong><button type="button" class="remove-line" data-remove-line="${index}">Remove</button></div>`;
+      return `<div class="structured-row compact-row" data-line="${index}"><label>Cost<select data-field="ReferenceID" data-cost-select>${costOptions}</select></label><label>Quantity<input data-field="Quantity" type="number" min="0" step=".01" value="${esc(line.Quantity)}"></label><label>Unit<input data-field="Unit" value="${esc(line.Unit)}" readonly></label><label>Unit cost<input data-field="UnitCost" type="number" min="0" step=".01" value="${esc(line.UnitCost)}" readonly></label><strong>${money(Number(line.Quantity) * Number(line.UnitCost) * costMultiplier())}</strong><button type="button" class="remove-line" data-remove-line="${index}">Remove</button></div>`;
     }).join("") || empty("No additional costs selected.");
     document.querySelectorAll("[data-cost-select]").forEach(select => { select.value = state.lines[Number(select.closest("[data-line]").dataset.line)]?.ReferenceID || ""; });
 
-    byId("customUsageList").innerHTML = state.lines.map((line, index) => line.ItemType === "CUSTOM" ? `<div class="structured-row compact-row" data-line="${index}"><label>Description<input data-field="Description" value="${esc(line.Description)}"></label><label>Quantity<input data-field="Quantity" type="number" min="0" step=".01" value="${esc(line.Quantity)}"></label><label>Unit<input data-field="Unit" value="${esc(line.Unit)}"></label><label>Unit cost<input data-field="UnitCost" type="number" min="0" step=".01" value="${esc(line.UnitCost)}"></label><strong>${money(Number(line.Quantity) * Number(line.UnitCost) * productionQuantity())}</strong><button type="button" class="remove-line" data-remove-line="${index}">Remove</button></div>` : "").join("") || empty("No custom costs.");
+    byId("customUsageList").innerHTML = state.lines.map((line, index) => line.ItemType === "CUSTOM" ? `<div class="structured-row compact-row" data-line="${index}"><label>Description<input data-field="Description" value="${esc(line.Description)}"></label><label>Quantity<input data-field="Quantity" type="number" min="0" step=".01" value="${esc(line.Quantity)}"></label><label>Unit<input data-field="Unit" value="${esc(line.Unit)}"></label><label>Unit cost<input data-field="UnitCost" type="number" min="0" step=".01" value="${esc(line.UnitCost)}"></label><strong>${money(Number(line.Quantity) * Number(line.UnitCost) * costMultiplier())}</strong><button type="button" class="remove-line" data-remove-line="${index}">Remove</button></div>` : "").join("") || empty("No custom costs.");
     recalculate();
   }
 
@@ -378,15 +380,12 @@
     });
   }
 
-  function productionQuantity() {
-    return byId("massProduction").checked ? Math.max(1, Number(byId("documentForm").elements.ProductionQuantity.value || 1)) : 1;
-  }
+  function orderQuantity() { return Math.max(1, Number(byId("documentForm").elements.ProductionQuantity.value || 1)); }
+  function costMultiplier() { return byId("massProduction").checked ? orderQuantity() : 1; }
 
   function updateProductionMode() {
     const enabled = byId("massProduction").checked;
-    byId("productionQuantityLabel").classList.toggle("hidden", !enabled);
-    if (!enabled) byId("documentForm").elements.ProductionQuantity.value = 1;
-    const wording = enabled ? "Enter the specifications for one finished item. Material, time, labor, and additional costs will be multiplied by the order quantity." : "Enter specifications and costs for the complete job.";
+    const wording = enabled ? "Enter costs for one finished item. The calculator will multiply them by the customer quantity." : "Enter costs for the complete order; they will not be multiplied.";
     byId("productionHelp").textContent = wording;
     byId("standardCostHelp").textContent = enabled ? "Hours entered below are for one finished item." : "Standard job-level time and rates";
     renderStructuredLines();
@@ -411,41 +410,59 @@
         line.Unit = cost.UnitType || "each";
         line.UnitCost = Number(cost.DefaultUnitCost || 0);
       }
-      return { ...line, DetailsJson: JSON.stringify(details), PerUnit: true };
+      return { ...line, DetailsJson: JSON.stringify(details), PerUnit: byId("massProduction").checked };
     });
     const machineHours = Number(byId("machineHours").value || 0);
     const laborHours = Number(byId("laborHours").value || 0);
-    if (machineHours) lines.push({ ItemType: "MACHINE", Description: "3D printer machine time", Quantity: machineHours, Unit: "hour", UnitCost: Number(byId("machineRate").value || 0), PerUnit: true, DetailsJson: "{}" });
-    if (laborHours) lines.push({ ItemType: "LABOR", Description: "Post-processing and assembly", Quantity: laborHours, Unit: "hour", UnitCost: Number(byId("laborRate").value || 0), PerUnit: true, DetailsJson: "{}" });
+    if (machineHours) lines.push({ ItemType: "MACHINE", Description: "3D printer machine time", Quantity: machineHours, Unit: "hour", UnitCost: Number(byId("machineRate").value || 0), PerUnit: byId("massProduction").checked, DetailsJson: "{}" });
+    if (laborHours) lines.push({ ItemType: "LABOR", Description: "Post-processing and assembly", Quantity: laborHours, Unit: "hour", UnitCost: Number(byId("laborRate").value || 0), PerUnit: byId("massProduction").checked, DetailsJson: "{}" });
     return lines;
   }
 
   function calculateTotals() {
     const form = byId("documentForm");
     const lines = allDocumentLines();
-    const multiplier = productionQuantity();
+    const multiplier = costMultiplier();
     const subtotal = lines.reduce((sum, line) => sum + Number(line.Quantity || 0) * Number(line.UnitCost || 0) * multiplier, 0);
     const buffer = subtotal * Number(form.elements.FailureBufferPercent.value || 0) / 100;
-    const discount = Number(form.elements.Discount.value || 0);
-    const taxable = Math.max(0, subtotal + buffer - discount);
+    const costBasis = subtotal + buffer;
+    const markupPercent = Math.max(0, Number(form.elements.PricingMarkupPercent.value || 0));
+    const recommended = costBasis * (1 + markupPercent / 100);
+    const requestedTarget = Number(form.elements.TargetSubtotal.value || 0);
+    const target = requestedTarget > 0 ? requestedTarget : recommended;
+    const adjustment = target - recommended;
+    const discount = Math.max(0, -adjustment);
+    const taxable = Math.max(0, target);
     const tax = taxable * Number(form.elements.TaxPercent.value || 0) / 100;
     const shipping = Number(form.elements.Shipping.value || 0);
-    return { Subtotal: subtotal, FailureBufferAmount: buffer, Discount: discount, TaxAmount: tax, Shipping: shipping, GrandTotal: taxable + tax + shipping };
+    return { Subtotal: subtotal, FailureBufferAmount: buffer, PricingMarkupPercent: markupPercent, RecommendedSubtotal: recommended, TargetSubtotal: target, PricingAdjustment: adjustment, Discount: discount, TaxAmount: tax, Shipping: shipping, GrandTotal: taxable + tax + shipping };
   }
   function recalculate() {
     const totals = calculateTotals();
     byId("documentTotals").innerHTML = [
-      ["Subtotal", totals.Subtotal], ["Failure buffer", totals.FailureBufferAmount],
-      ["Discount", -totals.Discount], ["Tax", totals.TaxAmount], ["Shipping", totals.Shipping]
+      ["Private production cost", totals.Subtotal], ["Failure / waste allowance", totals.FailureBufferAmount],
+      ["Recommended selling subtotal", totals.RecommendedSubtotal], ["Customer subtotal", totals.TargetSubtotal],
+      ["Tax", totals.TaxAmount], ["Shipping", totals.Shipping]
     ].map(([label, value]) => `<div class="total-row"><span>${label}</span><strong>${money(value)}</strong></div>`).join("") +
       `<div class="total-row grand"><span>Grand Total</span><strong>${money(totals.GrandTotal)}</strong></div>`;
+    const difference = totals.PricingAdjustment;
+    const costBasis = totals.Subtotal + totals.FailureBufferAmount;
+    const margin = totals.TargetSubtotal > 0 ? (totals.TargetSubtotal - costBasis) / totals.TargetSubtotal * 100 : 0;
+    const effectiveMarkup = costBasis > 0 ? (totals.TargetSubtotal / costBasis - 1) * 100 : 0;
+    const laborRate = Number(byId("laborRate").value || 0);
+    const direction = Math.abs(difference) < .01 ? "matches the recommendation" : difference > 0 ? `adds ${money(difference)} above the recommendation` : `applies an implied ${money(Math.abs(difference))} discount`;
+    const coverage = totals.TargetSubtotal >= costBasis ? "Your production costs remain covered." : "Warning: this price does not cover the calculated production cost.";
+    let adjustmentAdvice = `This is an effective markup of ${effectiveMarkup.toFixed(1)}% on the cost basis.`;
+    if (difference > .01 && laborRate > 0) adjustmentAdvice += ` You could treat the extra ${money(difference)} as a complexity/design allowance equal to ${(difference / laborRate).toFixed(2)} hours at ${money(laborRate)}/hour.`;
+    if (difference < -.01 && totals.TargetSubtotal >= costBasis) adjustmentAdvice += ` The lower effective markup preserves costs without changing your private inputs.`;
+    byId("pricingRecommendation").innerHTML = `<div><span>Suggested subtotal</span><strong>${money(totals.RecommendedSubtotal)}</strong><small>${money(totals.RecommendedSubtotal / orderQuantity())} per item</small></div><div><span>Your price</span><strong>${money(totals.TargetSubtotal)}</strong><small>${money(totals.TargetSubtotal / orderQuantity())} per item</small></div><p>Your price ${direction}. Estimated gross margin: <strong>${margin.toFixed(1)}%</strong>. ${coverage} ${adjustmentAdvice}</p>`;
   }
   async function saveDocument(event) {
     event.preventDefault();
     const formData = Object.fromEntries(new FormData(event.currentTarget).entries());
     const totals = calculateTotals();
-    const multiplier = productionQuantity();
-    formData.ProductionQuantity = multiplier;
+    const multiplier = costMultiplier();
+    formData.ProductionQuantity = orderQuantity();
     const record = { ...formData, ...totals, Items: allDocumentLines().map((line, index) => ({ ...line, Amount: Number(line.Quantity || 0) * Number(line.UnitCost || 0) * multiplier, SortOrder: index + 1 })) };
     loading(`Saving ${record.Type === "QUOTE" ? "quote" : "invoice"}`, "Writing the document and itemized costs…", 45);
     try {
@@ -500,6 +517,14 @@
   byId("documentForm").addEventListener("input", recalculate);
   byId("documentForm").addEventListener("change", event => {
     if (event.target.id === "massProduction") return updateProductionMode();
+    if (event.target.name === "ProjectID") {
+      const project = findProject(event.target.value);
+      if (project) {
+        byId("documentForm").elements.ClientID.value = project.ClientID || byId("documentForm").elements.ClientID.value;
+        byId("documentForm").elements.PublicDescription.value = project.ProjectName || "";
+      }
+      return recalculate();
+    }
     const row = event.target.closest("[data-line]");
     if (!row) return recalculate();
     const index = Number(row.dataset.line);

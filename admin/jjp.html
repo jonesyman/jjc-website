@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#10281f">
   <title>JJP 3D Printing Admin</title>
-  <link rel="stylesheet" href="../assets/css/jjp-admin.css?v=2026072502">
+  <link rel="stylesheet" href="../assets/css/jjp-admin.css?v=2026072503">
 </head>
 <body>
   <div id="loadingStatus" class="loading-status hidden" role="status" aria-live="polite">
@@ -30,7 +30,7 @@
         <button data-view="costs">Additional Costs</button>
         <button data-view="settings">Settings</button>
       </nav>
-      <div class="sidebar-footer"><a href="./index.html">← Consulting Admin</a><span>JJP Version 2026.07.25.02</span></div>
+      <div class="sidebar-footer"><a href="./index.html">← Consulting Admin</a><span>JJP Version 2026.07.25.03</span></div>
     </aside>
     <button id="sidebarBackdrop" class="sidebar-backdrop" aria-label="Close navigation"></button>
 
@@ -130,9 +130,13 @@
           <label class="invoice-only">Due date<input name="DueDate" type="date"></label>
         </div>
         <div class="production-panel">
-          <label class="production-toggle"><input id="massProduction" type="checkbox"> Mass production / multiple identical items</label>
-          <label id="productionQuantityLabel" class="hidden">Order quantity<input name="ProductionQuantity" type="number" min="1" step="1" value="1"></label>
-          <p id="productionHelp">Enter specifications and costs for the complete job.</p>
+          <div><strong>Customer-facing item</strong><p>What the customer will see on the quote or invoice.</p></div>
+          <div class="form-grid">
+            <label>Quantity<input name="ProductionQuantity" type="number" min="1" step="1" value="1"></label>
+            <label class="wide">Description<input name="PublicDescription" placeholder="3 inch logo with magnet backer"></label>
+          </div>
+          <label class="production-toggle"><input id="massProduction" type="checkbox"> Costs below are for one item</label>
+          <p id="productionHelp">Leave unchecked when the costs below cover the complete order.</p>
         </div>
         <div class="cost-section">
           <div class="section-head"><div><h3>Filament</h3><p>Add each filament product and select every color used.</p></div><button type="button" class="button secondary" data-add-structured="filament">Add Filament</button></div>
@@ -155,10 +159,17 @@
           <div class="section-head"><div><h3>Custom Costs</h3><p>Use only for a cost that does not belong in the reusable library.</p></div><button type="button" class="button secondary" data-add-structured="custom">Add Custom Cost</button></div>
           <div id="customUsageList" class="structured-list"></div>
         </div>
+        <section class="pricing-workbench">
+          <div class="section-head"><div><h3>Pricing Calculator</h3><p>Private working numbers—only the final description, quantity, unit price, and total appear on the PDF.</p></div></div>
+          <div class="form-grid">
+            <label>Suggested markup %<input name="PricingMarkupPercent" type="number" min="0" step="1"></label>
+            <label>Your desired subtotal<input name="TargetSubtotal" type="number" min="0" step=".01" placeholder="Leave blank to use suggestion"></label>
+          </div>
+          <div id="pricingRecommendation" class="pricing-recommendation"></div>
+        </section>
         <div class="document-bottom">
           <div class="form-grid">
             <label>Failure buffer %<input name="FailureBufferPercent" type="number" min="0" step=".1"></label>
-            <label>Discount<input name="Discount" type="number" min="0" step=".01"></label>
             <label>Tax %<input name="TaxPercent" type="number" min="0" step=".1"></label>
             <label>Shipping<input name="Shipping" type="number" min="0" step=".01"></label>
             <label class="wide">Notes<textarea name="Notes"></textarea></label>
@@ -171,7 +182,7 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="../assets/js/jjpApi.js?v=2026072502"></script>
-  <script src="../assets/js/jjpAdmin.js?v=2026072502"></script>
+  <script src="../assets/js/jjpApi.js?v=2026072503"></script>
+  <script src="../assets/js/jjpAdmin.js?v=2026072503"></script>
 </body>
 </html>

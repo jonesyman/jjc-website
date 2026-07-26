@@ -10,7 +10,7 @@ const JJP_SHEETS = Object.freeze({
   ProjectFiles: ["ProjectFileID","ProjectID","Name","MimeType","DriveFileID","Url","CreatedDate"],
   Filaments: ["FilamentID","Name","Brand","ProductLine","MaterialType","Color","ColorsJson","ProductUrl","SpoolWeightG","SpoolCost","CostPerGram","Supplier","Active","CreatedDate","UpdatedDate"],
   AdditionalCosts: ["CostID","Name","Category","UnitType","DefaultUnitCost","Description","Active","CreatedDate","UpdatedDate"],
-  Documents: ["DocumentID","Type","Status","ClientID","ProjectID","IssueDate","DueDate","ValidUntil","ProductionQuantity","Notes","Subtotal","FailureBufferPercent","FailureBufferAmount","Discount","TaxPercent","TaxAmount","Shipping","GrandTotal","AmountPaid","BalanceDue","SourceQuoteID","PdfFileID","PdfUrl","PdfGeneratedDate","Active","CreatedDate","UpdatedDate"],
+  Documents: ["DocumentID","Type","Status","ClientID","ProjectID","IssueDate","DueDate","ValidUntil","ProductionQuantity","PublicDescription","PricingMarkupPercent","RecommendedSubtotal","TargetSubtotal","PricingAdjustment","Notes","Subtotal","FailureBufferPercent","FailureBufferAmount","Discount","TaxPercent","TaxAmount","Shipping","GrandTotal","AmountPaid","BalanceDue","SourceQuoteID","PdfFileID","PdfUrl","PdfGeneratedDate","Active","CreatedDate","UpdatedDate"],
   DocumentItems: ["ItemID","DocumentID","ItemType","ReferenceID","Description","Quantity","Unit","UnitCost","PerUnit","DetailsJson","Amount","SortOrder","CreatedDate","UpdatedDate"],
   Settings: ["Key","Value","Description","UpdatedDate"],
   Counters: ["Key","NextNumber","UpdatedDate"]
@@ -26,6 +26,7 @@ const JJP_DEFAULT_SETTINGS = Object.freeze({
   DefaultLaborRate: ["30.00", "Default labor and assembly rate per hour"],
   DefaultMachineRate: ["2.00", "Default machine wear and electricity rate per hour"],
   DefaultFailureBufferPercent: ["10", "Default print failure and waste allowance"],
+  DefaultMarkupPercent: ["60", "Default markup applied to production cost when suggesting a selling price"],
   DefaultTaxPercent: ["0", "Default sales tax percentage"],
   QuoteValidityDays: ["30", "Default quote validity period"],
   LogoFileID: ["", "Optional Google Drive PNG file ID for PDF branding"],
@@ -51,6 +52,7 @@ function initializeJjpDatabase() {
   seedCounters_();
   seedLibrary_();
   ensureDocumentFolders_();
+  ensureLogoFile_();
   try { SpreadsheetApp.getActive().toast("JJP database is ready.", "JJP Setup", 6); } catch (ignored) {}
   return { ok: true };
 }
@@ -260,8 +262,14 @@ function calculateDocumentTotals_(record, items) {
   }, 0), 2);
   const failureBufferPercent = number_(record.FailureBufferPercent);
   const failureBufferAmount = round_(subtotal * failureBufferPercent / 100, 2);
-  const discount = Math.max(0, number_(record.Discount));
-  const taxable = Math.max(0, subtotal + failureBufferAmount - discount);
+  const costBasis = subtotal + failureBufferAmount;
+  const markupPercent = Math.max(0, number_(record.PricingMarkupPercent));
+  const recommendedSubtotal = round_(costBasis * (1 + markupPercent / 100), 2);
+  const requestedTarget = number_(record.TargetSubtotal);
+  const targetSubtotal = round_(requestedTarget > 0 ? requestedTarget : recommendedSubtotal, 2);
+  const pricingAdjustment = round_(targetSubtotal - recommendedSubtotal, 2);
+  const discount = Math.max(0, -pricingAdjustment);
+  const taxable = Math.max(0, targetSubtotal);
   const taxPercent = number_(record.TaxPercent);
   const taxAmount = round_(taxable * taxPercent / 100, 2);
   const shipping = Math.max(0, number_(record.Shipping));
@@ -269,6 +277,10 @@ function calculateDocumentTotals_(record, items) {
     Subtotal: subtotal,
     FailureBufferPercent: failureBufferPercent,
     FailureBufferAmount: failureBufferAmount,
+    PricingMarkupPercent: markupPercent,
+    RecommendedSubtotal: recommendedSubtotal,
+    TargetSubtotal: targetSubtotal,
+    PricingAdjustment: pricingAdjustment,
     Discount: discount,
     TaxPercent: taxPercent,
     TaxAmount: taxAmount,
@@ -297,53 +309,31 @@ function generatePdf_(documentId) {
   right.appendParagraph(record.Type === "QUOTE" ? "QUOTE" : "INVOICE").setHeading(DocumentApp.ParagraphHeading.HEADING1).setAlignment(DocumentApp.HorizontalAlignment.RIGHT).setForegroundColor("#145c3b");
   right.appendParagraph(record.DocumentID).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
   right.appendParagraph("Issued: " + formatDate_(record.IssueDate)).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
-  if (number_(record.ProductionQuantity) > 1) right.appendParagraph("Order quantity: " + formatNumber_(record.ProductionQuantity)).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
   if (record.Type === "QUOTE") right.appendParagraph("Valid until: " + formatDate_(record.ValidUntil)).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
   else right.appendParagraph("Due: " + formatDate_(record.DueDate)).setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
   body.appendHorizontalRule();
   const parties = body.appendTable([["BILL TO", "PROJECT"], [
-    [client.Name || client.Company || "", client.Company && client.Company !== client.Name ? client.Company : "", client.Email || "", client.Phone || "", client.ShippingAddress || ""].filter(Boolean).join("\n"),
-    [project.ProjectName || "General 3D Printing", project.Description || ""].filter(Boolean).join("\n")
+    [client.Company || client.Name || "", client.Company && client.Name && client.Name !== client.Company ? client.Name : "", client.ShippingAddress || "", client.Phone || "", client.Email || ""].filter(Boolean).join("\n"),
+    project.ProjectName || "General 3D Printing"
   ]]);
   styleHeaderRow_(parties, "#dcefe4");
-  body.appendParagraph("");
-  const rows = [["DESCRIPTION", "QTY", "UNIT", "RATE", "AMOUNT"]];
   const productionQuantity = Math.max(1, number_(record.ProductionQuantity) || 1);
-  const filamentItems = items.filter(item => item.ItemType === "FILAMENT");
-  if (filamentItems.length) {
-    const totalGrams = filamentItems.reduce((sum, item) => sum + number_(item.Quantity) * productionQuantity, 0);
-    const totalCost = filamentItems.reduce((sum, item) => sum + number_(item.Amount), 0);
-    const details = filamentItems.map(item => {
-      let detail = {};
-      try { detail = JSON.parse(item.DetailsJson || "{}"); } catch (ignored) {}
-      const colors = (detail.colors || []).map(color => String(color).replace(/\s*\(\d+\)$/, "")).join(", ");
-      const name = [detail.brand, detail.productLine].filter(Boolean).join(" ") || item.Description || "Filament";
-      const grams = number_(item.Quantity) * productionQuantity;
-      return name + " — " + formatNumber_(grams) + "g" + (colors ? " (" + colors + ")" : "") + " — " + currency_(item.Amount);
-    });
-    rows.push(["Filament\n" + details.join("\n"), formatNumber_(totalGrams), "g", "", currency_(totalCost)]);
-  }
-  items.filter(item => item.ItemType !== "FILAMENT").forEach(item => {
-    const perUnit = String(item.PerUnit).toLowerCase() !== "false";
-    rows.push([
-      item.Description || item.ItemType || "",
-      formatNumber_(number_(item.Quantity) * (perUnit ? productionQuantity : 1)),
-      item.Unit || "",
-      currency_(item.UnitCost),
-      currency_(item.Amount)
-    ]);
-  });
+  const quoteSubtotal = number_(record.TargetSubtotal) || number_(record.RecommendedSubtotal) || number_(record.GrandTotal);
+  body.appendParagraph("ORDER QUANTITY").setAlignment(DocumentApp.HorizontalAlignment.CENTER).setBold(true).setForegroundColor("#4b6357").setSpacingBefore(12);
+  body.appendParagraph(formatNumber_(productionQuantity)).setAlignment(DocumentApp.HorizontalAlignment.CENTER).setBold(true).setFontSize(24).setForegroundColor("#145c3b").setSpacingAfter(12);
+  const description = record.PublicDescription || project.ProjectName || "Custom 3D printing";
+  const unitPrice = productionQuantity ? quoteSubtotal / productionQuantity : quoteSubtotal;
+  const rows = [
+    ["DESCRIPTION", "QTY", "UNIT PRICE", "AMOUNT"],
+    [description, formatNumber_(productionQuantity), currency_(unitPrice), currency_(quoteSubtotal)]
+  ];
   const itemTable = body.appendTable(rows);
   styleHeaderRow_(itemTable, "#145c3b", "#ffffff");
-  [1,2,3,4].forEach(column => {
+  styleCustomerItemTable_(itemTable);
+  [1,2,3].forEach(column => {
     for (let row = 1; row < itemTable.getNumRows(); row++) itemTable.getCell(row, column).getChild(0).asParagraph().setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
   });
-  body.appendParagraph("");
-  const totalRows = [
-    ["Subtotal", currency_(record.Subtotal)],
-    ["Failure / waste buffer (" + formatNumber_(record.FailureBufferPercent) + "%)", currency_(record.FailureBufferAmount)]
-  ];
-  if (number_(record.Discount)) totalRows.push(["Discount", "-" + currency_(record.Discount)]);
+  const totalRows = [["Subtotal", currency_(quoteSubtotal)]];
   if (number_(record.TaxAmount)) totalRows.push(["Tax (" + formatNumber_(record.TaxPercent) + "%)", currency_(record.TaxAmount)]);
   if (number_(record.Shipping)) totalRows.push(["Shipping", currency_(record.Shipping)]);
   totalRows.push([record.Type === "QUOTE" ? "QUOTE TOTAL" : "BALANCE DUE", currency_(record.Type === "INVOICE" ? record.BalanceDue : record.GrandTotal)]);
@@ -365,9 +355,6 @@ function generatePdf_(documentId) {
     body.appendParagraph("PAYMENT INSTRUCTIONS").setBold(true).setForegroundColor("#145c3b");
     body.appendParagraph(String(settings.PaymentInstructions));
   }
-  body.appendParagraph("");
-  body.appendHorizontalRule();
-  body.appendParagraph([settings.BusinessName, settings.BusinessEmail, settings.BusinessPhone, settings.BusinessAddress].filter(Boolean).join(" • ")).setAlignment(DocumentApp.HorizontalAlignment.CENTER).setForegroundColor("#65786e").setFontSize(8);
   doc.saveAndClose();
 
   const folders = ensureDocumentFolders_();
@@ -387,14 +374,18 @@ function generatePdf_(documentId) {
 }
 
 function insertLogo_(cell, settings) {
-  try {
-    const blob = settings.LogoFileID
-      ? DriveApp.getFileById(settings.LogoFileID).getBlob()
-      : UrlFetchApp.fetch(settings.LogoUrl || "https://jeffjonesconsulting.com/assets/images/JJP_Logo.png").getBlob();
-    const image = cell.appendImage(blob);
-    const width = image.getWidth(), height = image.getHeight(), maxWidth = 120;
-    if (width > maxWidth) image.setWidth(maxWidth).setHeight(Math.round(height * maxWidth / width));
-  } catch (ignored) {}
+  const sources = [];
+  if (settings.LogoFileID) sources.push(() => DriveApp.getFileById(settings.LogoFileID).getBlob());
+  sources.push(() => UrlFetchApp.fetch("https://raw.githubusercontent.com/jonesyman/jjc-website/main/assets/images/JJP_Logo.png", { muteHttpExceptions: false }).getBlob());
+  if (settings.LogoUrl) sources.push(() => UrlFetchApp.fetch(settings.LogoUrl, { muteHttpExceptions: false }).getBlob());
+  for (let index = 0; index < sources.length; index++) {
+    try {
+      const image = cell.appendImage(sources[index]());
+      const width = image.getWidth(), height = image.getHeight(), maxWidth = 120;
+      if (width > maxWidth) image.setWidth(maxWidth).setHeight(Math.round(height * maxWidth / width));
+      return;
+    } catch (ignored) {}
+  }
 }
 
 function styleHeaderRow_(table, background, foreground) {
@@ -404,6 +395,47 @@ function styleHeaderRow_(table, background, foreground) {
     row.getCell(column).editAsText().setBold(true);
     if (foreground) row.getCell(column).editAsText().setForegroundColor(foreground);
   }
+}
+
+function styleCustomerItemTable_(table) {
+  table.setBorderColor("#a9cbb7").setBorderWidth(1);
+  [270, 55, 85, 90].forEach((width, column) => {
+    table.getCell(0, column).setWidth(width);
+    table.getCell(1, column).setWidth(width);
+  });
+  for (let row = 0; row < table.getNumRows(); row++) {
+    for (let column = 0; column < table.getRow(row).getNumCells(); column++) {
+      const cell = table.getCell(row, column);
+      cell.setPaddingTop(10).setPaddingBottom(10).setPaddingLeft(9).setPaddingRight(9);
+      if (row > 0) cell.setBackgroundColor("#f3f8f5");
+      cell.editAsText().setFontSize(row === 0 ? 9 : 10);
+    }
+  }
+  table.getCell(1, 0).editAsText().setBold(true).setForegroundColor("#213b2e");
+  table.getCell(1, 3).editAsText().setBold(true).setForegroundColor("#145c3b");
+}
+
+function ensureLogoFile_() {
+  const settings = settingsObject_();
+  if (settings.LogoFileID) {
+    try { DriveApp.getFileById(settings.LogoFileID).getBlob(); return settings.LogoFileID; } catch (ignored) {}
+  }
+  const parent = DriveApp.getFolderById(JJP_CONFIG.DOCUMENT_FOLDER_ID);
+  const existing = parent.getFilesByName("JJP_Logo.png");
+  let file;
+  if (existing.hasNext()) {
+    file = existing.next();
+  } else {
+    const blob = UrlFetchApp.fetch("https://raw.githubusercontent.com/jonesyman/jjc-website/main/assets/images/JJP_Logo.png", { muteHttpExceptions: false }).getBlob().setName("JJP_Logo.png");
+    file = parent.createFile(blob);
+  }
+  upsert_("Settings", "Key", {
+    Key: "LogoFileID",
+    Value: file.getId(),
+    Description: JJP_DEFAULT_SETTINGS.LogoFileID[1],
+    UpdatedDate: isoNow_()
+  });
+  return file.getId();
 }
 
 function ensureDocumentFolders_() {

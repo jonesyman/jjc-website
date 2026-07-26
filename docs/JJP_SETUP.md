@@ -48,9 +48,10 @@ Create a new deployment version after every JJP Apps Script change.
 - Confirm the Bambu Lab PLA Basic color list and additional-cost records.
 - Upload a small client sketch to a saved project and confirm its Drive link appears.
 - Create a quote with multiple filament colors, machine time, labor, and an additional cost.
-- Enable mass production, set a quantity greater than one, and confirm every per-item production input multiplies once.
+- Set a customer quantity greater than one, select **Costs below are for one item**, and confirm every production input multiplies once.
+- Compare the recommended subtotal with a higher and lower desired subtotal; confirm the adjustment, unit price, margin, and cost-coverage guidance.
 - Convert it to an invoice.
-- Generate both PDFs and confirm the logo, compact filament detail, totals, and Drive locations.
+- Generate both PDFs and confirm the logo, prominent quantity, public description, unit price, total, and Drive locations. Private production details should not appear.
 - Check desktop, mobile portrait, and mobile landscape layouts.
 
 ## Deferred Consulting organization task
