@@ -877,7 +877,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.25.06</strong><br>
+        Version <strong id="appVersionLabel">2026.07.25.07</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1536,7 +1536,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/googleSheets.js?v=10"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
-  <script src="../assets/js/teamMapAnalysis.js?v=6"></script>
+  <script src="../assets/js/teamMapAnalysis.js?v=7"></script>
   <script src="../assets/js/assessmentLibrary.js?v=6"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
@@ -1544,7 +1544,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.25.06";
+    const APP_VERSION = "2026.07.25.07";
 
     const K = {
       clients: "jjc_clients",
@@ -3109,7 +3109,7 @@ Sanger, CA 93657"></textarea>
         context.fillStyle="#29497f"; context.font="800 24px Montserrat, Arial, sans-serif"; context.textAlign="center"; context.textBaseline="middle"; context.fillText(card.abbreviation,badgeCenterX,y+panelHeader/2+1);
         context.fillStyle="#ffffff"; context.font=`800 ${headerFontSize}px Montserrat, Arial, sans-serif`; context.textAlign="left"; context.fillText(card.type,headerStart+badgeDiameter+headerGap,y+panelHeader/2+1);
         context.strokeStyle="#cbd5e1"; context.lineWidth=2; context.beginPath(); context.moveTo(x+half,y+panelHeader); context.lineTo(x+half,y+rowHeight); context.stroke();
-        context.font="800 22px Montserrat, Arial, sans-serif"; context.fillStyle="#15803d"; context.fillText("Genius",x+half/2,y+panelHeader+40); context.fillStyle="#dc2626"; context.fillText("Frustration",x+half+half/2,y+panelHeader+40);
+        context.font="800 22px Montserrat, Arial, sans-serif"; context.textAlign="center"; context.fillStyle="#15803d"; context.fillText("Genius",x+half/2,y+panelHeader+40); context.fillStyle="#dc2626"; context.fillText("Frustration",x+half+half/2,y+panelHeader+40);
         const drawNames=(people,startX,color)=>{
           const labels=people.map(person=>`${teamMapDisplayName(person,mode)}${team.leader&&person.id===team.leader.id?" *":""}`), columns=labels.length>9?2:1, rowsPerColumn=labels.length>18?Math.ceil(labels.length/2):9, columnInnerWidth=(half-32)/columns, lineHeight=Math.min(32,286/rowsPerColumn);
           let fontSize=Math.min(23,lineHeight-3); context.font=`600 ${fontSize}px Montserrat, Arial, sans-serif`;

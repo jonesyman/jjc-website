@@ -6,13 +6,15 @@ Last updated: 2026-07-25
 
 - Primary branch: `main`
 - Remote: `origin` (`jonesyman/jjc-website`)
-- Current application version: `2026.07.25.06`
-- Latest feature: unanimous three-type highlighting for Responsive and Disruptive slide-note suggestions
+- Current application version: `2026.07.25.07`
+- Latest feature: unanimous yellow orientation highlights and centered condensed-map subheaders
 
 Always run `git status`, `git branch --show-current`, and a short `git log` before starting. Do not assume the working tree is clean or that the local branch has already been pushed.
 
 ## What was just completed
 
+- Added yellow Responsive/Disruptive suggestions when all three associated types independently carry yellow Competency highlights.
+- Re-centered the Genius and Frustration subheaders in standalone condensed Team Map downloads.
 - Limited Responsive and Disruptive highlight suggestions to cases where all three associated types independently share the same green or red highlight.
 - Normalized each Working Genius slide-note distribution to one denominator and exactly 100%, including leader-weighted teams.
 - Reserved red type highlights for high Frustration so a 0% Frustration result is never presented as a red risk.

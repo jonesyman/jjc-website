@@ -2,6 +2,11 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.25.07 — 2026-07-25
+
+- Added unanimous yellow Competency highlighting for Responsive and Disruptive when all three associated types are yellow.
+- Restored centered Genius and Frustration subheaders in downloaded condensed Team Maps after drawing the left-aligned type names.
+
 ## 2026.07.25.06 — 2026-07-25
 
 - Changed Responsive and Disruptive suggestions to require unanimous highlights across all three associated Working Genius types.

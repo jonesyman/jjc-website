@@ -38,6 +38,7 @@ This roadmap records product capabilities rather than relying solely on historic
 - Consistent measured letter-and-name headers across workshop and saved-group condensed Team Map downloads.
 - Exact 100% facilitator-note type distributions with high-Frustration-only red highlights.
 - Consensus-based Responsive and Disruptive highlights requiring three matching green or red type signals.
+- Yellow Responsive and Disruptive consensus highlights plus centered condensed-map section subheaders.
 - A separate JJP 3D-printing admin console, data schema, pricing engine, quote/invoice workflow, and Drive PDF backend.
 
 ## Current release boundary
