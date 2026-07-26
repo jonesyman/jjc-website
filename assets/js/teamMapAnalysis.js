@@ -130,7 +130,13 @@ window.TeamMapAnalysis = (() => {
       return candidates.sort((a,b)=>b.severity-a.severity).slice(0,1);
     };
     const stageHighlights=dominantDimensionHighlight(stages,50,33);
-    const orientationHighlights=dominantDimensionHighlight(orientations,75,50);
+    const orientationHighlights=orientations.flatMap(orientation=>{
+      const memberHighlights=orientation.types.map(type=>typeAnalyses.find(item=>item.type===type)?.highlights?.[0]).filter(Boolean);
+      if(memberHighlights.length!==orientation.types.length)return [];
+      const color=memberHighlights[0].color;
+      if(!["green","red"].includes(color)||memberHighlights.some(item=>item.color!==color))return [];
+      return [{subject:orientation.label,area:color==="green"?"Genius":"Frustration",color,rate:color==="green"?orientation.geniusRate:orientation.frustrationRate,severity:0}];
+    });
     const highlightGroups={types:typeHighlights,stages:stageHighlights,orientations:orientationHighlights};
     return {valid:true,highlights:[...typeHighlights,...stageHighlights,...orientationHighlights],highlightGroups,typeAnalyses,stages,orientations};
   }

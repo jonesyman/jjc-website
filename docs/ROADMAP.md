@@ -37,6 +37,7 @@ This roadmap records product capabilities rather than relying solely on historic
 - Facilitator-ready Team Map slide notes and standalone condensed-map PNG downloads for workshops and saved groups.
 - Consistent measured letter-and-name headers across workshop and saved-group condensed Team Map downloads.
 - Exact 100% facilitator-note type distributions with high-Frustration-only red highlights.
+- Consensus-based Responsive and Disruptive highlights requiring three matching green or red type signals.
 - A separate JJP 3D-printing admin console, data schema, pricing engine, quote/invoice workflow, and Drive PDF backend.
 
 ## Current release boundary

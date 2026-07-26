@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.25.06 — 2026-07-25
+
+- Changed Responsive and Disruptive suggestions to require unanimous highlights across all three associated Working Genius types.
+- An orientation is now green only when all three member types are green, or red only when all three are red.
+- Mixed colors, yellow highlights, and incomplete type highlighting no longer produce an orientation highlight.
+
 ## 2026.07.25.05 — 2026-07-25
 
 - Corrected facilitator-note type distributions so Genius, Competency, and Frustration use one normalized denominator and total exactly 100%.
