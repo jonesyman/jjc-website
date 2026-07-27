@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.26.01 — 2026-07-26
+
+- Consolidated the Consulting database, generated documents, and assets beneath one permanent Drive workspace.
+- Anchored PDF generation to permanent Drive folder IDs so renames cannot create duplicate document folders.
+- Added spreadsheet menu actions to open, audit, and safely repair the Consulting Drive organization.
+- Added an archive location for prior folders and test PDFs without deleting them.
+
 ## 2026.07.25.11 — 2026-07-25
 
 - Moved only the Discernment and Enablement labels and their annotations downward to add separation from the radar graph.

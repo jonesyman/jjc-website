@@ -32,9 +32,15 @@ const TEAM_MAP_ANALYSIS_DEFAULT_SETTINGS = {
   IncludeLeaderWeighting:true, IncludeCompetencyAnalysis:true, IncludeConsultantQuestions:true,
   IncludeMethodologyNote:true, MaximumAutomaticObservations:8
 };
-const PDF_ROOT_FOLDER = "Jeff Jones Consulting PDFs";
+const CONSULTING_SPREADSHEET_ID = "1oFYGZ75k0cuK3dMeeRUU-Oj5lziA7KjETUrVlDM-zsQ";
+const CONSULTING_ROOT_FOLDER_ID = "1Clhe5MKlv5cGUowRrTQVJEM4YIjqH_BE";
+const PDF_ROOT_FOLDER_ID = "1K72XXtHFhlIVp3GM95RdIXBuqQrMtfIB";
+const ASSETS_FOLDER_ID = "1IDU04X1LgkFX8JseRDnCSjS9bBdcc722";
+const LEGACY_PDF_ROOT_FOLDER_ID = "11R_1oSIyT15o0y8Zf0tW9fB-k6DP-RZk";
+const PDF_ROOT_FOLDER = "Generated Documents";
 const PDF_ESTIMATE_FOLDER = "Estimates";
 const PDF_INVOICE_FOLDER = "Invoices";
+const PDF_ARCHIVE_FOLDER = "Archived Documents";
 const LOGO_URL = "https://jeffjonesconsulting.com/assets/images/JJC_Logo.png";
 const ZOHO_DEFAULT_ACCOUNTS_URL = "https://accounts.zoho.com";
 const ZOHO_DEFAULT_MAIL_API_URL = "https://mail.zoho.com/api";
@@ -42,7 +48,115 @@ const ZOHO_DEFAULT_MAIL_API_URL = "https://mail.zoho.com/api";
 function authorizeDriveAccess() {
   getOrCreatePdfFolder(PDF_ESTIMATE_FOLDER);
   getOrCreatePdfFolder(PDF_INVOICE_FOLDER);
+  getOrCreatePdfFolder(PDF_ARCHIVE_FOLDER);
   return "Drive access authorized for Jeff Jones Consulting PDF generation.";
+}
+
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu("Consulting Setup")
+    .addItem("Open Consulting Folder", "openConsultingFolder")
+    .addItem("Audit Drive Organization", "auditConsultingDriveOrganization")
+    .addItem("Initialize / Repair Drive Organization", "organizeConsultingDrive")
+    .addToUi();
+}
+
+function openConsultingFolder() {
+  const url = "https://drive.google.com/drive/folders/" + CONSULTING_ROOT_FOLDER_ID;
+  const html = HtmlService.createHtmlOutput(
+    '<script>window.open(' + JSON.stringify(url) + ', "_blank");google.script.host.close();</script>'
+  ).setWidth(120).setHeight(40);
+  SpreadsheetApp.getUi().showModalDialog(html, "Opening Consulting Folder");
+}
+
+function auditConsultingDriveOrganization() {
+  const audit = buildConsultingDriveAudit();
+  SpreadsheetApp.getUi().alert(
+    audit.ok ? "Consulting Drive organization is ready." : "Consulting Drive organization needs repair.",
+    audit.messages.join("\n"),
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+  return audit;
+}
+
+function organizeConsultingDrive() {
+  const consultingRoot = DriveApp.getFolderById(CONSULTING_ROOT_FOLDER_ID);
+  const generatedRoot = DriveApp.getFolderById(PDF_ROOT_FOLDER_ID);
+  const archiveFolder = getOrCreateFolder(generatedRoot, PDF_ARCHIVE_FOLDER);
+
+  DriveApp.getFileById(CONSULTING_SPREADSHEET_ID).moveTo(consultingRoot);
+  DriveApp.getFolderById(ASSETS_FOLDER_ID).moveTo(consultingRoot);
+  generatedRoot.moveTo(consultingRoot);
+
+  try {
+    const legacyRoot = DriveApp.getFolderById(LEGACY_PDF_ROOT_FOLDER_ID);
+    moveNamedChildFolders(legacyRoot, generatedRoot, [PDF_ESTIMATE_FOLDER, PDF_INVOICE_FOLDER]);
+    archiveNamedTestFiles(generatedRoot, archiveFolder);
+    legacyRoot.setName("Previous PDF Folder");
+    legacyRoot.moveTo(archiveFolder);
+  } catch (err) {
+    console.warn("Legacy PDF folder could not be archived: " + err);
+  }
+
+  const audit = buildConsultingDriveAudit();
+  SpreadsheetApp.getUi().alert(
+    audit.ok ? "Consulting Drive organization is ready." : "Consulting Drive organization still needs attention.",
+    audit.messages.join("\n"),
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+  return audit;
+}
+
+function moveNamedChildFolders(source, destination, names) {
+  names.forEach(name => {
+    const matches = source.getFoldersByName(name);
+    while (matches.hasNext()) matches.next().moveTo(destination);
+  });
+}
+
+function archiveNamedTestFiles(generatedRoot, archiveFolder) {
+  const estimates = getOrCreateFolder(generatedRoot, PDF_ESTIMATE_FOLDER);
+  const files = estimates.getFiles();
+  while (files.hasNext()) {
+    const file = files.next();
+    if (/\bDELETE\b/i.test(file.getName())) file.moveTo(archiveFolder);
+  }
+}
+
+function buildConsultingDriveAudit() {
+  const messages = [];
+  const consultingRoot = DriveApp.getFolderById(CONSULTING_ROOT_FOLDER_ID);
+  const generatedRoot = DriveApp.getFolderById(PDF_ROOT_FOLDER_ID);
+  const spreadsheet = DriveApp.getFileById(CONSULTING_SPREADSHEET_ID);
+  const expectedRootId = consultingRoot.getId();
+
+  messages.push(parentIncludesId(spreadsheet.getParents(), expectedRootId)
+    ? "✓ Consulting database is in the Consulting folder."
+    : "• Consulting database is outside the Consulting folder.");
+  messages.push(parentIncludesId(generatedRoot.getParents(), expectedRootId)
+    ? "✓ Generated Documents is in the Consulting folder."
+    : "• Generated Documents is outside the Consulting folder.");
+
+  [PDF_ESTIMATE_FOLDER, PDF_INVOICE_FOLDER, PDF_ARCHIVE_FOLDER].forEach(name => {
+    messages.push(generatedRoot.getFoldersByName(name).hasNext()
+      ? "✓ " + name + " folder is ready."
+      : "• Missing " + name + " folder.");
+  });
+
+  return {
+    ok: messages.every(message => message.indexOf("✓") === 0),
+    rootFolderId: CONSULTING_ROOT_FOLDER_ID,
+    generatedDocumentsFolderId: PDF_ROOT_FOLDER_ID,
+    assetsFolderId: ASSETS_FOLDER_ID,
+    messages: messages
+  };
+}
+
+function parentIncludesId(parents, folderId) {
+  while (parents.hasNext()) {
+    if (parents.next().getId() === folderId) return true;
+  }
+  return false;
 }
 
 function doGet(e) {
@@ -1403,7 +1517,7 @@ function updateRowFields(sheetName, rowNumber, fields) {
 }
 
 function getOrCreatePdfFolder(childName) {
-  const root = getOrCreateFolder(DriveApp, PDF_ROOT_FOLDER);
+  const root = DriveApp.getFolderById(PDF_ROOT_FOLDER_ID);
   return getOrCreateFolder(root, childName);
 }
 
