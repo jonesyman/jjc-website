@@ -885,7 +885,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.26.01</strong><br>
+        Version <strong id="appVersionLabel">2026.07.26.02</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -944,9 +944,10 @@
             <div class="card">
               <div class="section-title"><h2>Client Form</h2><button class="button ghost small-btn" onclick="resetClientForm()">New</button></div>
               <div class="field"><label>Client ID</label><input id="clientId" placeholder="CLI-0001" readonly></div>
-              <div class="field"><label>Organization</label><input id="clientOrg" autocomplete="organization"></div>
+              <div class="field"><label>Client Type</label><select id="clientType" onchange="updateClientTypeFields()"><option value="Organization">Organization</option><option value="Individual">Individual</option></select></div>
+              <div class="field" id="clientOrgField"><label>Organization</label><input id="clientOrg" autocomplete="organization"></div>
               <div class="form-row">
-                <div class="field"><label>Contact</label><input id="clientContact" autocomplete="name"></div>
+                <div class="field"><label id="clientContactLabel">Primary Contact</label><input id="clientContact" autocomplete="name"></div>
                 <div class="field"><label>Email</label><input id="clientEmail" type="email" inputmode="email" autocomplete="email"></div>
               </div>
               <div class="field"><label>Phone</label><input id="clientPhone" type="tel" inputmode="tel" autocomplete="tel"></div>
@@ -1555,7 +1556,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.26.01";
+    const APP_VERSION = "2026.07.26.02";
 
     const K = {
       clients: "jjc_clients",
@@ -1851,7 +1852,7 @@ Sanger, CA 93657"></textarea>
 
     function updateLookupLists() {
       const clientOptions = clients.filter(record => !isArchived(record))
-        .map(c => `<option value="${esc(c.Organization)}" data-id="${esc(c.ClientID)}" data-email="${esc(c.Email)}">${esc(c.ClientID)}${c.Contact ? " • " + esc(c.Contact) : ""}</option>`)
+        .map(c => `<option value="${esc(clientDisplayName(c))}" data-id="${esc(c.ClientID)}" data-email="${esc(c.Email)}">${esc(c.ClientID)}${c.Contact && c.Contact !== clientDisplayName(c) ? " • " + esc(c.Contact) : ""}</option>`)
         .join("");
       document.getElementById("clientsDatalist").innerHTML = clientOptions;
 
@@ -1867,9 +1868,20 @@ Sanger, CA 93657"></textarea>
     function findClientByNameOrId(value) {
       const v = String(value || "").trim().toLowerCase();
       if (!v) return null;
-      return clients.find(c => !isArchived(c) && String(c.Organization || "").trim().toLowerCase() === v)
+      return clients.find(c => !isArchived(c) && clientDisplayName(c).toLowerCase() === v)
+        || clients.find(c => !isArchived(c) && String(c.Contact || "").trim().toLowerCase() === v)
         || clients.find(c => !isArchived(c) && String(c.ClientID || "").trim().toLowerCase() === v)
         || null;
+    }
+
+    function clientDisplayName(client) {
+      return String(client?.Organization || client?.Contact || client?.ClientID || "Client").trim();
+    }
+
+    function updateClientTypeFields() {
+      const individual = document.getElementById("clientType").value === "Individual";
+      document.getElementById("clientOrgField").classList.toggle("hidden", individual);
+      document.getElementById("clientContactLabel").textContent = individual ? "Individual Name" : "Primary Contact";
     }
 
     function selectWorkshopClient(requireExact = true) {
@@ -1881,7 +1893,7 @@ Sanger, CA 93657"></textarea>
         return;
       }
       document.getElementById("workshopClientId").value = selected.ClientID || "";
-      document.getElementById("workshopOrg").value = selected.Organization || "";
+      document.getElementById("workshopOrg").value = clientDisplayName(selected);
       document.getElementById("workshopPrimaryContact").value = selected.Contact || "";
       document.getElementById("workshopContactEmail").value = selected.Email || "";
     }
@@ -1892,7 +1904,7 @@ Sanger, CA 93657"></textarea>
         if (requireExact) return;
         return;
       }
-      document.getElementById("invClientName").value = selected.Organization || "";
+      document.getElementById("invClientName").value = clientDisplayName(selected);
       document.getElementById("invClientEmail").value = selected.Email || "";
     }
 
@@ -1902,7 +1914,7 @@ Sanger, CA 93657"></textarea>
         if (requireExact) document.getElementById("estimateClientId").value = "";
         return;
       }
-      document.getElementById("estimateClientName").value = selected.Organization || "";
+      document.getElementById("estimateClientName").value = clientDisplayName(selected);
       document.getElementById("estimateClientId").value = selected.ClientID || "";
     }
 
@@ -1931,19 +1943,26 @@ Sanger, CA 93657"></textarea>
       dirtyFormViews.delete("clients");
       document.getElementById("clientId").value = nextId(clients, "CLI", "ClientID");
       ["clientOrg", "clientContact", "clientEmail", "clientPhone", "clientNotes"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("clientType").value = "Organization";
+      updateClientTypeFields();
     }
 
     async function saveClient(button) {
+      const clientType = document.getElementById("clientType").value;
+      const organization = document.getElementById("clientOrg").value.trim();
+      const contact = document.getElementById("clientContact").value.trim();
       const c = {
         ClientID: document.getElementById("clientId").value.trim(),
-        Organization: document.getElementById("clientOrg").value.trim(),
-        Contact: document.getElementById("clientContact").value.trim(),
+        ClientType: clientType,
+        Organization: clientType === "Individual" ? contact : organization,
+        Contact: contact,
         Email: document.getElementById("clientEmail").value.trim(),
         Phone: document.getElementById("clientPhone").value.trim(),
         Notes: document.getElementById("clientNotes").value.trim()
       };
       if (!c.ClientID) return focusRequiredField("clientId", "Client ID is required.");
-      if (!c.Organization) return focusRequiredField("clientOrg", "Organization is required.");
+      if (clientType === "Individual" && !c.Contact) return focusRequiredField("clientContact", "Individual name is required.");
+      if (clientType === "Organization" && !c.Organization) return focusRequiredField("clientOrg", "Organization is required.");
       const finishSave = beginSave(button, "Saving Client...");
       if (!finishSave) return;
       try {
@@ -1976,7 +1995,7 @@ Sanger, CA 93657"></textarea>
       filtered.forEach(c => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(c.Organization)}</div>${isArchived(c) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(c.ClientID)} • ${esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button small-btn" onclick="showClientDetail('${jsEsc(c.ClientID)}')">View Details</button>${isArchived(c) ? `<button class="button secondary small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('client','${jsEsc(c.ClientID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editClient('${jsEsc(c.ClientID)}')">Edit</button><button class="button ghost small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',true)">Archive</button>`}</div>`;
+        el.innerHTML = `<div class="record-title">${esc(clientDisplayName(c))}</div>${isArchived(c) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(c.ClientID)} • ${esc(c.ClientType || "Organization")}${c.ClientType === "Individual" ? "" : " • " + esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button small-btn" onclick="showClientDetail('${jsEsc(c.ClientID)}')">View Details</button>${isArchived(c) ? `<button class="button secondary small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('client','${jsEsc(c.ClientID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editClient('${jsEsc(c.ClientID)}')">Edit</button><button class="button ghost small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',true)">Archive</button>`}</div>`;
         wrap.appendChild(el);
       });
       prepareMobileActionMenus(wrap);
@@ -2018,7 +2037,7 @@ Sanger, CA 93657"></textarea>
         return sum + balance;
       }, 0);
 
-      document.getElementById("clientDetailName").textContent = client.Organization || "Client Details";
+      document.getElementById("clientDetailName").textContent = clientDisplayName(client);
       document.getElementById("clientDetailContact").textContent = [client.Contact, client.Email, client.Phone].filter(Boolean).join(" • ") || client.ClientID;
       document.getElementById("clientDetailNotes").textContent = client.Notes || "No client notes.";
       document.getElementById("clientTotalBilled").textContent = JJC_money(totalBilled);
@@ -2169,12 +2188,15 @@ Sanger, CA 93657"></textarea>
     function editClient(id) {
       const c = clients.find(x => x.ClientID === id);
       if (!c) return;
+      const clientType = c.ClientType || "Organization";
       document.getElementById("clientId").value = c.ClientID || "";
-      document.getElementById("clientOrg").value = c.Organization || "";
+      document.getElementById("clientType").value = clientType;
+      document.getElementById("clientOrg").value = clientType === "Individual" ? "" : c.Organization || "";
       document.getElementById("clientContact").value = c.Contact || "";
       document.getElementById("clientEmail").value = c.Email || "";
       document.getElementById("clientPhone").value = c.Phone || "";
       document.getElementById("clientNotes").value = c.Notes || "";
+      updateClientTypeFields();
     }
 
     async function resetWorkshopForm() {

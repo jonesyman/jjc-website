@@ -236,7 +236,7 @@ function doPost(e) {
     }
 
     if (action === "saveClient") {
-      ensureHeaders(SHEET_NAMES.clients, ARCHIVE_HEADERS);
+      ensureHeaders(SHEET_NAMES.clients, ["ClientType"].concat(ARCHIVE_HEADERS));
       upsertRow(SHEET_NAMES.clients, "ClientID", body.data || {});
       return jsonResponse({ success: true });
     }

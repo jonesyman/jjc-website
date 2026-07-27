@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.26.02 — 2026-07-26
+
+- Added Organization and Individual client types for one-on-one debrief engagements.
+- Individual clients now use the person’s name throughout client lookups, estimates, invoices, and related records without requiring an organization.
+- Documented that Team Map Analysis settings are initialized as persistent spreadsheet rows when first loaded.
+
 ## 2026.07.26.01 — 2026-07-26
 
 - Consolidated the Consulting database, generated documents, and assets beneath one permanent Drive workspace.
