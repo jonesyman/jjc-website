@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.29.01 — 2026-07-29
+
+- Reduced the generated Team Map PDF from three pages to two by removing the condensed-map page.
+- Added Responsive and Disruptive column headers plus Ideation, Activation, and Implementation row labels to the full-size Team Map on page 1.
+- Preserved the standalone square condensed Team Map PNG download for presentation slides.
+
 ## 2026.07.26.02 — 2026-07-26
 
 - Added Organization and Individual client types for one-on-one debrief engagements.
