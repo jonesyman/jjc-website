@@ -2,6 +2,11 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.29.03 — 2026-07-29
+
+- Expanded the reusable Industry and Team Function suggestions to cover the current consulting workshop portfolio.
+- Added standardized choices for community development, child and family services, higher education consulting, K–12 enrichment, and specialized higher-education teams.
+
 ## 2026.07.29.02 — 2026-07-29
 
 - Added reusable Sector, Industry, and Team Function classifications to workshops and saved assessment groups.
