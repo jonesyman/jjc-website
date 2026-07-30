@@ -890,7 +890,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.29.03</strong><br>
+        Version <strong id="appVersionLabel">2026.07.29.04</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -951,6 +951,11 @@
               <div class="field"><label>Client ID</label><input id="clientId" placeholder="CLI-0001" readonly></div>
               <div class="field"><label>Client Type</label><select id="clientType" onchange="updateClientTypeFields()"><option value="Organization">Organization</option><option value="Individual">Individual</option></select></div>
               <div class="field" id="clientOrgField"><label>Organization</label><input id="clientOrg" autocomplete="organization"></div>
+              <div class="form-row">
+                <div class="field"><label>Sector</label><select id="clientSector"><option value="">Unclassified</option><option>For-profit</option><option>Nonprofit</option><option>Government/Public</option><option>Education</option><option>Faith-based</option></select></div>
+                <div class="field"><label>Industry</label><input id="clientIndustry" list="industryOptions" placeholder="For example: Higher Education"></div>
+              </div>
+              <div class="field"><label>Team Function</label><input id="clientTeamFunction" list="teamFunctionOptions" placeholder="For example: Executive Leadership"></div>
               <div class="form-row">
                 <div class="field"><label id="clientContactLabel">Primary Contact</label><input id="clientContact" autocomplete="name"></div>
                 <div class="field"><label>Email</label><input id="clientEmail" type="email" inputmode="email" autocomplete="email"></div>
@@ -1575,7 +1580,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.29.03";
+    const APP_VERSION = "2026.07.29.04";
 
     const K = {
       clients: "jjc_clients",
@@ -1915,6 +1920,9 @@ Sanger, CA 93657"></textarea>
       document.getElementById("workshopOrg").value = clientDisplayName(selected);
       document.getElementById("workshopPrimaryContact").value = selected.Contact || "";
       document.getElementById("workshopContactEmail").value = selected.Email || "";
+      if (!document.getElementById("workshopSector").value) document.getElementById("workshopSector").value = selected.Sector || "";
+      if (!document.getElementById("workshopIndustry").value) document.getElementById("workshopIndustry").value = selected.Industry || "";
+      if (!document.getElementById("workshopTeamFunction").value) document.getElementById("workshopTeamFunction").value = selected.TeamFunction || "";
     }
 
     function selectInvoiceClient(requireExact = true) {
@@ -1961,7 +1969,7 @@ Sanger, CA 93657"></textarea>
     async function resetClientForm() {
       dirtyFormViews.delete("clients");
       document.getElementById("clientId").value = nextId(clients, "CLI", "ClientID");
-      ["clientOrg", "clientContact", "clientEmail", "clientPhone", "clientNotes"].forEach(id => document.getElementById(id).value = "");
+      ["clientOrg", "clientContact", "clientEmail", "clientPhone", "clientNotes", "clientSector", "clientIndustry", "clientTeamFunction"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("clientType").value = "Organization";
       updateClientTypeFields();
     }
@@ -1977,6 +1985,9 @@ Sanger, CA 93657"></textarea>
         Contact: contact,
         Email: document.getElementById("clientEmail").value.trim(),
         Phone: document.getElementById("clientPhone").value.trim(),
+        Sector: document.getElementById("clientSector").value,
+        Industry: document.getElementById("clientIndustry").value.trim(),
+        TeamFunction: document.getElementById("clientTeamFunction").value.trim(),
         Notes: document.getElementById("clientNotes").value.trim()
       };
       if (!c.ClientID) return focusRequiredField("clientId", "Client ID is required.");
@@ -2014,7 +2025,8 @@ Sanger, CA 93657"></textarea>
       filtered.forEach(c => {
         const el = document.createElement("div");
         el.className = "record-card";
-        el.innerHTML = `<div class="record-title">${esc(clientDisplayName(c))}</div>${isArchived(c) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(c.ClientID)} • ${esc(c.ClientType || "Organization")}${c.ClientType === "Individual" ? "" : " • " + esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button small-btn" onclick="showClientDetail('${jsEsc(c.ClientID)}')">View Details</button>${isArchived(c) ? `<button class="button secondary small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('client','${jsEsc(c.ClientID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editClient('${jsEsc(c.ClientID)}')">Edit</button><button class="button ghost small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',true)">Archive</button>`}</div>`;
+        const classification = [c.Sector, c.Industry, c.TeamFunction].filter(Boolean).join(" • ");
+        el.innerHTML = `<div class="record-title">${esc(clientDisplayName(c))}</div>${isArchived(c) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(c.ClientID)} • ${esc(c.ClientType || "Organization")}${c.ClientType === "Individual" ? "" : " • " + esc(c.Contact || "No contact")}</div><div class="tiny muted">${esc(classification || (c.ClientType === "Individual" ? "Individual client" : "Needs classification"))}</div><div class="tiny muted">${esc(c.Email || "")}</div><div class="actions"><button class="button small-btn" onclick="showClientDetail('${jsEsc(c.ClientID)}')">View Details</button>${isArchived(c) ? `<button class="button secondary small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('client','${jsEsc(c.ClientID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editClient('${jsEsc(c.ClientID)}')">Edit</button><button class="button ghost small-btn" onclick="setRecordArchived('client','${jsEsc(c.ClientID)}',true)">Archive</button>`}</div>`;
         wrap.appendChild(el);
       });
       prepareMobileActionMenus(wrap);
@@ -2057,7 +2069,7 @@ Sanger, CA 93657"></textarea>
       }, 0);
 
       document.getElementById("clientDetailName").textContent = clientDisplayName(client);
-      document.getElementById("clientDetailContact").textContent = [client.Contact, client.Email, client.Phone].filter(Boolean).join(" • ") || client.ClientID;
+      document.getElementById("clientDetailContact").textContent = [client.Contact, client.Email, client.Phone, client.Sector, client.Industry, client.TeamFunction].filter(Boolean).join(" • ") || client.ClientID;
       document.getElementById("clientDetailNotes").textContent = client.Notes || "No client notes.";
       document.getElementById("clientTotalBilled").textContent = JJC_money(totalBilled);
       document.getElementById("clientTotalPaid").textContent = JJC_money(totalPaid);
@@ -2214,6 +2226,9 @@ Sanger, CA 93657"></textarea>
       document.getElementById("clientContact").value = c.Contact || "";
       document.getElementById("clientEmail").value = c.Email || "";
       document.getElementById("clientPhone").value = c.Phone || "";
+      document.getElementById("clientSector").value = c.Sector || "";
+      document.getElementById("clientIndustry").value = c.Industry || "";
+      document.getElementById("clientTeamFunction").value = c.TeamFunction || "";
       document.getElementById("clientNotes").value = c.Notes || "";
       updateClientTypeFields();
     }
@@ -2451,9 +2466,9 @@ Sanger, CA 93657"></textarea>
         ...row,
         clientId: workshop.ClientID || client.ClientID || "",
         organization: workshop.Organization || client.Organization || row.organization || row.AssessmentGroupName || row.GroupName || "Unknown organization",
-        sector: workshop.Sector || row.sector || "",
-        industry: workshop.Industry || row.industry || "",
-        teamFunction: workshop.TeamFunction || row.teamFunction || "",
+        sector: workshop.Sector || client.Sector || row.sector || "",
+        industry: workshop.Industry || client.Industry || row.industry || "",
+        teamFunction: workshop.TeamFunction || client.TeamFunction || row.teamFunction || "",
         workshopDate: normalizeDateInput(workshop.WorkshopDate || row.AssessmentImportedDate || row.ImportedDate),
         workshopLabel: `${workshop.Organization || row.AssessmentGroupName || row.WorkshopID || "Workshop"}${workshop.WorkshopDate ? " • " + formatDate(workshop.WorkshopDate) : ""}`
       };
@@ -2477,7 +2492,7 @@ Sanger, CA 93657"></textarea>
         {id:"analyticsTeamFunction",field:"TeamFunction",label:"team functions"}
       ].forEach(config=>{
         const select=document.getElementById(config.id),previous=select.value;
-        const values=[...new Set(workshops.concat(groups).map(item=>String(item[config.field]||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+        const values=[...new Set(workshops.concat(groups,clients).map(item=>String(item[config.field]||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
         select.innerHTML=`<option value="">All ${config.label}</option>`+values.map(value=>`<option value="${esc(value)}">${esc(value)}</option>`).join("");
         select.value=values.includes(previous)?previous:"";
       });
@@ -2556,15 +2571,27 @@ Sanger, CA 93657"></textarea>
     }
 
     function analyticsComparisonContext() {
-      const workshopSelect = document.getElementById("analyticsWorkshop"), groupSelect = document.getElementById("analyticsGroup");
+      const workshopSelect = document.getElementById("analyticsWorkshop"), groupSelect = document.getElementById("analyticsGroup"), clientSelect = document.getElementById("analyticsClient");
       if (workshopSelect.value) {
         const workshop=workshops.find(item=>String(item.WorkshopID)===String(workshopSelect.value))||{};
-        return {kind:"Workshop",label:workshopSelect.options[workshopSelect.selectedIndex]?.text || "Selected Workshop",record:workshop};
+        const client=clients.find(item=>String(item.ClientID)===String(workshop.ClientID))||{};
+        return {kind:"Workshop",label:workshopSelect.options[workshopSelect.selectedIndex]?.text || "Selected Workshop",record:{...client,...workshop,Sector:workshop.Sector||client.Sector||"",Industry:workshop.Industry||client.Industry||"",TeamFunction:workshop.TeamFunction||client.TeamFunction||""}};
       }
       if (groupSelect.value) {
         const group=assessmentLibraryGroups().find(item=>String(item.GroupID)===String(groupSelect.value))||{};
-        return {kind:"Group",label:groupSelect.options[groupSelect.selectedIndex]?.text || "Selected Group",record:group};
+        const client=clients.find(item=>String(item.ClientID)===String(group.ClientID))||{};
+        return {kind:"Group",label:groupSelect.options[groupSelect.selectedIndex]?.text || "Selected Group",record:{...client,...group,Sector:group.Sector||client.Sector||"",Industry:group.Industry||client.Industry||"",TeamFunction:group.TeamFunction||client.TeamFunction||""}};
       }
+      if (clientSelect.value) {
+        const client=clients.find(item=>String(item.ClientID)===String(clientSelect.value))||{};
+        return {kind:"Client",label:clientSelect.options[clientSelect.selectedIndex]?.text || "Selected Client",record:client};
+      }
+      const activeClassifications=[
+        ["Sector",document.getElementById("analyticsSector").value],
+        ["Industry",document.getElementById("analyticsIndustry").value],
+        ["Team Function",document.getElementById("analyticsTeamFunction").value]
+      ].filter(item=>item[1]);
+      if(activeClassifications.length)return {kind:"Filtered",label:activeClassifications.map(item=>`${item[0]}: ${item[1]}`).join(" • "),record:{}};
       return null;
     }
 
@@ -2635,11 +2662,11 @@ Sanger, CA 93657"></textarea>
       ]:[{id:"analyticsOverallChart",label:"Everyone in Portal",title:"Overall Genius Distribution",subtitle:`${overallRows.length} people · percentage with each Genius`,datasets:[blue]}];
       if(context){
         [
-          {field:"sector",recordField:"Sector",label:"Sector"},
-          {field:"industry",recordField:"Industry",label:"Industry"},
-          {field:"teamFunction",recordField:"TeamFunction",label:"Team Function"}
+          {field:"sector",recordField:"Sector",filterId:"analyticsSector",label:"Sector"},
+          {field:"industry",recordField:"Industry",filterId:"analyticsIndustry",label:"Industry"},
+          {field:"teamFunction",recordField:"TeamFunction",filterId:"analyticsTeamFunction",label:"Team Function"}
         ].forEach(level=>{
-          const value=String(context.record?.[level.recordField]||"").trim();
+          const value=String(document.getElementById(level.filterId).value||context.record?.[level.recordField]||"").trim();
           if(!value)return;
           const benchmarkRows=analyticsBenchmarkRows(level.field,value),distribution=analyticsGeniusDistribution(benchmarkRows);
           const benchmark={label:`${level.label} benchmark`,comparisonLabel:level.label.toLowerCase(),color:"#29497f",fill:"rgba(41,73,127,.20)",values:distribution.map(item=>item.percent)};

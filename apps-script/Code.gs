@@ -9,6 +9,7 @@ const SHEET_NAMES = {
 
 const PDF_HEADERS = ["pdfUrl", "pdfFileId", "pdfGeneratedDate"];
 const EMAIL_HEADERS = ["sentDate", "firstSentDate", "lastSentDate", "sentTo", "sentCc", "sentSubject", "sendCount"];
+const CLIENT_HEADERS = ["ClientType", "Sector", "Industry", "TeamFunction"];
 const WORKSHOP_HEADERS = ["WorkshopDate", "DateDescription", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization", "Sector", "Industry", "TeamFunction", "SaveToken"];
 const ESTIMATE_HEADERS = ["ClientID", "ClientName", "ClientEmail", "consultingDiscount", "prepDiscount", "assessmentDiscount"];
 const ARCHIVE_HEADERS = ["archived", "archivedDate"];
@@ -236,7 +237,7 @@ function doPost(e) {
     }
 
     if (action === "saveClient") {
-      ensureHeaders(SHEET_NAMES.clients, ["ClientType"].concat(ARCHIVE_HEADERS));
+      ensureHeaders(SHEET_NAMES.clients, CLIENT_HEADERS.concat(ARCHIVE_HEADERS));
       upsertRow(SHEET_NAMES.clients, "ClientID", body.data || {});
       return jsonResponse({ success: true });
     }

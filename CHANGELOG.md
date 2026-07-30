@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.29.04 — 2026-07-29
+
+- Added Sector, Industry, and Team Function classifications to client records.
+- Workshops inherit missing classification values from their selected client.
+- Analytics classification filters now generate their own square benchmark and selected-versus-benchmark radar charts alongside the overall, selected, and overall-comparison graphics.
+- Workshop and saved-group analytics can inherit benchmark classifications from their linked client.
+
 ## 2026.07.29.03 — 2026-07-29
 
 - Expanded the reusable Industry and Team Function suggestions to cover the current consulting workshop portfolio.
