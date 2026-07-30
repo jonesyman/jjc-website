@@ -2,6 +2,14 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.07.29.02 — 2026-07-29
+
+- Added reusable Sector, Industry, and Team Function classifications to workshops and saved assessment groups.
+- Added a Needs Classification workshop filter and visible classification status to simplify historical backfilling.
+- Added square downloadable sector, industry, and team-function benchmark and comparison radar charts for selected workshops and groups.
+- Benchmarks count each reusable assessment person once and flag samples below 10 people as limited.
+- Added Sector, Industry, and Team Function filters to Assessment Analytics.
+
 ## 2026.07.29.01 — 2026-07-29
 
 - Reduced the generated Team Map PDF from three pages to two by removing the condensed-map page.

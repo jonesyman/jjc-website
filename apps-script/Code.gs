@@ -9,7 +9,7 @@ const SHEET_NAMES = {
 
 const PDF_HEADERS = ["pdfUrl", "pdfFileId", "pdfGeneratedDate"];
 const EMAIL_HEADERS = ["sentDate", "firstSentDate", "lastSentDate", "sentTo", "sentCc", "sentSubject", "sendCount"];
-const WORKSHOP_HEADERS = ["WorkshopDate", "DateDescription", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization", "SaveToken"];
+const WORKSHOP_HEADERS = ["WorkshopDate", "DateDescription", "StartTime", "EndTime", "Location", "DeliveryFormat", "Participants", "PrimaryContact", "ContactEmail", "Notes", "EstimateID", "InvoiceID", "FollowUpDate", "Status", "Type", "ClientID", "Organization", "Sector", "Industry", "TeamFunction", "SaveToken"];
 const ESTIMATE_HEADERS = ["ClientID", "ClientName", "ClientEmail", "consultingDiscount", "prepDiscount", "assessmentDiscount"];
 const ARCHIVE_HEADERS = ["archived", "archivedDate"];
 const INVOICE_LIFECYCLE_HEADERS = ["amountPaid", "balanceDue", "paidDate", "paymentMethod", "paymentReference", "voidReason"];
@@ -17,7 +17,7 @@ const ASSESSMENT_IMPORT_HEADERS = ["AssessmentImportID", "WorkshopID", "GroupNam
 const ASSESSMENT_RESULT_HEADERS = ["AssessmentResultID", "AssessmentImportID", "WorkshopID", "PersonID", "FirstName", "LastName", "DisplayName", "GroupName", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "SortOrder", "ImportedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_HISTORY_HEADERS = ["AssessmentImportEventID", "AssessmentImportID", "WorkshopID", "UploadMode", "OriginalFileName", "UploadedDate", "UploadedParticipantCount", "NewParticipantCount", "UpdatedParticipantCount", "UnchangedParticipantCount", "DuplicateIgnoredCount", "ConflictCount", "PreviousTotalCount", "FinalTotalCount", "GroupNameBefore", "GroupNameAfter", "LeaderBefore", "LeaderAfter", "Notes"];
 const ASSESSMENT_PERSON_HEADERS = ["PersonID", "FirstName", "LastName", "DisplayName", "NameKey", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "CreatedDate", "UpdatedDate", "Active", "SourceType"];
-const ASSESSMENT_GROUP_HEADERS = ["GroupID", "GroupName", "ClientID", "Organization", "Description", "CreatedDate", "UpdatedDate", "Active"];
+const ASSESSMENT_GROUP_HEADERS = ["GroupID", "GroupName", "ClientID", "Organization", "Sector", "Industry", "TeamFunction", "Description", "CreatedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_GROUP_MEMBER_HEADERS = ["GroupMemberID", "GroupID", "PersonID", "IsLeader", "AddedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_DUPLICATE_HEADERS = ["DuplicateReviewID", "PersonID1", "PersonID2", "Status", "ResolutionDate", "Notes"];
 const EMAIL_TEMPLATE_HEADERS = ["EmailTemplateID", "TemplateName", "Category", "Subject", "Body", "Description", "Active", "SortOrder", "CreatedDate", "UpdatedDate"];
@@ -662,9 +662,9 @@ function saveAssessmentGroup(data) {
   let groupInfo = groupId ? getRowById("AssessmentGroups", "GroupID", groupId) : null;
   if (!groupInfo) {
     groupId = groupId || ("GRP-" + Utilities.getUuid());
-    appendRow("AssessmentGroups", { GroupID: groupId, GroupName: name, ClientID: data.clientId || "", Organization: data.organization || "", Description: data.description || "", CreatedDate: now, UpdatedDate: now, Active: true });
+    appendRow("AssessmentGroups", { GroupID: groupId, GroupName: name, ClientID: data.clientId || "", Organization: data.organization || "", Sector: data.sector || "", Industry: data.industry || "", TeamFunction: data.teamFunction || "", Description: data.description || "", CreatedDate: now, UpdatedDate: now, Active: true });
   } else {
-    updateRowFields("AssessmentGroups", groupInfo.rowNumber, { GroupName: name, ClientID: data.clientId || "", Organization: data.organization || "", Description: data.description || "", UpdatedDate: now, Active: true });
+    updateRowFields("AssessmentGroups", groupInfo.rowNumber, { GroupName: name, ClientID: data.clientId || "", Organization: data.organization || "", Sector: data.sector || "", Industry: data.industry || "", TeamFunction: data.teamFunction || "", Description: data.description || "", UpdatedDate: now, Active: true });
   }
 
   const validPeople = {};

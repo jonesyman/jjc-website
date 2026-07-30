@@ -326,9 +326,13 @@ function addPersonToAssessmentGroup() {
 function addWorkshopToAssessmentGroup() {
   const workshopId = document.getElementById("assessmentGroupWorkshop").value;
   if (!workshopId) return toast("Choose a workshop to add.");
+  const workshop = workshops.find(item => String(item.WorkshopID) === String(workshopId)) || {};
   const personIds = (assessmentLibraryState.workshopMembers || []).filter(item => String(item.WorkshopID) === String(workshopId)).map(item => String(item.PersonID));
   const before = assessmentGroupDraftMembers.length;
   personIds.forEach(personId => { if (!assessmentGroupDraftMembers.includes(personId)) assessmentGroupDraftMembers.push(personId); });
+  if (!document.getElementById("assessmentGroupSector").value) document.getElementById("assessmentGroupSector").value = workshop.Sector || "";
+  if (!document.getElementById("assessmentGroupIndustry").value) document.getElementById("assessmentGroupIndustry").value = workshop.Industry || "";
+  if (!document.getElementById("assessmentGroupTeamFunction").value) document.getElementById("assessmentGroupTeamFunction").value = workshop.TeamFunction || "";
   renderAssessmentGroupMembers();
   toast(`${assessmentGroupDraftMembers.length - before} ${assessmentGroupDraftMembers.length - before === 1 ? "person" : "people"} added from the workshop.`);
 }
@@ -369,6 +373,9 @@ function resetAssessmentGroupForm() {
   document.getElementById("assessmentGroupName").value = "";
   document.getElementById("assessmentGroupClient").value = "";
   document.getElementById("assessmentGroupDescription").value = "";
+  document.getElementById("assessmentGroupSector").value = "";
+  document.getElementById("assessmentGroupIndustry").value = "";
+  document.getElementById("assessmentGroupTeamFunction").value = "";
   document.getElementById("assessmentGroupPerson").value = "";
   document.getElementById("assessmentGroupWorkshop").value = "";
   document.getElementById("assessmentGroupSourceGroup").value = "";
@@ -398,6 +405,9 @@ async function saveAssessmentGroup(button, previewAfterSave = false) {
       groupName,
       clientId,
       organization: client.Organization || "",
+      sector: document.getElementById("assessmentGroupSector").value,
+      industry: document.getElementById("assessmentGroupIndustry").value.trim(),
+      teamFunction: document.getElementById("assessmentGroupTeamFunction").value.trim(),
       description: document.getElementById("assessmentGroupDescription").value.trim(),
       personIds: assessmentGroupDraftMembers,
       leaderPersonId: assessmentGroupLeaderId
@@ -420,6 +430,9 @@ function editAssessmentGroup(groupId) {
   document.getElementById("assessmentGroupId").value = group.GroupID;
   document.getElementById("assessmentGroupName").value = group.GroupName || "";
   document.getElementById("assessmentGroupClient").value = group.ClientID || "";
+  document.getElementById("assessmentGroupSector").value = group.Sector || "";
+  document.getElementById("assessmentGroupIndustry").value = group.Industry || "";
+  document.getElementById("assessmentGroupTeamFunction").value = group.TeamFunction || "";
   document.getElementById("assessmentGroupDescription").value = group.Description || "";
   populateAssessmentLibraryOptions();
   const members = assessmentLibraryMemberships().filter(item => String(item.GroupID) === String(groupId));
@@ -443,7 +456,8 @@ function renderAssessmentGroups() {
     const members = assessmentLibraryMemberships().filter(item => String(item.GroupID) === String(group.GroupID));
     const leaderMembership = members.find(item => String(item.IsLeader).toLowerCase() === "true");
     const leader = leaderMembership ? assessmentPersonById(leaderMembership.PersonID) : null;
-    return `<article class="record-card"><button class="record-title record-title-button" type="button" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">${esc(group.GroupName)}</button><div class="tiny muted">${esc(group.Organization || "Independent group")} • ${members.length} ${members.length === 1 ? "person" : "people"}</div>${group.Description ? `<div class="small">${esc(group.Description)}</div>` : ""}<div class="small"><strong>Leader:</strong> ${leader ? esc(assessmentPersonName(leader)) : '<span class="muted">Not selected</span>'}</div><div class="actions group-card-actions"><button class="button secondary small-btn" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">Load Group to Edit</button><button class="button small-btn" onclick="previewAssessmentGroup('${jsEsc(group.GroupID)}')">Create Team Map</button><button class="button secondary small-btn" onclick="openAssessmentGroupFacilitatorAnalysis('${jsEsc(group.GroupID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadAssessmentGroupCondensedMap('${jsEsc(group.GroupID)}',this)">Download Map</button><button class="button danger small-btn" onclick="deleteAssessmentGroup('${jsEsc(group.GroupID)}')">Delete Group</button></div></article>`;
+    const classification=[group.Sector,group.Industry,group.TeamFunction].filter(Boolean).join(" • ");
+    return `<article class="record-card"><button class="record-title record-title-button" type="button" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">${esc(group.GroupName)}</button><div class="tiny muted">${esc(group.Organization || "Independent group")} • ${members.length} ${members.length === 1 ? "person" : "people"}</div><div class="tiny muted">${classification ? esc(classification) : '<span class="status-badge">Needs classification</span>'}</div>${group.Description ? `<div class="small">${esc(group.Description)}</div>` : ""}<div class="small"><strong>Leader:</strong> ${leader ? esc(assessmentPersonName(leader)) : '<span class="muted">Not selected</span>'}</div><div class="actions group-card-actions"><button class="button secondary small-btn" onclick="editAssessmentGroup('${jsEsc(group.GroupID)}')">Load Group to Edit</button><button class="button small-btn" onclick="previewAssessmentGroup('${jsEsc(group.GroupID)}')">Create Team Map</button><button class="button secondary small-btn" onclick="openAssessmentGroupFacilitatorAnalysis('${jsEsc(group.GroupID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadAssessmentGroupCondensedMap('${jsEsc(group.GroupID)}',this)">Download Map</button><button class="button danger small-btn" onclick="deleteAssessmentGroup('${jsEsc(group.GroupID)}')">Delete Group</button></div></article>`;
   }).join("");
 }
 

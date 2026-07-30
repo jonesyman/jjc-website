@@ -890,7 +890,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.29.01</strong><br>
+        Version <strong id="appVersionLabel">2026.07.29.02</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1013,6 +1013,11 @@
                   <div class="field"><label>Group Name</label><input id="assessmentGroupName" placeholder="FPU Former Employees"></div>
                   <div class="field"><label>Client (optional)</label><select id="assessmentGroupClient" onchange="selectAssessmentGroupClient()"><option value="">No linked client</option></select></div>
                 </div>
+                <div class="form-row-3">
+                  <div class="field"><label>Sector</label><select id="assessmentGroupSector"><option value="">Unclassified</option><option>For-profit</option><option>Nonprofit</option><option>Government/Public</option><option>Education</option><option>Faith-based</option></select></div>
+                  <div class="field"><label>Industry</label><input id="assessmentGroupIndustry" list="industryOptions" placeholder="For example: Higher Education"></div>
+                  <div class="field"><label>Team Function</label><input id="assessmentGroupTeamFunction" list="teamFunctionOptions" placeholder="For example: Information Technology"></div>
+                </div>
                 <div class="field"><label>Description / Notes</label><textarea id="assessmentGroupDescription" rows="3" placeholder="What this group represents..."></textarea></div>
                 <div class="field"><label>Add an individual</label><div class="member-picker"><select id="assessmentGroupPerson"><option value="">Choose a person...</option></select><button class="button secondary small-btn" onclick="addPersonToAssessmentGroup()">Add Person</button></div></div>
                 <div class="field"><label>Add everyone from a workshop</label><div class="member-picker"><select id="assessmentGroupWorkshop"><option value="">Choose a workshop...</option></select><button class="button secondary small-btn" onclick="addWorkshopToAssessmentGroup()">Add Workshop</button></div><div class="tiny muted">People are copied into this group by reference. Later workshop changes will not alter the saved group.</div></div>
@@ -1052,13 +1057,16 @@
                 <select id="analyticsClient" onchange="updateAnalyticsWorkshopOptions(); renderAssessmentAnalytics()"><option value="">All clients</option></select>
                 <select id="analyticsWorkshop" onchange="handleAnalyticsWorkshopChange()"><option value="">All workshops</option></select>
                 <select id="analyticsGroup" onchange="handleAnalyticsGroupChange()"><option value="">All saved groups</option></select>
+                <select id="analyticsSector" onchange="renderAssessmentAnalytics()"><option value="">All sectors</option></select>
+                <select id="analyticsIndustry" onchange="renderAssessmentAnalytics()"><option value="">All industries</option></select>
+                <select id="analyticsTeamFunction" onchange="renderAssessmentAnalytics()"><option value="">All team functions</option></select>
                 <input id="analyticsStartDate" type="date" aria-label="Start date" onchange="renderAssessmentAnalytics()">
                 <input id="analyticsEndDate" type="date" aria-label="End date" onchange="renderAssessmentAnalytics()">
                 <select id="analyticsGenius" onchange="renderAssessmentAnalytics()"><option value="">All Geniuses</option><option>Wonder</option><option>Invention</option><option>Discernment</option><option>Galvanizing</option><option>Enablement</option><option>Tenacity</option></select>
                 <button class="button ghost small-btn" onclick="clearAnalyticsFilters()">Clear Filters</button>
               </div></div>
               <div class="client-detail-summary"><div class="metric"><div class="metric-label">People Served</div><div id="analyticsPeopleCount" class="metric-value">0</div><div class="metric-note">Unique people in this view</div></div><div class="metric"><div class="metric-label">Workshops</div><div id="analyticsWorkshopCount" class="metric-value">0</div><div class="metric-note">Represented in this view</div></div><div class="metric"><div class="metric-label">Genius Selections</div><div id="analyticsGeniusCount" class="metric-value">0</div><div class="metric-note">Two per person</div></div></div>
-              <div class="section-title"><div><h3>Genius Distribution Graphics</h3><p class="tiny muted">Square slide-ready graphics. Select a workshop or saved group to compare it with everyone in the portal.</p></div></div>
+              <div class="section-title"><div><h3>Genius Distribution Graphics</h3><p class="tiny muted">Square slide-ready graphics. A selected workshop or group is compared with the portal, its sector, industry, and team function when classified.</p></div></div>
               <div id="analyticsDistributionCharts" class="analytics-chart-grid single"></div>
               <div class="section-title"><div><h3>Individual Genius Distribution</h3><p class="tiny muted">Count and percentage of people with each Genius in the filtered list</p></div></div>
               <div id="analyticsGeniusMetrics" class="genius-metrics"></div>
@@ -1089,6 +1097,11 @@
                 <div class="field"><label>Type</label><select id="workshopType"><option>Corporate</option><option>Nonprofit</option><option>Government</option><option>Church</option><option>Individual Debrief</option></select></div>
                 <div class="field"><label>Status</label><select id="workshopStatus"><option>Inquiry</option><option>Proposed</option><option>Scheduled</option><option>Completed</option><option>Canceled</option><option>Follow-up Needed</option></select></div>
               </div>
+              <div class="form-row-3">
+                <div class="field"><label>Sector</label><select id="workshopSector"><option value="">Unclassified</option><option>For-profit</option><option>Nonprofit</option><option>Government/Public</option><option>Education</option><option>Faith-based</option></select></div>
+                <div class="field"><label>Industry</label><input id="workshopIndustry" list="industryOptions" placeholder="For example: Church"></div>
+                <div class="field"><label>Team Function</label><input id="workshopTeamFunction" list="teamFunctionOptions" placeholder="For example: Executive Leadership"></div>
+              </div>
               <div class="field"><label>Date Description (optional)</label><input id="workshopDateDescription" placeholder="For example: Spring 2019 or date unknown"><div class="tiny muted">Use this for historical workshops when the exact date is unavailable.</div></div>
               <div class="form-row-3">
                 <div class="field"><label>Participants</label><input id="workshopParticipants" type="number" inputmode="numeric" min="1" value="12"></div>
@@ -1118,7 +1131,7 @@
               <div class="section-title"><h2>Workshop List</h2><span id="workshopMatchCount" class="tiny muted"></span></div>
               <div class="list-filter-panel"><button class="button secondary small-btn list-filter-toggle" onclick="toggleListFilters(this)">Search & Filters</button><div class="list-filter-controls workshop-filters">
                 <input id="workshopSearch" placeholder="Search workshops..." oninput="renderWorkshops()">
-                <select id="workshopFilter" onchange="renderWorkshops()"><option value="all">All workshops</option><option value="upcoming">Upcoming</option><option value="completed">Completed</option><option value="canceled">Canceled</option><option value="unpaid">Unpaid</option><option value="followup">Follow-up Needed</option></select>
+                <select id="workshopFilter" onchange="renderWorkshops()"><option value="all">All workshops</option><option value="unclassified">Needs classification</option><option value="upcoming">Upcoming</option><option value="completed">Completed</option><option value="canceled">Canceled</option><option value="unpaid">Unpaid</option><option value="followup">Follow-up Needed</option></select>
                 <label class="archive-toggle"><input id="includeArchivedWorkshops" type="checkbox" onchange="renderWorkshops()"> Include Archived</label>
                 <button class="button ghost small-btn" onclick="clearWorkshopFilters()">Clear Filters</button>
               </div></div>
@@ -1372,6 +1385,8 @@ Sanger, CA 93657"></textarea>
   <datalist id="clientsDatalist"></datalist>
   <datalist id="estimatesDatalist"></datalist>
   <datalist id="invoicesDatalist"></datalist>
+  <datalist id="industryOptions"><option value="Church"></option><option value="Higher Education"></option><option value="K-12 Education"></option><option value="Healthcare"></option><option value="Technology"></option><option value="Consulting"></option><option value="Manufacturing"></option><option value="Government"></option></datalist>
+  <datalist id="teamFunctionOptions"><option value="Board"></option><option value="Executive Leadership"></option><option value="Administration"></option><option value="Information Technology"></option><option value="Finance"></option><option value="Admissions"></option><option value="Student Life"></option><option value="Operations"></option><option value="Ministry Staff"></option><option value="Faculty"></option><option value="Human Resources"></option></datalist>
 
   <div id="analyticsDrilldownBackdrop" class="dialog-backdrop analytics-drilldown-backdrop no-print">
     <div class="send-dialog analytics-drilldown-dialog" role="dialog" aria-modal="true" aria-labelledby="analyticsDrilldownTitle" aria-describedby="analyticsDrilldownExplanation">
@@ -1560,7 +1575,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.29.01";
+    const APP_VERSION = "2026.07.29.02";
 
     const K = {
       clients: "jjc_clients",
@@ -2206,7 +2221,7 @@ Sanger, CA 93657"></textarea>
     async function resetWorkshopForm() {
       dirtyFormViews.delete("workshops");
       document.getElementById("workshopId").value = nextId(workshops, "WRK", "WorkshopID");
-      ["workshopClientName", "workshopClientId", "workshopOrg", "workshopEstimateId", "workshopInvoiceId", "workshopLocation", "workshopNotes", "workshopStartTime", "workshopEndTime", "workshopPrimaryContact", "workshopContactEmail", "workshopDateDescription"].forEach(id => document.getElementById(id).value = "");
+      ["workshopClientName", "workshopClientId", "workshopOrg", "workshopEstimateId", "workshopInvoiceId", "workshopLocation", "workshopNotes", "workshopStartTime", "workshopEndTime", "workshopPrimaryContact", "workshopContactEmail", "workshopDateDescription", "workshopSector", "workshopIndustry", "workshopTeamFunction"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("workshopDate").value = "";
       document.getElementById("workshopFollowUpDate").value = "";
       document.getElementById("workshopParticipants").value = 12;
@@ -2224,6 +2239,9 @@ Sanger, CA 93657"></textarea>
         WorkshopDate: document.getElementById("workshopDate").value,
         DateDescription: document.getElementById("workshopDateDescription").value.trim(),
         Type: document.getElementById("workshopType").value,
+        Sector: document.getElementById("workshopSector").value,
+        Industry: document.getElementById("workshopIndustry").value.trim(),
+        TeamFunction: document.getElementById("workshopTeamFunction").value.trim(),
         Status: document.getElementById("workshopStatus").value,
         Participants: document.getElementById("workshopParticipants").value,
         StartTime: document.getElementById("workshopStartTime").value,
@@ -2271,6 +2289,7 @@ Sanger, CA 93657"></textarea>
           const status = normalizeWorkshopStatus(w.Status);
           const financial = workshopFinancialStatus(w);
           if (filter === "upcoming") return normalizeDateInput(w.WorkshopDate) >= today && !["Completed", "Canceled"].includes(status);
+          if (filter === "unclassified") return !w.Sector || !w.Industry || !w.TeamFunction;
           if (filter === "completed") return status === "Completed";
           if (filter === "canceled") return status === "Canceled";
           if (filter === "unpaid") return financial === "Invoiced";
@@ -2292,7 +2311,8 @@ Sanger, CA 93657"></textarea>
         const el = document.createElement("div");
         el.className = "record-card";
         const workshopWhen = w.WorkshopDate ? formatDate(w.WorkshopDate) : (w.DateDescription || "Date not recorded");
-        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button><button class="button secondary small-btn" onclick="openWorkshopFacilitatorAnalysis('${jsEsc(w.WorkshopID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadWorkshopCondensedTeamMap('${jsEsc(w.WorkshopID)}',this)">Download Map</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
+        const classification=[w.Sector,w.Industry,w.TeamFunction].filter(Boolean).join(" • ");
+        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div><div class="tiny muted">${classification ? esc(classification) : '<span class="status-badge">Needs classification</span>'}</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button><button class="button secondary small-btn" onclick="openWorkshopFacilitatorAnalysis('${jsEsc(w.WorkshopID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadWorkshopCondensedTeamMap('${jsEsc(w.WorkshopID)}',this)">Download Map</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
         if (!isArchived(w)) {
           const emailButton = document.createElement("button");
           emailButton.className = "button secondary small-btn";
@@ -2345,6 +2365,9 @@ Sanger, CA 93657"></textarea>
       document.getElementById("workshopDate").value = normalizeDateInput(w.WorkshopDate);
       document.getElementById("workshopDateDescription").value = w.DateDescription || "";
       document.getElementById("workshopType").value = w.Type || "Corporate";
+      document.getElementById("workshopSector").value = w.Sector || "";
+      document.getElementById("workshopIndustry").value = w.Industry || "";
+      document.getElementById("workshopTeamFunction").value = w.TeamFunction || "";
       document.getElementById("workshopStatus").value = normalizeWorkshopStatus(w.Status);
       document.getElementById("workshopParticipants").value = w.Participants || 12;
       document.getElementById("workshopStartTime").value = w.StartTime || "";
@@ -2427,7 +2450,10 @@ Sanger, CA 93657"></textarea>
       return {
         ...row,
         clientId: workshop.ClientID || client.ClientID || "",
-        organization: workshop.Organization || client.Organization || row.AssessmentGroupName || row.GroupName || "Unknown organization",
+        organization: workshop.Organization || client.Organization || row.organization || row.AssessmentGroupName || row.GroupName || "Unknown organization",
+        sector: workshop.Sector || row.sector || "",
+        industry: workshop.Industry || row.industry || "",
+        teamFunction: workshop.TeamFunction || row.teamFunction || "",
         workshopDate: normalizeDateInput(workshop.WorkshopDate || row.AssessmentImportedDate || row.ImportedDate),
         workshopLabel: `${workshop.Organization || row.AssessmentGroupName || row.WorkshopID || "Workshop"}${workshop.WorkshopDate ? " • " + formatDate(workshop.WorkshopDate) : ""}`
       };
@@ -2445,6 +2471,16 @@ Sanger, CA 93657"></textarea>
       const groups = assessmentLibraryGroups().slice().sort((a,b) => String(a.GroupName || "").localeCompare(String(b.GroupName || "")));
       groupSelect.innerHTML = '<option value="">All saved groups</option>' + groups.map(group => `<option value="${esc(group.GroupID)}">${esc(group.GroupName || group.GroupID)}</option>`).join("");
       groupSelect.value = groups.some(group => String(group.GroupID) === previousGroup) ? previousGroup : "";
+      [
+        {id:"analyticsSector",field:"Sector",label:"sectors"},
+        {id:"analyticsIndustry",field:"Industry",label:"industries"},
+        {id:"analyticsTeamFunction",field:"TeamFunction",label:"team functions"}
+      ].forEach(config=>{
+        const select=document.getElementById(config.id),previous=select.value;
+        const values=[...new Set(workshops.concat(groups).map(item=>String(item[config.field]||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+        select.innerHTML=`<option value="">All ${config.label}</option>`+values.map(value=>`<option value="${esc(value)}">${esc(value)}</option>`).join("");
+        select.value=values.includes(previous)?previous:"";
+      });
       updateAnalyticsWorkshopOptions();
     }
 
@@ -2482,7 +2518,12 @@ Sanger, CA 93657"></textarea>
       const start = document.getElementById("analyticsStartDate").value;
       const end = document.getElementById("analyticsEndDate").value;
       const genius = document.getElementById("analyticsGenius").value;
-      return assessmentAnalyticsResults.map(analyticsRecord).filter(row => {
+      const sector=document.getElementById("analyticsSector").value,industry=document.getElementById("analyticsIndustry").value,teamFunction=document.getElementById("analyticsTeamFunction").value;
+      const selectedGroup=groupId?assessmentLibraryGroups().find(group=>String(group.GroupID)===groupId)||{}:{};
+      const sourceRows=groupPersonIds
+        ? assessmentLibraryPeople().filter(person=>groupPersonIds.has(String(person.PersonID))).map(person=>({...person,organization:selectedGroup.GroupName||"Saved group",sector:selectedGroup.Sector||"",industry:selectedGroup.Industry||"",teamFunction:selectedGroup.TeamFunction||""}))
+        : assessmentAnalyticsResults;
+      return sourceRows.map(analyticsRecord).filter(row => {
         const searchable = `${row.FirstName} ${row.LastName} ${row.DisplayName} ${row.organization} ${row.GroupName} ${row.WorkshopID} ${row.Genius1} ${row.Genius2}`.toLowerCase();
         return (!query || searchable.includes(query))
           && (!clientId || String(row.clientId) === clientId)
@@ -2490,6 +2531,9 @@ Sanger, CA 93657"></textarea>
           && (!groupPersonIds || groupPersonIds.has(String(row.PersonID || row.AssessmentResultID)))
           && (!start || row.workshopDate >= start)
           && (!end || row.workshopDate <= end)
+          && (!sector || classificationMatches(row.sector,sector))
+          && (!industry || classificationMatches(row.industry,industry))
+          && (!teamFunction || classificationMatches(row.teamFunction,teamFunction))
           && (!genius || row.Genius1 === genius || row.Genius2 === genius);
       });
     }
@@ -2513,9 +2557,33 @@ Sanger, CA 93657"></textarea>
 
     function analyticsComparisonContext() {
       const workshopSelect = document.getElementById("analyticsWorkshop"), groupSelect = document.getElementById("analyticsGroup");
-      if (workshopSelect.value) return {kind:"Workshop",label:workshopSelect.options[workshopSelect.selectedIndex]?.text || "Selected Workshop"};
-      if (groupSelect.value) return {kind:"Group",label:groupSelect.options[groupSelect.selectedIndex]?.text || "Selected Group"};
+      if (workshopSelect.value) {
+        const workshop=workshops.find(item=>String(item.WorkshopID)===String(workshopSelect.value))||{};
+        return {kind:"Workshop",label:workshopSelect.options[workshopSelect.selectedIndex]?.text || "Selected Workshop",record:workshop};
+      }
+      if (groupSelect.value) {
+        const group=assessmentLibraryGroups().find(item=>String(item.GroupID)===String(groupSelect.value))||{};
+        return {kind:"Group",label:groupSelect.options[groupSelect.selectedIndex]?.text || "Selected Group",record:group};
+      }
       return null;
+    }
+
+    function classificationMatches(left,right) {
+      return String(left||"").trim().toLowerCase()===String(right||"").trim().toLowerCase();
+    }
+
+    function analyticsBenchmarkRows(field,value) {
+      if(!value)return [];
+      const workshopRows=assessmentAnalyticsResults.map(analyticsRecord).filter(row=>classificationMatches(row[field],value));
+      const groupField={sector:"Sector",industry:"Industry",teamFunction:"TeamFunction"}[field];
+      const groupIds=new Set(assessmentLibraryGroups().filter(group=>classificationMatches(group[groupField],value)).map(group=>String(group.GroupID)));
+      const personIds=new Set(assessmentLibraryMemberships().filter(item=>groupIds.has(String(item.GroupID))).map(item=>String(item.PersonID)));
+      const groupRows=assessmentLibraryPeople().filter(person=>personIds.has(String(person.PersonID))).map(person=>({...person,sector:field==="sector"?value:"",industry:field==="industry"?value:"",teamFunction:field==="teamFunction"?value:""}));
+      return uniqueAnalyticsPeople(workshopRows.concat(groupRows));
+    }
+
+    function analyticsSampleSubtitle(label,count) {
+      return `${label} · ${count} unique ${count===1?"person":"people"}${count<10?" · limited sample":""}`;
     }
 
     function drawAnalyticsRadarChart(canvas,title,subtitle,datasets) {
@@ -2546,13 +2614,13 @@ Sanger, CA 93657"></textarea>
         context.textAlign=Math.cos(angle)>.2?"left":Math.cos(angle)<-.2?"right":"center"; context.fillStyle="#17345f"; context.font="800 28px Montserrat, Arial, sans-serif"; context.fillText(`${type[0]} · ${type}`,x,y);
         if(datasets.length===1){context.fillStyle=datasets[0].color;context.font="800 24px Montserrat, Arial, sans-serif";context.fillText(`${datasets[0].values[index]}%`,x,y+34);}
         else {
-          const difference=datasets[1].values[index]-datasets[0].values[index],differenceLabel=`${difference>0?"+":""}${difference}% vs overall`;
+          const difference=datasets[1].values[index]-datasets[0].values[index],differenceLabel=`${difference>0?"+":""}${difference}% vs ${datasets[0].comparisonLabel||"overall"}`;
           context.fillStyle=difference===0?"#64748b":"#c55f16"; context.font="800 22px Montserrat, Arial, sans-serif"; context.fillText(differenceLabel,x,y+34);
         }
       });
       if(datasets.length>1){
         const legendY=1130,totalWidth=datasets.length*270,gap=30,startX=centerX-(totalWidth+gap*(datasets.length-1))/2;
-        datasets.forEach((dataset,index)=>{const x=startX+index*(270+gap);context.fillStyle=dataset.color;context.fillRect(x,legendY-8,38,16);context.textAlign="left";context.fillStyle="#334155";context.font="700 22px Montserrat, Arial, sans-serif";context.fillText(dataset.label,x+52,legendY);});
+        datasets.forEach((dataset,index)=>{const x=startX+index*(270+gap);context.fillStyle=dataset.color;context.fillRect(x,legendY-8,38,16);context.textAlign="left";context.fillStyle="#334155";context.font="700 22px Montserrat, Arial, sans-serif";context.fillText(dataset.label,x+52,legendY,210);});
       }
     }
 
@@ -2565,6 +2633,23 @@ Sanger, CA 93657"></textarea>
         {id:"analyticsSelectedChart",label:context.label,title:`${context.kind} Distribution`,subtitle:`${context.label} · ${filteredRows.length} people`,datasets:[orange]},
         {id:"analyticsOverlayChart",label:`${context.label} Comparison`,title:"Distribution Comparison",subtitle:"Overall portal distribution compared with selected group",datasets:[blue,orange]}
       ]:[{id:"analyticsOverallChart",label:"Everyone in Portal",title:"Overall Genius Distribution",subtitle:`${overallRows.length} people · percentage with each Genius`,datasets:[blue]}];
+      if(context){
+        [
+          {field:"sector",recordField:"Sector",label:"Sector"},
+          {field:"industry",recordField:"Industry",label:"Industry"},
+          {field:"teamFunction",recordField:"TeamFunction",label:"Team Function"}
+        ].forEach(level=>{
+          const value=String(context.record?.[level.recordField]||"").trim();
+          if(!value)return;
+          const benchmarkRows=analyticsBenchmarkRows(level.field,value),distribution=analyticsGeniusDistribution(benchmarkRows);
+          const benchmark={label:`${level.label} benchmark`,comparisonLabel:level.label.toLowerCase(),color:"#29497f",fill:"rgba(41,73,127,.20)",values:distribution.map(item=>item.percent)};
+          const suffix=level.field==="teamFunction"?"TeamFunction":level.recordField;
+          charts.push(
+            {id:`analytics${suffix}Chart`,label:`${value} Benchmark`,title:`${level.label}: ${value}`,subtitle:analyticsSampleSubtitle("Benchmark",benchmarkRows.length),datasets:[benchmark]},
+            {id:`analytics${suffix}ComparisonChart`,label:`${value} Comparison`,title:`${level.label} Comparison`,subtitle:`${context.label} compared with ${value} · ${benchmarkRows.length} benchmark people${benchmarkRows.length<10?" · limited sample":""}`,datasets:[benchmark,orange]}
+          );
+        });
+      }
       container.classList.toggle("single",charts.length===1);
       container.innerHTML=charts.map(chart=>`<article class="analytics-chart-card"><canvas id="${chart.id}" aria-label="${esc(chart.title)}"></canvas><div class="analytics-chart-actions"><span class="analytics-chart-label">${esc(chart.label)}</span><button class="button secondary small-btn" type="button" onclick="downloadAnalyticsChart('${chart.id}','${jsEsc(chart.label)}')">Download PNG</button></div></article>`).join("");
       charts.forEach(chart=>drawAnalyticsRadarChart(document.getElementById(chart.id),chart.title,chart.subtitle,chart.datasets));
@@ -2639,10 +2724,14 @@ Sanger, CA 93657"></textarea>
       const start = document.getElementById("analyticsStartDate").value;
       const end = document.getElementById("analyticsEndDate").value;
       const genius = document.getElementById("analyticsGenius").value;
+      const sector=document.getElementById("analyticsSector"),industry=document.getElementById("analyticsIndustry"),teamFunction=document.getElementById("analyticsTeamFunction");
       if (search) summary.push(`Search: ${search}`);
       if (client.value) summary.push(`Client: ${client.selectedOptions[0]?.textContent || client.value}`);
       if (workshop.value) summary.push(`Workshop: ${workshop.selectedOptions[0]?.textContent || workshop.value}`);
       if (group.value) summary.push(`Group: ${group.selectedOptions[0]?.textContent || group.value}`);
+      if (sector.value) summary.push(`Sector: ${sector.value}`);
+      if (industry.value) summary.push(`Industry: ${industry.value}`);
+      if (teamFunction.value) summary.push(`Team function: ${teamFunction.value}`);
       if (start && end) summary.push(`Date range: ${formatDate(start)} through ${formatDate(end)}`);
       else if (start) summary.push(`Starting: ${formatDate(start)}`);
       else if (end) summary.push(`Through: ${formatDate(end)}`);
@@ -2714,6 +2803,9 @@ Sanger, CA 93657"></textarea>
       document.getElementById("analyticsClient").value = "";
       document.getElementById("analyticsGenius").value = "";
       document.getElementById("analyticsGroup").value = "";
+      document.getElementById("analyticsSector").value = "";
+      document.getElementById("analyticsIndustry").value = "";
+      document.getElementById("analyticsTeamFunction").value = "";
       updateAnalyticsWorkshopOptions();
       document.getElementById("analyticsWorkshop").value = "";
       renderAssessmentAnalytics();
