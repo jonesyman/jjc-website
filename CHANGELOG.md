@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.01.04 — 2026-08-01
+
+- Batched generated assessment-PDF confirmation to eliminate repeated Drive waits during package creation.
+- Added durable server-side operation status so the package builder reports the actual upload or ZIP error instead of a generic confirmation timeout.
+- Added visible generation stages, longer Drive finalization handling, and a Refresh Package History action that surfaces processing and failed operations.
+
 ## 2026.08.01.03 — 2026-08-01
 
 - Post-session packages now generate the current workshop and associated-group Assessment Results PDFs automatically from saved assessment data.

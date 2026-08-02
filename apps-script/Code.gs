@@ -27,6 +27,7 @@ const POST_SESSION_RESOURCE_HEADERS = ["ResourceID", "Title", "Category", "Descr
 const WORKSHOP_GROUP_LINK_HEADERS = ["LinkID", "WorkshopID", "GroupID", "Active", "CreatedDate", "UpdatedDate"];
 const PACKAGE_FILE_HEADERS = ["PackageFileID", "ContextType", "ContextID", "FileRole", "DisplayName", "FileName", "FileId", "MimeType", "UploadToken", "Active", "CreatedDate", "UpdatedDate"];
 const PACKAGE_HISTORY_HEADERS = ["PackageID", "WorkshopID", "PackageName", "Mode", "SelectedGroupIDs", "SelectedResourceIDs", "ZipFileId", "ZipUrl", "GenerationToken", "CreatedDate"];
+const POST_SESSION_OPERATION_HEADERS = ["OperationToken", "OperationType", "Status", "Message", "ResultUrl", "CreatedDate", "UpdatedDate"];
 const TEAM_MAP_ANALYSIS_DEFAULT_SETTINGS = {
   AnalysisEnabled:true, MissingGeniusThresholdPercent:15, UnderrepresentedGeniusThresholdPercent:15,
   WellRepresentedGeniusThresholdPercent:35, HighlyRepresentedGeniusThresholdPercent:50,
@@ -1859,6 +1860,17 @@ function ensurePostSessionSheets() {
   ensureSheetWithHeaders("WorkshopGroupLinks", WORKSHOP_GROUP_LINK_HEADERS);
   ensureSheetWithHeaders("PostSessionPackageFiles", PACKAGE_FILE_HEADERS);
   ensureSheetWithHeaders("PostSessionPackages", PACKAGE_HISTORY_HEADERS);
+  ensureSheetWithHeaders("PostSessionOperations", POST_SESSION_OPERATION_HEADERS);
+}
+
+function setPostSessionOperation(token, type, status, message, resultUrl) {
+  token = String(token || "").trim();
+  if (!token) return;
+  const now = new Date().toISOString();
+  const existing = getRowById("PostSessionOperations", "OperationToken", token);
+  const values = { OperationToken:token, OperationType:type || "Package", Status:status || "Processing", Message:message || "", ResultUrl:resultUrl || "", UpdatedDate:now };
+  if (existing) updateRowFields("PostSessionOperations", existing.rowNumber, values);
+  else appendRow("PostSessionOperations", Object.assign(values, { CreatedDate:now }));
 }
 
 function postSessionFolder(name) {
@@ -1872,7 +1884,8 @@ function getPostSessionWorkspace() {
     resources: getRows("PostSessionResources"),
     workshopGroupLinks: getRows("WorkshopGroupLinks").filter(isActiveAssessmentRow),
     packageFiles: getRows("PostSessionPackageFiles").filter(isActiveAssessmentRow),
-    packages: getRows("PostSessionPackages").slice(-50).reverse()
+    packages: getRows("PostSessionPackages").slice(-50).reverse(),
+    operations: getRows("PostSessionOperations").slice(-100).reverse()
   };
 }
 
@@ -1950,6 +1963,9 @@ function setPostSessionResourceActive(data) {
 
 function uploadPostSessionPackageFile(data) {
   ensurePostSessionSheets();
+  const operationToken = String(data.uploadToken || "").trim();
+  setPostSessionOperation(operationToken, "PackageFile", "Processing", "Uploading " + String(data.displayName || data.fileName || "package file"), "");
+  try {
   const contextType = String(data.contextType || "Standalone");
   const contextId = String(data.contextId || "").trim();
   const role = String(data.fileRole || "Attachment");
@@ -1962,7 +1978,12 @@ function uploadPostSessionPackageFile(data) {
     if (info) updateRowFields("PostSessionPackageFiles", info.rowNumber, { Active:false, UpdatedDate:now });
   });
   appendRow("PostSessionPackageFiles", { PackageFileID:"PSF-" + Utilities.getUuid(), ContextType:contextType, ContextID:contextId, FileRole:role, DisplayName:data.displayName || data.fileName, FileName:file.getName(), FileId:file.getId(), MimeType:data.mimeType || file.getMimeType(), UploadToken:data.uploadToken || "", Active:true, CreatedDate:now, UpdatedDate:now });
+  setPostSessionOperation(operationToken, "PackageFile", "Complete", "Upload complete", file.getUrl());
   return { success:true };
+  } catch (error) {
+    setPostSessionOperation(operationToken, "PackageFile", "Error", error && error.message ? error.message : String(error), "");
+    throw error;
+  }
 }
 
 function saveWorkshopGroupLinks(data) {
@@ -2013,6 +2034,9 @@ function safePackageName(value) {
 
 function generatePostSessionPackage(data) {
   ensurePostSessionSheets();
+  const operationToken = String(data.generationToken || "").trim();
+  setPostSessionOperation(operationToken, "Package", "Processing", "Building ZIP package", "");
+  try {
   const name = safePackageName(data.packageName);
   const selectedResourceIds = new Set((data.resourceIds || []).map(String));
   const selectedGroupIds = (data.groupIds || []).map(String);
@@ -2032,7 +2056,12 @@ function generatePostSessionPackage(data) {
   const file = postSessionFolder("Generated Packages").createFile(zip);
   const now = new Date().toISOString();
   appendRow("PostSessionPackages", { PackageID:"PSP-" + Utilities.getUuid(), WorkshopID:data.workshopId || "", PackageName:name, Mode:data.workshopId ? "Workshop" : "Standalone", SelectedGroupIDs:JSON.stringify(selectedGroupIds), SelectedResourceIDs:JSON.stringify(Array.from(selectedResourceIds)), ZipFileId:file.getId(), ZipUrl:file.getUrl(), GenerationToken:data.generationToken || "", CreatedDate:now });
+  setPostSessionOperation(operationToken, "Package", "Complete", "ZIP package created", file.getUrl());
   return { success:true, url:file.getUrl() };
+  } catch (error) {
+    setPostSessionOperation(operationToken, "Package", "Error", error && error.message ? error.message : String(error), "");
+    throw error;
+  }
 }
 
 function jsonResponse(data) {

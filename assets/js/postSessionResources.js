@@ -1,5 +1,5 @@
 (function(){
-  let workspace={resources:[],workshopGroupLinks:[],packageFiles:[],packages:[]};
+  let workspace={resources:[],workshopGroupLinks:[],packageFiles:[],packages:[],operations:[]};
   let loaded=false;
   let pendingGroupId="";
 
@@ -86,12 +86,15 @@
   }
 
   function renderHistory(){
-    byId("postSessionPackageHistory").innerHTML=(workspace.packages||[]).map(row=>`<div class="record-card"><div class="record-title">${safe(row.PackageName)}</div><div class="tiny muted">${safe(row.Mode||"")} • ${safe(row.CreatedDate?new Date(row.CreatedDate).toLocaleString():"")}</div><div class="actions"><a class="button small-btn" href="${safe(row.ZipUrl)}" target="_blank" rel="noopener">Open ZIP</a></div></div>`).join("")||'<p class="muted small">Generated packages will appear here.</p>';
+    const pending=(workspace.operations||[]).filter(row=>String(row.OperationType)==="Package"&&String(row.Status).toLowerCase()!=="complete").slice(0,5).map(row=>`<div class="record-card"><div class="record-title">${String(row.Status).toLowerCase()==="error"?"Package generation needs attention":"Package is still processing"}</div><div class="tiny muted">${safe(row.Message||"")}</div><span class="status-badge">${safe(row.Status||"Processing")}</span></div>`).join("");
+    const packages=(workspace.packages||[]).map(row=>`<div class="record-card"><div class="record-title">${safe(row.PackageName)}</div><div class="tiny muted">${safe(row.Mode||"")} • ${safe(row.CreatedDate?new Date(row.CreatedDate).toLocaleString():"")}</div><div class="actions"><a class="button small-btn" href="${safe(row.ZipUrl)}" target="_blank" rel="noopener">Open ZIP</a></div></div>`).join("");
+    byId("postSessionPackageHistory").innerHTML=pending+packages||'<p class="muted small">Generated packages will appear here.</p>';
   }
 
-  async function poll(predicate,message){
-    for(let attempt=1;attempt<=12;attempt++){await Database.wait(Math.min(3000,500+attempt*250));workspace=await Database.getPostSessionWorkspace();const value=predicate(workspace);if(value)return value;}
-    throw new Error(message);
+  async function poll(predicate,message,attempts=30){
+    let lastError=null;
+    for(let attempt=1;attempt<=attempts;attempt++){await Database.wait(Math.min(4000,500+attempt*250));try{workspace=await Database.getPostSessionWorkspace();const value=predicate(workspace);if(value)return value;}catch(error){if(String(error?.message||"").startsWith("Package generation failed:")||String(error?.message||"").startsWith("File upload failed:"))throw error;lastError=error;}}
+    throw new Error(`${message}${lastError?" "+lastError.message:""}`);
   }
 
   window.loadPostSessionWorkspace=refresh;
@@ -132,8 +135,20 @@
     const finish=beginSave(button,"Saving Groups...");try{await Database.saveWorkshopGroupLinks({workshopId,groupIds:selectedGroupIds()});pendingGroupId="";await refresh(true);toast("Workshop group associations saved.");}catch(err){toast(err.message||"Unable to save group associations.");}finally{finish();}
   };
 
-  async function uploadPackageFile(file,contextId,role,displayName){
-    const token="PSF-"+crypto.randomUUID(),payload=await filePayload(file);await Database.uploadPostSessionPackageFile({...payload,contextType:currentMode()==="workshop"?"Workshop":"Standalone",contextId,fileRole:role,displayName,uploadToken:token});return poll(data=>(data.packageFiles||[]).find(row=>String(row.UploadToken)===token),`Upload was not confirmed for ${file.name}.`);
+  async function queuePackageFile(file,contextId,role,displayName){
+    const token="PSF-"+crypto.randomUUID(),payload=await filePayload(file);await Database.uploadPostSessionPackageFile({...payload,contextType:currentMode()==="workshop"?"Workshop":"Standalone",contextId,fileRole:role,displayName,uploadToken:token});return token;
+  }
+
+  async function uploadPackageFiles(entries,contextId){
+    const tokens=[];
+    for(const entry of entries)tokens.push(await queuePackageFile(entry.file,contextId,entry.role,entry.displayName));
+    if(!tokens.length)return;
+    await poll(data=>{
+      const operations=data.operations||[],failed=operations.find(row=>tokens.includes(String(row.OperationToken))&&String(row.Status).toLowerCase()==="error");
+      if(failed)throw new Error(`File upload failed: ${failed.Message||"Google Drive could not save a package file."}`);
+      const completed=new Set((data.packageFiles||[]).filter(row=>tokens.includes(String(row.UploadToken))).map(row=>String(row.UploadToken)));
+      return tokens.every(token=>completed.has(token));
+    },"Google Drive is still processing the generated assessment files. Refresh Package History before trying again.",24);
   }
 
   async function renderAssessmentPdf(payload){
@@ -158,23 +173,26 @@
     }
   }
 
-  async function generateAssessmentFiles(workshopId,groupIds,contextId,packageName){
+  async function buildAssessmentFiles(workshopId,groupIds,packageName){
     const jobs=[];
     if(workshopId){const workshop=workshops.find(item=>String(item.WorkshopID)===String(workshopId))||{},assessment=await Database.getWorkshopAssessment(workshopId);if(!assessment?.import||!(assessment.results||[]).length)throw new Error("The selected workshop does not have saved assessment results.");jobs.push({role:"Assessment:Overall",name:`${packageName} - Assessment Results.pdf`,payload:{assessment,workshopId,title:workshop.Organization||packageName,context:{title:workshop.Organization||packageName,organization:workshop.Organization||"",identifier:workshopId,dateLabel:workshop.WorkshopDate?formatDate(workshop.WorkshopDate):(workshop.DateDescription||"")}}});}
     groupIds.forEach(groupId=>{const payload=assessmentGroupTeamMapPayload(groupId),groupName=payload.title||groupId;jobs.push({role:`Assessment:${groupId}`,name:`${packageName} - ${groupName} - Assessment Results.pdf`,payload});});
-    for(const job of jobs){const blob=await renderAssessmentPdf(job.payload),file=new File([blob],job.name,{type:"application/pdf"});await uploadPackageFile(file,contextId,job.role,job.name);}
+    const files=[];for(const job of jobs){const blob=await renderAssessmentPdf(job.payload),file=new File([blob],job.name,{type:"application/pdf"});files.push({file,role:job.role,displayName:job.name});}return files;
   }
 
   window.generatePostSessionPackage=async function(button){
     const contextId=currentContextId(),workshopId=currentMode()==="workshop"?byId("postSessionWorkshop").value:"",name=byId("postSessionPackageName").value.trim();
     if(!contextId)return toast("Choose a workshop or create a standalone package.");if(!name)return focusRequiredField("postSessionPackageName","Package name is required.");
     const finish=beginSave(button,"Building Package...");try{
-      const presentation=byId("postSessionPresentation").files[0];if(presentation)await uploadPackageFile(presentation,contextId,"Presentation",`${name} - Workshop Presentation.pdf`);
+      const entries=[],presentation=byId("postSessionPresentation").files[0];if(presentation)entries.push({file:presentation,role:"Presentation",displayName:`${name} - Workshop Presentation.pdf`});
       const groupIds=selectedGroupIds();if(workshopId)await Database.saveWorkshopGroupLinks({workshopId,groupIds});
-      await generateAssessmentFiles(workshopId,groupIds,contextId,name);
+      button.textContent="Generating Assessment PDFs...";entries.push(...await buildAssessmentFiles(workshopId,groupIds,name));
+      button.textContent="Saving Package Files...";await uploadPackageFiles(entries,contextId);
       const resourceIds=[...byId("postSessionResourceChoices").querySelectorAll('input:checked')].map(input=>input.value),generationToken="PSG-"+crypto.randomUUID();
+      button.textContent="Creating ZIP...";
       await Database.generatePostSessionPackage({generationToken,workshopId,contextId,packageName:name,dateLabel:byId("postSessionDateLabel").value.trim(),groupIds,resourceIds,includeReadme:byId("postSessionIncludeReadme").checked});
-      const generated=await poll(data=>(data.packages||[]).find(row=>String(row.GenerationToken)===generationToken),"The ZIP package was not confirmed.");render();toast("Post-session package created.");window.open(generated.ZipUrl,"_blank","noopener");
+      button.textContent="Confirming ZIP...";
+      const generated=await poll(data=>{const operation=(data.operations||[]).find(row=>String(row.OperationToken)===generationToken);if(String(operation?.Status).toLowerCase()==="error")throw new Error(`Package generation failed: ${operation.Message||"Google Drive could not create the ZIP."}`);const history=(data.packages||[]).find(row=>String(row.GenerationToken)===generationToken);if(history)return history;if(String(operation?.Status).toLowerCase()==="complete"&&operation.ResultUrl)return {ZipUrl:operation.ResultUrl};return null;},"Google Drive is still finalizing the ZIP. Use Refresh Package History in a moment; do not generate a duplicate package.",36);render();toast("Post-session package created.");window.open(generated.ZipUrl,"_blank","noopener");
     }catch(err){toast(err.message||"Unable to generate package.");}finally{finish();}
   };
 })();

@@ -899,7 +899,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.08.01.03</strong><br>
+        Version <strong id="appVersionLabel">2026.08.01.04</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1329,7 +1329,7 @@
               <div class="actions"><button class="button" type="button" onclick="generatePostSessionPackage(this)">Generate ZIP Package</button></div>
             </div>
           </div>
-          <div class="card" style="margin-top:16px;"><div class="section-title"><div><h2>Package History</h2><p class="tiny muted">Recent workshop and standalone packages stored in Google Drive.</p></div></div><div id="postSessionPackageHistory" class="list-grid"></div></div>
+          <div class="card" style="margin-top:16px;"><div class="section-title"><div><h2>Package History</h2><p class="tiny muted">Recent workshop and standalone packages stored in Google Drive.</p></div><button class="button secondary small-btn" type="button" onclick="loadPostSessionWorkspace(true)">Refresh Package History</button></div><div id="postSessionPackageHistory" class="list-grid"></div></div>
         </section>
 
         <!-- TUTORIAL & BEST PRACTICES -->
@@ -1624,7 +1624,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.08.01.03";
+    const APP_VERSION = "2026.08.01.04";
 
     const K = {
       clients: "jjc_clients",
