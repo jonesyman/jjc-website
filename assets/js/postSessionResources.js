@@ -87,7 +87,7 @@
   }
 
   function renderHistory(){
-    const pending=(workspace.operations||[]).filter(row=>String(row.OperationType)==="Package"&&String(row.Status).toLowerCase()!=="complete").slice(0,5).map(row=>`<div class="record-card"><div class="record-title">${String(row.Status).toLowerCase()==="error"?"Package generation needs attention":"Package is still processing"}</div><div class="tiny muted">${safe(row.Message||"")}</div><span class="status-badge">${safe(row.Status||"Processing")}</span></div>`).join("");
+    const pending=(workspace.operations||[]).filter(row=>{const message=String(row.Message||"");return String(row.OperationType)==="Package"&&String(row.Status).toLowerCase()!=="complete"&&!/DocumentApp\.create|auth\/documents/i.test(message);}).slice(0,5).map(row=>`<div class="record-card"><div class="record-title">${String(row.Status).toLowerCase()==="error"?"Package generation needs attention":"Package is still processing"}</div><div class="tiny muted">${safe(row.Message||"")}</div><span class="status-badge">${safe(row.Status||"Processing")}</span></div>`).join("");
     const packages=(workspace.packages||[]).map(row=>`<div class="record-card"><div class="record-title">${safe(row.PackageName)}</div><div class="tiny muted">${safe(row.Mode||"")} • ${safe(row.CreatedDate?new Date(row.CreatedDate).toLocaleString():"")}</div><div class="actions"><a class="button small-btn" href="${safe(row.ZipUrl)}" target="_blank" rel="noopener">Open ZIP</a></div></div>`).join("");
     byId("postSessionPackageHistory").innerHTML=pending+packages||'<p class="muted small">Generated packages will appear here.</p>';
   }

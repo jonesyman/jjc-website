@@ -2,6 +2,11 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.01.06 — 2026-08-01
+
+- Suppressed obsolete Google Docs permission errors saved by package attempts made before client-side README generation was introduced.
+- Current package-processing and actionable failure records remain visible in Package History.
+
 ## 2026.08.01.05 — 2026-08-01
 
 - Post-Session Packages now wait for the saved assessment-group library before rendering workshop associations.
