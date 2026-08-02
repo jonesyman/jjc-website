@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.01.03 — 2026-08-01
+
+- Post-session packages now generate the current workshop and associated-group Assessment Results PDFs automatically from saved assessment data.
+- Added an Associate with Workshop action to every saved group while retaining association management in the package builder.
+- Removed the unnecessary manual assessment-PDF upload controls and standardized generated workshop/group filenames inside each ZIP.
+
 ## 2026.08.01.02 — 2026-08-01
 
 - Constrained Post-Session Resource descriptions to three wrapped lines inside each selection card, with the complete description available on hover.

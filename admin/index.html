@@ -899,7 +899,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.08.01.02</strong><br>
+        Version <strong id="appVersionLabel">2026.08.01.03</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1315,13 +1315,13 @@
               <div class="section-title"><div><h2>Build a Resource Package</h2><p class="tiny muted">Create a package for a saved workshop or a historical engagement that is not in the workshop list.</p></div></div>
               <div class="field"><label>Package type</label><select id="postSessionMode" onchange="changePostSessionMode()"><option value="workshop">Saved workshop</option><option value="standalone">Standalone / historical</option></select></div>
               <div id="postSessionWorkshopFields" class="field"><label>Workshop</label><select id="postSessionWorkshop" onchange="changePostSessionWorkshop()"><option value="">Choose a workshop...</option></select></div>
-              <div id="postSessionStandaloneFields" class="hidden"><input id="postSessionStandaloneId" type="hidden"><p class="notice">Standalone packages can include saved groups, uploaded assessment PDFs, a presentation, and any resources in the library.</p></div>
+              <div id="postSessionStandaloneFields" class="hidden"><input id="postSessionStandaloneId" type="hidden"><p class="notice">Standalone packages can include saved groups, their automatically generated assessment PDFs, a presentation, and any resources in the library.</p></div>
               <div class="form-row"><div class="field"><label>Package / engagement name</label><input id="postSessionPackageName" placeholder="Organization or engagement name" oninput="changeStandalonePackageName()"></div><div class="field"><label>Date or timeframe</label><input id="postSessionDateLabel" placeholder="For example: Spring 2025"></div></div>
               <div class="field"><label>Presentation PDF</label><input id="postSessionPresentation" type="file" accept="application/pdf,.pdf"><div id="postSessionPresentationStatus" class="tiny muted">No presentation PDF saved for this package.</div></div>
               <div class="section-title"><div><h3>Associated Groups</h3><p class="tiny muted">Checked groups are saved to the workshop and included in future package visits.</p></div></div>
               <div id="postSessionGroupChoices" class="package-choice-grid"></div>
               <div id="postSessionSaveGroups" class="actions"><button class="button secondary small-btn" type="button" onclick="savePostSessionGroupLinks(this)">Save Group Associations</button></div>
-              <div class="section-title"><div><h3>Assessment Results PDFs</h3><p class="tiny muted">Upload the current two-page Assessment Results PDF for the overall team and each selected subgroup. Saved PDFs are reused until replaced.</p></div></div>
+              <div class="section-title"><div><h3>Assessment Results PDFs</h3><p class="tiny muted">The site automatically generates the current Team Map and Analysis PDF for the selected workshop and every associated group.</p></div></div>
               <div id="postSessionAssessmentSlots" class="package-upload-list"></div>
               <div class="section-title"><div><h3>Post-Session Resources</h3><p class="tiny muted">Choose exactly what this recipient should receive.</p></div></div>
               <div id="postSessionResourceChoices" class="package-choice-grid"></div>
@@ -1349,7 +1349,7 @@
               <details class="tutorial-step"><summary><span class="tutorial-number">5</span><span>Create and manage the invoice</span></summary><div class="tutorial-body">Create the invoice from the accepted estimate, then verify issue date, due date, recipient, totals, and payment instructions.<ul><li>Record partial payments as they arrive.</li><li>Mark the invoice Paid only when the balance is satisfied.</li><li>Use Void or Canceled instead of deleting a legitimate financial record.</li></ul><button class="button secondary small-btn" onclick="showView('invoices')">Open Invoices</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">6</span><span>Import or assemble assessment results</span></summary><div class="tutorial-body">From the workshop, choose Assessment Results. Upload the official Individual Results workbook, or use Add Individual Results to assemble a roster from people already in the assessment library.<ul><li>Review validation messages, then scroll through the complete participant preview before importing a workbook.</li><li>Use Merge for additions or corrections that should preserve omitted people.</li><li>Use Replace only when the uploaded workbook should become the complete active roster.</li><li>A manually assembled roster can still select a leader and generate a Team Map.</li></ul><button class="button secondary small-btn" onclick="showView('workshops')">Find Workshop Assessments</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">7</span><span>Select the leader and review the Team View</span></summary><div class="tutorial-body">Choose and save the team leader, then review all six Team View cards. The leader is intentionally represented twice in Genius and Frustration lists to reflect leadership influence; the person’s stored result is not duplicated.</div></details>
-              <details class="tutorial-step"><summary><span class="tutorial-number">8</span><span>Preview and save the Team Map</span></summary><div class="tutorial-body">Preview the Team Map, choose the preferred name format, and check all six Genius and Frustration sections.<ul><li>Use Print / Save as PDF to store the map locally.</li><li>Team Map PDFs are not stored in Google Sheets or Google Drive by the app.</li></ul></div></details>
+              <details class="tutorial-step"><summary><span class="tutorial-number">8</span><span>Preview and save the Team Map</span></summary><div class="tutorial-body">Preview the Team Map, choose the preferred name format, and check all six Genius and Frustration sections.<ul><li>Use Print / Save as PDF to store the map locally.</li><li>When building a Post-Session Package, the site automatically regenerates and stores the included workshop and group Assessment Results PDFs for the ZIP.</li></ul></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">9</span><span>Add individuals and maintain reusable groups</span></summary><div class="tutorial-body">Use Assessments & Groups to add an individual result received outside a workshop, or combine individuals and complete workshop rosters without duplicating anyone’s assessment.<ul><li>For an ad hoc result, enter the person’s name and assign all six cards to Genius, Competency, or Frustration.</li><li>At the top of Group Builder, choose a saved group and use Load Group to edit its members, leader, name, or description.</li><li>Choose a group-specific leader, then use Save &amp; Create Team Map for a direct preview.</li><li>Delete Group is available in the saved-group manager and on every saved-group card.</li><li>If a group is deleted by mistake, use Restore Group under Recently Deleted Groups.</li><li>Review possible duplicate names when assessment data conflicts.</li></ul><button class="button secondary small-btn" onclick="showView('assessment-library')">Open Assessments & Groups</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">10</span><span>Review Assessment Analytics</span></summary><div class="tutorial-body">Use the analytics page to review unique people served, individual Genius distribution, and all 15 Genius pairings. Filter by client, workshop, saved group, dates, Genius, or participant search; every count and percentage updates with the filtered list.<ul><li>A person appearing in multiple workshops counts once within the filtered view.</li><li>Each person has two Geniuses, so the six individual percentages normally total approximately 200%.</li><li>Select a workshop or saved group to generate square overall, selected-group, and overlay graphics; download each PNG for a slide deck.</li><li>Each person has one pairing, and reversed order such as WI and IW is counted together.</li></ul><button class="button secondary small-btn" onclick="showView('assessments')">Open Assessment Analytics</button></div></details>
               <details class="tutorial-step"><summary><span class="tutorial-number">11</span><span>Complete follow-up and maintain records</span></summary><div class="tutorial-body">Update the workshop status, follow-up date, invoice status, and notes after the engagement.<ul><li>Archive inactive business records to reduce clutter while preserving history.</li><li>Use permanent deletion only for genuine mistakes or test records.</li><li>Assessment removal leaves the workshop and financial documents intact and retains inactive import history.</li></ul><button class="button secondary small-btn" onclick="showView('dashboard')">Review Dashboard</button></div></details>
@@ -1612,17 +1612,19 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/loadingStatus.js?v=1"></script>
   <script src="../assets/js/googleSheets.js?v=10"></script>
   <script src="../assets/js/xlsx.full.min.js"></script>
+  <script src="../assets/js/html2canvas.min.js"></script>
+  <script src="../assets/js/jspdf.umd.min.js"></script>
   <script src="../assets/js/assessments.js"></script>
   <script src="../assets/js/teamMapAnalysis.js?v=7"></script>
   <script src="../assets/js/assessmentLibrary.js?v=6"></script>
-  <script src="../assets/js/postSessionResources.js?v=1"></script>
+  <script src="../assets/js/postSessionResources.js?v=2"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
   <script src="../assets/js/invoices.js?v=2"></script>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.08.01.02";
+    const APP_VERSION = "2026.08.01.03";
 
     const K = {
       clients: "jjc_clients",

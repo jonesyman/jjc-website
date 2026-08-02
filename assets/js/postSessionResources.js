@@ -1,6 +1,7 @@
 (function(){
   let workspace={resources:[],workshopGroupLinks:[],packageFiles:[],packages:[]};
   let loaded=false;
+  let pendingGroupId="";
 
   const byId=id=>document.getElementById(id);
   const cleanTitle=name=>String(name||"").replace(/\.[^.]+$/,"").replace(/^Working Genius\s*/i,"").trim();
@@ -66,6 +67,7 @@
   function renderGroups(){
     const workshopId=byId("postSessionWorkshop").value;
     const linked=new Set((workspace.workshopGroupLinks||[]).filter(row=>String(row.WorkshopID)===workshopId).map(row=>String(row.GroupID)));
+    if(pendingGroupId)linked.add(String(pendingGroupId));
     byId("postSessionGroupChoices").innerHTML=groups().filter(active).map(group=>`<label class="archive-toggle package-choice"><input type="checkbox" value="${safe(group.GroupID)}" ${linked.has(String(group.GroupID))?"checked":""} onchange="renderPostSessionAssessmentSlots()"> <span><strong>${safe(group.GroupName||group.GroupID)}</strong><small>${safe([group.Organization,group.TeamFunction].filter(Boolean).join(" • "))}</small></span></label>`).join("")||'<p class="muted small">No saved groups are available.</p>';
     renderAssessmentSlots();
   }
@@ -74,9 +76,8 @@
 
   function renderAssessmentSlots(){
     const context=currentContextId(); if(!context){byId("postSessionAssessmentSlots").innerHTML='<p class="muted small">Choose a workshop or enter a standalone package name first.</p>';return;}
-    const selected=selectedGroupIds(),items=[{id:"Overall",name:"Overall Team"},...groups().filter(group=>selected.includes(String(group.GroupID))).map(group=>({id:group.GroupID,name:group.GroupName||group.GroupID}))];
-    const stored=(workspace.packageFiles||[]).filter(row=>active(row)&&String(row.ContextID)===context);
-    byId("postSessionAssessmentSlots").innerHTML=items.map(item=>{const role=`Assessment:${item.id}`,file=stored.find(row=>String(row.FileRole)===role);return `<div class="package-upload-row"><div><strong>${safe(item.name)}</strong><div class="tiny muted">${file?"Saved: "+safe(file.DisplayName||file.FileName):"Upload the current Assessment Results PDF"}</div></div><input type="file" accept="application/pdf,.pdf" data-package-role="${safe(role)}" data-display-name="${safe(item.name)} - Assessment Results.pdf"></div>`;}).join("");
+    const selected=selectedGroupIds(),items=[...(currentMode()==="workshop"?[{id:"Overall",name:"Overall Team"}]:[]),...groups().filter(group=>selected.includes(String(group.GroupID))).map(group=>({id:group.GroupID,name:group.GroupName||group.GroupID}))];
+    byId("postSessionAssessmentSlots").innerHTML=items.map(item=>`<div class="package-upload-row"><div><strong>${safe(item.name)}</strong><div class="tiny muted">Generated automatically from the latest saved assessment results</div></div><span class="status-badge">Automatic PDF</span></div>`).join("")||'<p class="muted small">Select a saved group to include its automatically generated Assessment Results PDF.</p>';
   }
 
   function renderUploadedFiles(){
@@ -111,8 +112,8 @@
   };
   window.changeStandalonePackageName=function(){renderAssessmentSlots();};
 
-  window.openResourcePackageBuilder=async function(workshopId=""){
-    showView("post-session");await refresh();byId("postSessionMode").value=workshopId?"workshop":"standalone";changePostSessionMode();if(workshopId){byId("postSessionWorkshop").value=workshopId;changePostSessionWorkshop();}
+  window.openResourcePackageBuilder=async function(workshopId="",groupId=""){
+    pendingGroupId=groupId||"";showView("post-session");await refresh();byId("postSessionMode").value=workshopId||groupId?"workshop":"standalone";changePostSessionMode();if(workshopId){byId("postSessionWorkshop").value=workshopId;changePostSessionWorkshop();}
     byId("postSessionBuilder").scrollIntoView({behavior:"smooth",block:"start"});
   };
 
@@ -128,11 +129,40 @@
 
   window.savePostSessionGroupLinks=async function(button){
     const workshopId=byId("postSessionWorkshop").value;if(!workshopId)return toast("Choose a workshop first.");
-    const finish=beginSave(button,"Saving Groups...");try{await Database.saveWorkshopGroupLinks({workshopId,groupIds:selectedGroupIds()});await refresh(true);toast("Workshop group associations saved.");}catch(err){toast(err.message||"Unable to save group associations.");}finally{finish();}
+    const finish=beginSave(button,"Saving Groups...");try{await Database.saveWorkshopGroupLinks({workshopId,groupIds:selectedGroupIds()});pendingGroupId="";await refresh(true);toast("Workshop group associations saved.");}catch(err){toast(err.message||"Unable to save group associations.");}finally{finish();}
   };
 
   async function uploadPackageFile(file,contextId,role,displayName){
     const token="PSF-"+crypto.randomUUID(),payload=await filePayload(file);await Database.uploadPostSessionPackageFile({...payload,contextType:currentMode()==="workshop"?"Workshop":"Standalone",contextId,fileRole:role,displayName,uploadToken:token});return poll(data=>(data.packageFiles||[]).find(row=>String(row.UploadToken)===token),`Upload was not confirmed for ${file.name}.`);
+  }
+
+  async function renderAssessmentPdf(payload){
+    if(typeof html2canvas!=="function"||!window.jspdf?.jsPDF)throw new Error("The PDF renderer did not load. Refresh the page and try again.");
+    if(!payload?.assessment?.import?.LeaderAssessmentResultID)throw new Error(`${payload?.title||"This team"} needs a saved team leader before its Assessment Results PDF can be generated.`);
+    const previous={data:currentAssessmentData,workshopId:assessmentWorkshopId,context:teamMapContext,distribution:currentTeamMapDistribution,analysis:currentTeamMapAnalysis,suggested:suggestedTeamMapAnalysis,stale:teamMapAnalysisStale};
+    const preview=byId("teamMapPreview"),wasHidden=preview.classList.contains("hidden"),oldStyle=preview.getAttribute("style");
+    try{
+      currentAssessmentData=payload.assessment;assessmentWorkshopId=payload.workshopId||"";teamMapContext=payload.context||null;
+      currentTeamMapDistribution=TeamMapAnalysis.calculateTeamMapDistribution(currentAssessmentData.results,currentAssessmentData.import.LeaderAssessmentResultID,settings);
+      if(!currentTeamMapDistribution.validation.valid)throw new Error(`${payload.title} has invalid assessment results and cannot be packaged.`);
+      renderTeamMapPreview();await loadCurrentTeamMapAnalysis();renderTeamMapAnalysisPage();
+      preview.classList.remove("hidden");preview.style.position="fixed";preview.style.left="0";preview.style.top="0";preview.style.zIndex="-9999";preview.style.pointerEvents="none";preview.style.display="block";
+      await document.fonts?.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));fitTeamMapNames();
+      const sheets=[byId("teamMapSheet"),byId("teamMapAnalysisSheet")].filter(sheet=>sheet&&!sheet.classList.contains("hidden"));
+      const pdf=new window.jspdf.jsPDF({orientation:"portrait",unit:"in",format:"letter",compress:true});
+      for(let index=0;index<sheets.length;index++){const canvas=await html2canvas(sheets[index],{scale:2,useCORS:true,backgroundColor:"#ffffff",logging:false,scrollX:0,scrollY:0});if(index)pdf.addPage("letter","portrait");pdf.addImage(canvas.toDataURL("image/jpeg",.96),"JPEG",0,0,8.5,11,undefined,"FAST");}
+      return pdf.output("blob");
+    }finally{
+      currentAssessmentData=previous.data;assessmentWorkshopId=previous.workshopId;teamMapContext=previous.context;currentTeamMapDistribution=previous.distribution;currentTeamMapAnalysis=previous.analysis;suggestedTeamMapAnalysis=previous.suggested;teamMapAnalysisStale=previous.stale;
+      if(wasHidden)preview.classList.add("hidden");if(oldStyle===null)preview.removeAttribute("style");else preview.setAttribute("style",oldStyle);
+    }
+  }
+
+  async function generateAssessmentFiles(workshopId,groupIds,contextId,packageName){
+    const jobs=[];
+    if(workshopId){const workshop=workshops.find(item=>String(item.WorkshopID)===String(workshopId))||{},assessment=await Database.getWorkshopAssessment(workshopId);if(!assessment?.import||!(assessment.results||[]).length)throw new Error("The selected workshop does not have saved assessment results.");jobs.push({role:"Assessment:Overall",name:`${packageName} - Assessment Results.pdf`,payload:{assessment,workshopId,title:workshop.Organization||packageName,context:{title:workshop.Organization||packageName,organization:workshop.Organization||"",identifier:workshopId,dateLabel:workshop.WorkshopDate?formatDate(workshop.WorkshopDate):(workshop.DateDescription||"")}}});}
+    groupIds.forEach(groupId=>{const payload=assessmentGroupTeamMapPayload(groupId),groupName=payload.title||groupId;jobs.push({role:`Assessment:${groupId}`,name:`${packageName} - ${groupName} - Assessment Results.pdf`,payload});});
+    for(const job of jobs){const blob=await renderAssessmentPdf(job.payload),file=new File([blob],job.name,{type:"application/pdf"});await uploadPackageFile(file,contextId,job.role,job.name);}
   }
 
   window.generatePostSessionPackage=async function(button){
@@ -140,12 +170,8 @@
     if(!contextId)return toast("Choose a workshop or create a standalone package.");if(!name)return focusRequiredField("postSessionPackageName","Package name is required.");
     const finish=beginSave(button,"Building Package...");try{
       const presentation=byId("postSessionPresentation").files[0];if(presentation)await uploadPackageFile(presentation,contextId,"Presentation",`${name} - Workshop Presentation.pdf`);
-      for(const input of byId("postSessionAssessmentSlots").querySelectorAll('input[type=file]')){const file=input.files[0];if(file)await uploadPackageFile(file,contextId,input.dataset.packageRole,`${name} - ${input.dataset.displayName}`);}
       const groupIds=selectedGroupIds();if(workshopId)await Database.saveWorkshopGroupLinks({workshopId,groupIds});
-      if(workshopId){
-        const expected=["Assessment:Overall",...groupIds.map(id=>`Assessment:${id}`)],stored=(workspace.packageFiles||[]).filter(row=>active(row)&&String(row.ContextID)===contextId),missing=expected.filter(role=>!stored.some(row=>String(row.FileRole)===role));
-        if(missing.length)throw new Error("Upload an Assessment Results PDF for the overall team and every selected group before generating this workshop package.");
-      }
+      await generateAssessmentFiles(workshopId,groupIds,contextId,name);
       const resourceIds=[...byId("postSessionResourceChoices").querySelectorAll('input:checked')].map(input=>input.value),generationToken="PSG-"+crypto.randomUUID();
       await Database.generatePostSessionPackage({generationToken,workshopId,contextId,packageName:name,dateLabel:byId("postSessionDateLabel").value.trim(),groupIds,resourceIds,includeReadme:byId("postSessionIncludeReadme").checked});
       const generated=await poll(data=>(data.packages||[]).find(row=>String(row.GenerationToken)===generationToken),"The ZIP package was not confirmed.");render();toast("Post-session package created.");window.open(generated.ZipUrl,"_blank","noopener");
