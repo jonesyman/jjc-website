@@ -2,6 +2,11 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.01.02 — 2026-08-01
+
+- Constrained Post-Session Resource descriptions to three wrapped lines inside each selection card, with the complete description available on hover.
+- Replaced the JJP 3D Printing sidebar's paper-printer emoji with a dedicated 3D-printer line icon.
+
 ## 2026.08.01.01 — 2026-08-01
 
 - Added a reusable Post-Session Resource Library with individual-file and ZIP import support.

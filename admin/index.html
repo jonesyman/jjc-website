@@ -842,8 +842,9 @@
     .invoice-brand .invoice-logo-img { margin-bottom:0; flex:0 0 auto; }
     .package-choice-grid { display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); }
     .package-choice { align-items:flex-start; padding:12px; border:1px solid #364152; border-radius:12px; background:#182536; }
-    .package-choice span { display:grid; gap:3px; }
-    .package-choice small { color:#94a3b8; line-height:1.35; }
+    .package-choice span { display:grid; gap:3px; min-width:0; }
+    .package-choice small { color:#94a3b8; line-height:1.35; white-space:normal; overflow:hidden; overflow-wrap:anywhere; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; }
+    .jjp-nav-icon { width:18px; height:18px; flex:0 0 auto; vertical-align:-4px; }
     .package-upload-list { display:grid; gap:10px; }
     .package-upload-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,.8fr); gap:14px; align-items:center; padding:12px; border:1px solid #364152; border-radius:12px; background:#182536; }
     @media (max-width:700px) { .package-choice-grid,.package-upload-row { grid-template-columns:1fr; } }
@@ -894,11 +895,11 @@
         <button data-view-btn="post-session">📦 Post-Session Packages</button>
         <button data-view-btn="tutorial">📖 Tutorial & Best Practices</button>
         <button data-view-btn="settings">⚙️ Settings</button>
-        <button type="button" onclick="location.href='./jjp.html'">🖨️ JJP 3D Printing</button>
+        <button type="button" onclick="location.href='./jjp.html'"><svg class="jjp-nav-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v6H5zM4 9h16a2 2 0 0 1 2 2v5h-4M2 16v-5a2 2 0 0 1 2-2M8 9v4h8V9M9 17l3-2 3 2v4H9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 13v2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg> JJP 3D Printing</button>
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.08.01.01</strong><br>
+        Version <strong id="appVersionLabel">2026.08.01.02</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1621,7 +1622,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.08.01.01";
+    const APP_VERSION = "2026.08.01.02";
 
     const K = {
       clients: "jjc_clients",
