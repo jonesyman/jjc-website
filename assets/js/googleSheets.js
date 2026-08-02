@@ -116,6 +116,34 @@ window.Database = {
 saveSettings(data) {
   return this.post("saveSettings", data);
 },
+
+getPostSessionWorkspace() {
+  return this.get("getPostSessionWorkspace");
+},
+
+uploadPostSessionResource(data) {
+  return this.postNoCors("uploadPostSessionResource", data);
+},
+
+importPostSessionResourceZip(data) {
+  return this.postNoCors("importPostSessionResourceZip", data);
+},
+
+setPostSessionResourceActive(data) {
+  return this.post("setPostSessionResourceActive", data);
+},
+
+uploadPostSessionPackageFile(data) {
+  return this.postNoCors("uploadPostSessionPackageFile", data);
+},
+
+saveWorkshopGroupLinks(data) {
+  return this.post("saveWorkshopGroupLinks", data);
+},
+
+generatePostSessionPackage(data) {
+  return this.postNoCors("generatePostSessionPackage", data);
+},
     
     //----------------------------------------------------
     // Rates

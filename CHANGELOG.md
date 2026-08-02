@@ -2,6 +2,16 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.01.01 — 2026-08-01
+
+- Added a reusable Post-Session Resource Library with individual-file and ZIP import support.
+- Added workshop-based and standalone/historical resource-package builders.
+- Workshops can retain associations with saved assessment groups for future packages.
+- Presentation PDFs and exact overall/subgroup Assessment Results PDFs can be uploaded once and reused until replaced.
+- Generated ZIP packages include organized presentation, Team Map Assessment, and selected resource folders.
+- Added a customized `00 - READ ME FIRST.pdf` describing the package contents and suggested next steps.
+- Added Google Drive package history with links to previously generated ZIP files.
+
 ## 2026.07.29.04 — 2026-07-29
 
 - Added Sector, Industry, and Team Function classifications to client records.

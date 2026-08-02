@@ -23,6 +23,10 @@ const ASSESSMENT_GROUP_MEMBER_HEADERS = ["GroupMemberID", "GroupID", "PersonID",
 const ASSESSMENT_DUPLICATE_HEADERS = ["DuplicateReviewID", "PersonID1", "PersonID2", "Status", "ResolutionDate", "Notes"];
 const EMAIL_TEMPLATE_HEADERS = ["EmailTemplateID", "TemplateName", "Category", "Subject", "Body", "Description", "Active", "SortOrder", "CreatedDate", "UpdatedDate"];
 const TEAM_MAP_ANALYSIS_HEADERS = ["ContextKey", "ContextType", "ContextID", "OverallTeamPattern", "MostSignificantStrength", "MostSignificantRisk", "CompetencySustainabilityObservation", "LeaderInfluence", "Recommendations", "AdditionalConsultantNotes", "FieldModes", "SourceFingerprint", "CreatedDate", "UpdatedDate", "LastGeneratedDate"];
+const POST_SESSION_RESOURCE_HEADERS = ["ResourceID", "Title", "Category", "Description", "FileName", "FileId", "MimeType", "DefaultSelected", "Active", "UploadToken", "CreatedDate", "UpdatedDate"];
+const WORKSHOP_GROUP_LINK_HEADERS = ["LinkID", "WorkshopID", "GroupID", "Active", "CreatedDate", "UpdatedDate"];
+const PACKAGE_FILE_HEADERS = ["PackageFileID", "ContextType", "ContextID", "FileRole", "DisplayName", "FileName", "FileId", "MimeType", "UploadToken", "Active", "CreatedDate", "UpdatedDate"];
+const PACKAGE_HISTORY_HEADERS = ["PackageID", "WorkshopID", "PackageName", "Mode", "SelectedGroupIDs", "SelectedResourceIDs", "ZipFileId", "ZipUrl", "GenerationToken", "CreatedDate"];
 const TEAM_MAP_ANALYSIS_DEFAULT_SETTINGS = {
   AnalysisEnabled:true, MissingGeniusThresholdPercent:15, UnderrepresentedGeniusThresholdPercent:15,
   WellRepresentedGeniusThresholdPercent:35, HighlyRepresentedGeniusThresholdPercent:50,
@@ -177,6 +181,7 @@ function doGet(e) {
     if (action === "getAssessmentImportHistory") return jsonResponse(getRows("AssessmentImportHistory").filter(row => String(row.WorkshopID) === String(e.parameter.workshopId || "")));
     if (action === "getEmailTemplates") return jsonResponse(getEmailTemplates());
     if (action === "getTeamMapAnalysis") return jsonResponse(getTeamMapAnalysis(e.parameter.contextKey));
+    if (action === "getPostSessionWorkspace") return jsonResponse(getPostSessionWorkspace());
     if (action === "generateEstimatePdf") return jsonResponse(generatePdfForRecord("estimate", e.parameter.id));
     if (action === "generateInvoicePdf") return jsonResponse(generatePdfForRecord("invoice", e.parameter.invoiceNo));
     if (action === "sendEstimateEmail") return jsonResponse(sendEmailForRecord("estimate", e.parameter));
@@ -306,6 +311,12 @@ function doPost(e) {
     if (action === "deleteEmailTemplate") return jsonResponse(deleteEmailTemplate(body.data || {}));
     if (action === "duplicateEmailTemplate") return jsonResponse(duplicateEmailTemplate(body.data || {}));
     if (action === "saveTeamMapAnalysis") return jsonResponse(saveTeamMapAnalysis(body.data || {}));
+    if (action === "uploadPostSessionResource") return jsonResponse(uploadPostSessionResource(body.data || {}));
+    if (action === "importPostSessionResourceZip") return jsonResponse(importPostSessionResourceZip(body.data || {}));
+    if (action === "setPostSessionResourceActive") return jsonResponse(setPostSessionResourceActive(body.data || {}));
+    if (action === "uploadPostSessionPackageFile") return jsonResponse(uploadPostSessionPackageFile(body.data || {}));
+    if (action === "saveWorkshopGroupLinks") return jsonResponse(saveWorkshopGroupLinks(body.data || {}));
+    if (action === "generatePostSessionPackage") return jsonResponse(generatePostSessionPackage(body.data || {}));
 
     if (action === "deleteWorkshop") {
       deleteRowById(SHEET_NAMES.workshops, "WorkshopID", (body.data || {}).id);
@@ -1841,6 +1852,187 @@ function escHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function ensurePostSessionSheets() {
+  ensureSheetWithHeaders("PostSessionResources", POST_SESSION_RESOURCE_HEADERS);
+  ensureSheetWithHeaders("WorkshopGroupLinks", WORKSHOP_GROUP_LINK_HEADERS);
+  ensureSheetWithHeaders("PostSessionPackageFiles", PACKAGE_FILE_HEADERS);
+  ensureSheetWithHeaders("PostSessionPackages", PACKAGE_HISTORY_HEADERS);
+}
+
+function postSessionFolder(name) {
+  const root = getOrCreateFolder(DriveApp.getFolderById(PDF_ROOT_FOLDER_ID), "Post-Session Packages");
+  return name ? getOrCreateFolder(root, name) : root;
+}
+
+function getPostSessionWorkspace() {
+  ensurePostSessionSheets();
+  return {
+    resources: getRows("PostSessionResources"),
+    workshopGroupLinks: getRows("WorkshopGroupLinks").filter(isActiveAssessmentRow),
+    packageFiles: getRows("PostSessionPackageFiles").filter(isActiveAssessmentRow),
+    packages: getRows("PostSessionPackages").slice(-50).reverse()
+  };
+}
+
+function decodedUploadBlob(data) {
+  const bytes = Utilities.base64Decode(String(data.base64 || ""));
+  if (!bytes.length) throw new Error("The uploaded file is empty.");
+  return Utilities.newBlob(bytes, data.mimeType || "application/octet-stream", data.fileName || "Uploaded file");
+}
+
+function uploadPostSessionResource(data) {
+  ensurePostSessionSheets();
+  const title = String(data.title || "").trim();
+  if (!title || !data.fileName || !data.base64) throw new Error("A resource title and file are required.");
+  const folder = postSessionFolder("Resource Library");
+  const file = folder.createFile(decodedUploadBlob(data));
+  const now = new Date().toISOString();
+  const resourceId = String(data.resourceId || "").trim() || ("PSR-" + Utilities.getUuid());
+  const existing = getRowById("PostSessionResources", "ResourceID", resourceId);
+  const row = { ResourceID:resourceId, Title:title, Category:data.category || "General", Description:data.description || "", FileName:file.getName(), FileId:file.getId(), MimeType:data.mimeType || file.getMimeType(), DefaultSelected:data.defaultSelected === true, Active:true, UploadToken:data.uploadToken || "", CreatedDate:existing ? existing.row.CreatedDate : now, UpdatedDate:now };
+  if (existing) {
+    if (existing.row.FileId) try { DriveApp.getFileById(existing.row.FileId).setTrashed(true); } catch (err) {}
+    updateRowFields("PostSessionResources", existing.rowNumber, row);
+  } else appendRow("PostSessionResources", row);
+  return { success:true, resourceId:resourceId };
+}
+
+function postSessionResourceDetails(fileName) {
+  const lower = String(fileName || "").toLowerCase();
+  let category = "Team Application";
+  if (lower.indexOf("hiring") >= 0) category = "Hiring";
+  else if (lower.indexOf("meeting") >= 0) category = "Meetings";
+  else if (lower.indexOf("playbook") >= 0 || lower.indexOf("norm") >= 0) category = "Team Development";
+  else if (lower.indexOf("data") >= 0 || lower.indexOf("research") >= 0) category = "Research";
+  else if (lower.indexOf("pairings") >= 0) category = "Genius Reference";
+  let description = "A Working Genius resource for continued learning and team application.";
+  if (lower.indexOf("activating") >= 0) description = "Practical prompts for engaging a Genius that is missing or underrepresented on a team.";
+  else if (lower.indexOf("collaborating") >= 0) description = "Guidance and useful questions for collaborating effectively with each Working Genius.";
+  else if (lower.indexOf("playbook") >= 0) description = "A fillable team playbook for turning Working Genius insights into ongoing team practices.";
+  else if (lower.indexOf("hiring") >= 0) description = "A guide for applying Working Genius appropriately during role design and hiring conversations.";
+  else if (lower.indexOf("misconception") >= 0) description = "Clarifies common misunderstandings about each of the six Working Geniuses.";
+  else if (lower.indexOf("missing or misuse") >= 0) description = "Shows the risks created when each Genius is absent, ignored, or overused.";
+  else if (lower.indexOf("pairings") >= 0) description = "An overview of the fifteen Working Genius pairings and their characteristic contributions.";
+  else if (lower.indexOf("meeting") >= 0) description = "A guide for matching meeting types to the appropriate stages and Geniuses of work.";
+  else if (lower.indexOf("norm") >= 0) description = "An editable starting point for developing practical team norms and commitments.";
+  else if (lower.indexOf("data") >= 0 || lower.indexOf("research") >= 0) description = "Reference data about Genius frequency, pairings, stages of work, and related patterns.";
+  const title = String(fileName || "Resource").replace(/\.[^.]+$/, "").replace(/^Working Genius\s*/i, "").trim();
+  return { title:title, category:category, description:description };
+}
+
+function importPostSessionResourceZip(data) {
+  ensurePostSessionSheets();
+  const folder = postSessionFolder("Resource Library");
+  const now = new Date().toISOString();
+  const blobs = Utilities.unzip(decodedUploadBlob(data));
+  let imported = 0;
+  blobs.forEach(blob => {
+    const fileName = String(blob.getName() || "").split("/").pop();
+    if (!fileName || /\/$/.test(blob.getName())) return;
+    blob.setName(fileName);
+    const file = folder.createFile(blob);
+    const details = postSessionResourceDetails(fileName);
+    appendRow("PostSessionResources", { ResourceID:"PSR-" + Utilities.getUuid(), Title:details.title, Category:details.category, Description:details.description, FileName:fileName, FileId:file.getId(), MimeType:file.getMimeType(), DefaultSelected:false, Active:true, UploadToken:data.uploadToken || "", CreatedDate:now, UpdatedDate:now });
+    imported++;
+  });
+  return { success:true, imported:imported };
+}
+
+function setPostSessionResourceActive(data) {
+  ensurePostSessionSheets();
+  const info = getRowById("PostSessionResources", "ResourceID", String(data.resourceId || ""));
+  if (!info) throw new Error("Resource not found.");
+  updateRowFields("PostSessionResources", info.rowNumber, { Active:data.active !== false, UpdatedDate:new Date().toISOString() });
+  return { success:true };
+}
+
+function uploadPostSessionPackageFile(data) {
+  ensurePostSessionSheets();
+  const contextType = String(data.contextType || "Standalone");
+  const contextId = String(data.contextId || "").trim();
+  const role = String(data.fileRole || "Attachment");
+  if (!contextId || !data.fileName || !data.base64) throw new Error("The package context and file are required.");
+  const folder = postSessionFolder("Package Files");
+  const file = folder.createFile(decodedUploadBlob(data));
+  const now = new Date().toISOString();
+  getRows("PostSessionPackageFiles").filter(row => isActiveAssessmentRow(row) && String(row.ContextType) === contextType && String(row.ContextID) === contextId && String(row.FileRole) === role).forEach(row => {
+    const info = getRowById("PostSessionPackageFiles", "PackageFileID", row.PackageFileID);
+    if (info) updateRowFields("PostSessionPackageFiles", info.rowNumber, { Active:false, UpdatedDate:now });
+  });
+  appendRow("PostSessionPackageFiles", { PackageFileID:"PSF-" + Utilities.getUuid(), ContextType:contextType, ContextID:contextId, FileRole:role, DisplayName:data.displayName || data.fileName, FileName:file.getName(), FileId:file.getId(), MimeType:data.mimeType || file.getMimeType(), UploadToken:data.uploadToken || "", Active:true, CreatedDate:now, UpdatedDate:now });
+  return { success:true };
+}
+
+function saveWorkshopGroupLinks(data) {
+  ensurePostSessionSheets();
+  const workshopId = String(data.workshopId || "").trim();
+  if (!workshopId) throw new Error("Workshop ID is required.");
+  const selected = new Set((data.groupIds || []).map(String));
+  const now = new Date().toISOString();
+  getRows("WorkshopGroupLinks").filter(row => String(row.WorkshopID) === workshopId && isActiveAssessmentRow(row)).forEach(row => {
+    const info = getRowById("WorkshopGroupLinks", "LinkID", row.LinkID);
+    if (info) updateRowFields("WorkshopGroupLinks", info.rowNumber, { Active:false, UpdatedDate:now });
+  });
+  selected.forEach(groupId => appendRow("WorkshopGroupLinks", { LinkID:"WGL-" + Utilities.getUuid(), WorkshopID:workshopId, GroupID:groupId, Active:true, CreatedDate:now, UpdatedDate:now }));
+  return { success:true };
+}
+
+function readmePdfBlob(packageName, dateLabel, presentationName, assessmentItems, resourceItems) {
+  const doc = DocumentApp.create(packageName + " - READ ME FIRST");
+  const body = doc.getBody();
+  body.clear();
+  body.appendParagraph("POST-SESSION RESOURCE PACKAGE").setHeading(DocumentApp.ParagraphHeading.TITLE);
+  body.appendParagraph(packageName).setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  if (dateLabel) body.appendParagraph(dateLabel);
+  body.appendParagraph("Thank you for participating in your Working Genius session. This package brings together the presentation, team assessment materials, and selected follow-up resources so your team can continue applying the framework.");
+  body.appendParagraph("WHERE TO BEGIN").setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  ["Review the workshop presentation and revisit the key ideas from the session.", "Open the assessment PDF for the overall team and any relevant subgroup.", "Discuss the Team Map observations and choose one or two practical changes.", "Use the selected resources during meetings, hiring, planning, and team-development conversations."].forEach(text => body.appendListItem(text));
+  if (presentationName) { body.appendParagraph("WORKSHOP PRESENTATION").setHeading(DocumentApp.ParagraphHeading.HEADING1); body.appendParagraph(presentationName + " - A PDF copy of the presentation used during the session."); }
+  if (assessmentItems.length) {
+    body.appendParagraph("TEAM MAP ASSESSMENTS").setHeading(DocumentApp.ParagraphHeading.HEADING1);
+    assessmentItems.forEach(item => body.appendListItem(item.name + " - Includes the Team Map and Team Map Analysis for this team."));
+  }
+  if (resourceItems.length) {
+    body.appendParagraph("POST-SESSION RESOURCES").setHeading(DocumentApp.ParagraphHeading.HEADING1);
+    resourceItems.forEach(item => body.appendListItem(item.title + " - " + (item.description || "A Working Genius reference for continued team application.")));
+  }
+  body.appendParagraph("SUGGESTED NEXT STEPS").setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  ["Complete or revisit the Team Playbook.", "Establish a small set of Team Norms.", "Use the collaboration and meeting guides in regular work.", "Revisit the Team Map when roles, staffing, or priorities change."].forEach(text => body.appendListItem(text));
+  doc.saveAndClose();
+  const file = DriveApp.getFileById(doc.getId());
+  const blob = file.getAs(MimeType.PDF).setName("00 - READ ME FIRST.pdf");
+  file.setTrashed(true);
+  return blob;
+}
+
+function safePackageName(value) {
+  return String(value || "Post-Session Resources").replace(/[\\/:*?\"<>|]+/g, "-").replace(/\s+/g, " ").trim();
+}
+
+function generatePostSessionPackage(data) {
+  ensurePostSessionSheets();
+  const name = safePackageName(data.packageName);
+  const selectedResourceIds = new Set((data.resourceIds || []).map(String));
+  const selectedGroupIds = (data.groupIds || []).map(String);
+  if (data.workshopId) saveWorkshopGroupLinks({ workshopId:data.workshopId, groupIds:selectedGroupIds });
+  const resources = getRows("PostSessionResources").filter(row => isActiveAssessmentRow(row) && selectedResourceIds.has(String(row.ResourceID)) && row.FileId);
+  const contextId = String(data.contextId || data.workshopId || "");
+  const packageFiles = getRows("PostSessionPackageFiles").filter(row => isActiveAssessmentRow(row) && String(row.ContextID) === contextId);
+  const blobs = [];
+  const presentation = packageFiles.find(row => String(row.FileRole) === "Presentation");
+  if (presentation) blobs.push(DriveApp.getFileById(presentation.FileId).getBlob().setName("01 - Workshop Presentation/" + safePackageName(presentation.DisplayName || presentation.FileName)));
+  const assessments = packageFiles.filter(row => String(row.FileRole).indexOf("Assessment:") === 0 && (String(row.FileRole) === "Assessment:Overall" || selectedGroupIds.indexOf(String(row.FileRole).replace("Assessment:", "")) >= 0));
+  assessments.forEach(row => blobs.push(DriveApp.getFileById(row.FileId).getBlob().setName("02 - Team Map Assessments/" + safePackageName(row.DisplayName || row.FileName))));
+  resources.forEach(row => blobs.push(DriveApp.getFileById(row.FileId).getBlob().setName("03 - Post-Session Resources/" + safePackageName(row.FileName || row.Title))));
+  if (data.includeReadme !== false) blobs.unshift(readmePdfBlob(name, data.dateLabel || "", presentation ? presentation.DisplayName : "", assessments.map(row => ({name:row.DisplayName || row.FileName})), resources.map(row => ({title:row.Title,description:row.Description}))));
+  if (!blobs.length) throw new Error("Select or upload at least one package item.");
+  const zip = Utilities.zip(blobs, name + " - Post-Session Resources.zip");
+  const file = postSessionFolder("Generated Packages").createFile(zip);
+  const now = new Date().toISOString();
+  appendRow("PostSessionPackages", { PackageID:"PSP-" + Utilities.getUuid(), WorkshopID:data.workshopId || "", PackageName:name, Mode:data.workshopId ? "Workshop" : "Standalone", SelectedGroupIDs:JSON.stringify(selectedGroupIds), SelectedResourceIDs:JSON.stringify(Array.from(selectedResourceIds)), ZipFileId:file.getId(), ZipUrl:file.getUrl(), GenerationToken:data.generationToken || "", CreatedDate:now });
+  return { success:true, url:file.getUrl() };
 }
 
 function jsonResponse(data) {

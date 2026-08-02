@@ -840,6 +840,13 @@
 
     .invoice-brand { display:flex; gap:14px; align-items:flex-start; }
     .invoice-brand .invoice-logo-img { margin-bottom:0; flex:0 0 auto; }
+    .package-choice-grid { display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .package-choice { align-items:flex-start; padding:12px; border:1px solid #364152; border-radius:12px; background:#182536; }
+    .package-choice span { display:grid; gap:3px; }
+    .package-choice small { color:#94a3b8; line-height:1.35; }
+    .package-upload-list { display:grid; gap:10px; }
+    .package-upload-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,.8fr); gap:14px; align-items:center; padding:12px; border:1px solid #364152; border-radius:12px; background:#182536; }
+    @media (max-width:700px) { .package-choice-grid,.package-upload-row { grid-template-columns:1fr; } }
 
     /* Shared letter-size print contract. Kept last so phone/tablet screen rules
        cannot override printable estimates, invoices, or team maps. */
@@ -884,13 +891,14 @@
         <button data-view-btn="assessment-library">🧩 Assessments & Groups</button>
         <button data-view-btn="invoices">💵 Invoices</button>
         <button data-view-btn="assessments">📊 Assessment Analytics</button>
+        <button data-view-btn="post-session">📦 Post-Session Packages</button>
         <button data-view-btn="tutorial">📖 Tutorial & Best Practices</button>
         <button data-view-btn="settings">⚙️ Settings</button>
         <button type="button" onclick="location.href='./jjp.html'">🖨️ JJP 3D Printing</button>
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.07.29.04</strong><br>
+        Version <strong id="appVersionLabel">2026.08.01.01</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1291,6 +1299,38 @@
           </div>
         </section>
 
+        <!-- POST-SESSION PACKAGES -->
+        <section id="view-post-session" class="view">
+          <div id="postSessionLoading" class="card muted small hidden">Loading post-session resources...</div>
+          <div class="grid workspace">
+            <div class="card">
+              <div class="section-title"><div><h2>Post-Session Resource Library</h2><p class="tiny muted">Upload a resource once, then reuse it in future workshop or standalone packages.</p></div><span id="postSessionResourceCount" class="tiny muted">0 active</span></div>
+              <div class="field"><label>Upload resources or a resource ZIP</label><input id="postSessionResourceFiles" type="file" multiple accept=".zip,.pdf,.doc,.docx,.xlsx,.pptx,.png,.jpg,.jpeg"></div>
+              <p class="tiny muted">A ZIP is unpacked into individual library resources. Titles, categories, and descriptions are suggested automatically from each filename. Resources can be archived without changing packages already generated.</p>
+              <div class="actions"><button class="button" type="button" onclick="uploadPostSessionResources(this)">Upload Selected Resources</button></div>
+              <div id="postSessionResourceLibrary" class="list-grid" style="margin-top:16px;"></div>
+            </div>
+            <div id="postSessionBuilder" class="card">
+              <div class="section-title"><div><h2>Build a Resource Package</h2><p class="tiny muted">Create a package for a saved workshop or a historical engagement that is not in the workshop list.</p></div></div>
+              <div class="field"><label>Package type</label><select id="postSessionMode" onchange="changePostSessionMode()"><option value="workshop">Saved workshop</option><option value="standalone">Standalone / historical</option></select></div>
+              <div id="postSessionWorkshopFields" class="field"><label>Workshop</label><select id="postSessionWorkshop" onchange="changePostSessionWorkshop()"><option value="">Choose a workshop...</option></select></div>
+              <div id="postSessionStandaloneFields" class="hidden"><input id="postSessionStandaloneId" type="hidden"><p class="notice">Standalone packages can include saved groups, uploaded assessment PDFs, a presentation, and any resources in the library.</p></div>
+              <div class="form-row"><div class="field"><label>Package / engagement name</label><input id="postSessionPackageName" placeholder="Organization or engagement name" oninput="changeStandalonePackageName()"></div><div class="field"><label>Date or timeframe</label><input id="postSessionDateLabel" placeholder="For example: Spring 2025"></div></div>
+              <div class="field"><label>Presentation PDF</label><input id="postSessionPresentation" type="file" accept="application/pdf,.pdf"><div id="postSessionPresentationStatus" class="tiny muted">No presentation PDF saved for this package.</div></div>
+              <div class="section-title"><div><h3>Associated Groups</h3><p class="tiny muted">Checked groups are saved to the workshop and included in future package visits.</p></div></div>
+              <div id="postSessionGroupChoices" class="package-choice-grid"></div>
+              <div id="postSessionSaveGroups" class="actions"><button class="button secondary small-btn" type="button" onclick="savePostSessionGroupLinks(this)">Save Group Associations</button></div>
+              <div class="section-title"><div><h3>Assessment Results PDFs</h3><p class="tiny muted">Upload the current two-page Assessment Results PDF for the overall team and each selected subgroup. Saved PDFs are reused until replaced.</p></div></div>
+              <div id="postSessionAssessmentSlots" class="package-upload-list"></div>
+              <div class="section-title"><div><h3>Post-Session Resources</h3><p class="tiny muted">Choose exactly what this recipient should receive.</p></div></div>
+              <div id="postSessionResourceChoices" class="package-choice-grid"></div>
+              <label class="archive-toggle" style="margin-top:16px;"><input id="postSessionIncludeReadme" type="checkbox" checked> Include customized 00 - READ ME FIRST.pdf</label>
+              <div class="actions"><button class="button" type="button" onclick="generatePostSessionPackage(this)">Generate ZIP Package</button></div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:16px;"><div class="section-title"><div><h2>Package History</h2><p class="tiny muted">Recent workshop and standalone packages stored in Google Drive.</p></div></div><div id="postSessionPackageHistory" class="list-grid"></div></div>
+        </section>
+
         <!-- TUTORIAL & BEST PRACTICES -->
         <section id="view-tutorial" class="view">
           <div class="tutorial-intro">
@@ -1574,13 +1614,14 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/assessments.js"></script>
   <script src="../assets/js/teamMapAnalysis.js?v=7"></script>
   <script src="../assets/js/assessmentLibrary.js?v=6"></script>
+  <script src="../assets/js/postSessionResources.js?v=1"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
   <script src="../assets/js/invoices.js?v=2"></script>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.07.29.04";
+    const APP_VERSION = "2026.08.01.01";
 
     const K = {
       clients: "jjc_clients",
@@ -1781,13 +1822,14 @@ Sanger, CA 93657"></textarea>
       document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
       document.getElementById("view-" + view).classList.add("active");
       document.querySelectorAll("[data-view-btn]").forEach(btn => btn.classList.toggle("active", btn.dataset.viewBtn === view));
-      const viewTitles = { assessments: "Assessment Analytics", "assessment-library": "Assessments & Groups", "email-templates": "Email Templates", tutorial: "Tutorial & Best Practices" };
+      const viewTitles = { assessments: "Assessment Analytics", "assessment-library": "Assessments & Groups", "email-templates": "Email Templates", "post-session": "Post-Session Packages", tutorial: "Tutorial & Best Practices" };
       document.getElementById("pageTitle").textContent = viewTitles[view] || view.charAt(0).toUpperCase() + view.slice(1);
       closeSidebar();
       location.hash = view;
       if (view === "assessments") loadAssessmentAnalytics();
       if (view === "assessment-library") loadAssessmentLibrary();
       if (view === "email-templates") loadEmailTemplates();
+      if (view === "post-session") loadPostSessionWorkspace();
     }
 
     document.querySelectorAll("[data-view-btn]").forEach(btn => btn.addEventListener("click", () => showView(btn.dataset.viewBtn)));
@@ -2327,7 +2369,7 @@ Sanger, CA 93657"></textarea>
         el.className = "record-card";
         const workshopWhen = w.WorkshopDate ? formatDate(w.WorkshopDate) : (w.DateDescription || "Date not recorded");
         const classification=[w.Sector,w.Industry,w.TeamFunction].filter(Boolean).join(" • ");
-        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div><div class="tiny muted">${classification ? esc(classification) : '<span class="status-badge">Needs classification</span>'}</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button><button class="button secondary small-btn" onclick="openWorkshopFacilitatorAnalysis('${jsEsc(w.WorkshopID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadWorkshopCondensedTeamMap('${jsEsc(w.WorkshopID)}',this)">Download Map</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
+        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div><div class="tiny muted">${classification ? esc(classification) : '<span class="status-badge">Needs classification</span>'}</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button><button class="button secondary small-btn" onclick="openResourcePackageBuilder('${jsEsc(w.WorkshopID)}')">Resource Package</button><button class="button secondary small-btn" onclick="openWorkshopFacilitatorAnalysis('${jsEsc(w.WorkshopID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadWorkshopCondensedTeamMap('${jsEsc(w.WorkshopID)}',this)">Download Map</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
         if (!isArchived(w)) {
           const emailButton = document.createElement("button");
           emailButton.className = "button secondary small-btn";
