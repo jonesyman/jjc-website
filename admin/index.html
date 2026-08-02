@@ -899,7 +899,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.08.01.04</strong><br>
+        Version <strong id="appVersionLabel">2026.08.01.05</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1326,6 +1326,7 @@
               <div class="section-title"><div><h3>Post-Session Resources</h3><p class="tiny muted">Choose exactly what this recipient should receive.</p></div></div>
               <div id="postSessionResourceChoices" class="package-choice-grid"></div>
               <label class="archive-toggle" style="margin-top:16px;"><input id="postSessionIncludeReadme" type="checkbox" checked> Include customized 00 - READ ME FIRST.pdf</label>
+              <div id="postSessionGenerationError" class="analysis-validation hidden" role="alert" style="margin-top:14px;"></div>
               <div class="actions"><button class="button" type="button" onclick="generatePostSessionPackage(this)">Generate ZIP Package</button></div>
             </div>
           </div>
@@ -1624,7 +1625,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.08.01.04";
+    const APP_VERSION = "2026.08.01.05";
 
     const K = {
       clients: "jjc_clients",

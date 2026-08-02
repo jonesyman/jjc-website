@@ -42,6 +42,7 @@
   }
 
   async function refresh(force=false){
+    if(!assessmentLibraryLoaded)await loadAssessmentLibrary();
     if(loaded&&!force)return render();
     byId("postSessionLoading").classList.remove("hidden");
     try{workspace=await Database.getPostSessionWorkspace();loaded=true;render();}
@@ -180,19 +181,42 @@
     const files=[];for(const job of jobs){const blob=await renderAssessmentPdf(job.payload),file=new File([blob],job.name,{type:"application/pdf"});files.push({file,role:job.role,displayName:job.name});}return files;
   }
 
+  function buildReadmeFile(packageName,dateLabel,presentationName,groupIds,resourceIds,workshopId){
+    const PDF=window.jspdf?.jsPDF;if(!PDF)throw new Error("The PDF renderer did not load. Refresh the page and try again.");
+    const doc=new PDF({orientation:"portrait",unit:"pt",format:"letter"}),margin=54,width=504,pageBottom=738;let y=58;
+    const ensure=height=>{if(y+height<=pageBottom)return;doc.addPage();y=58;};
+    const lines=(text,size=10,maxWidth=width)=>{doc.setFontSize(size);return doc.splitTextToSize(String(text||""),maxWidth);};
+    const paragraph=(text,size=10,indent=0)=>{const rows=lines(text,size,width-indent);ensure(rows.length*(size+4)+8);doc.setFont("helvetica","normal");doc.setFontSize(size);doc.text(rows,margin+indent,y);y+=rows.length*(size+4)+8;};
+    const heading=text=>{ensure(28);doc.setFont("helvetica","bold");doc.setFontSize(13);doc.setTextColor(36,63,114);doc.text(String(text),margin,y);doc.setTextColor(23,32,51);y+=22;};
+    const bullet=text=>paragraph(`• ${text}`,10,10);
+    doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(36,63,114);doc.text("POST-SESSION RESOURCE PACKAGE",margin,y);y+=24;doc.setFontSize(22);doc.text(packageName,margin,y);y+=24;doc.setTextColor(82,96,119);if(dateLabel){doc.setFont("helvetica","normal");doc.setFontSize(10);doc.text(dateLabel,margin,y);y+=22;}doc.setTextColor(23,32,51);
+    paragraph("Thank you for participating in your Working Genius session. This package brings together the presentation, team assessment materials, and selected follow-up resources so your team can continue applying the framework.");
+    heading("WHERE TO BEGIN");["Review the workshop presentation and revisit the key ideas from the session.","Open the assessment PDF for the overall team and any relevant subgroup.","Discuss the Team Map observations and choose one or two practical changes.","Use the selected resources during meetings, hiring, planning, and team-development conversations."].forEach(bullet);
+    if(presentationName){heading("WORKSHOP PRESENTATION");paragraph(`${presentationName} — A PDF copy of the presentation used during the session.`);}
+    const assessmentNames=[...(workshopId?[`${packageName} - Assessment Results.pdf`]:[]),...groups().filter(group=>groupIds.includes(String(group.GroupID))).map(group=>`${packageName} - ${group.GroupName||group.GroupID} - Assessment Results.pdf`)];
+    if(assessmentNames.length){heading("TEAM MAP ASSESSMENTS");assessmentNames.forEach(name=>bullet(`${name} — Includes the Team Map and Team Map Analysis for this team.`));}
+    const selectedResources=(workspace.resources||[]).filter(row=>resourceIds.includes(String(row.ResourceID)));
+    if(selectedResources.length){heading("POST-SESSION RESOURCES");selectedResources.forEach(row=>bullet(`${row.Title} — ${row.Description||"A Working Genius reference for continued team application."}`));}
+    heading("SUGGESTED NEXT STEPS");["Complete or revisit the Team Playbook.","Establish a small set of Team Norms.","Use the collaboration and meeting guides in regular work.","Revisit the Team Map when roles, staffing, or priorities change."].forEach(bullet);
+    return new File([doc.output("blob")],"00 - READ ME FIRST.pdf",{type:"application/pdf"});
+  }
+
   window.generatePostSessionPackage=async function(button){
     const contextId=currentContextId(),workshopId=currentMode()==="workshop"?byId("postSessionWorkshop").value:"",name=byId("postSessionPackageName").value.trim();
     if(!contextId)return toast("Choose a workshop or create a standalone package.");if(!name)return focusRequiredField("postSessionPackageName","Package name is required.");
+    const errorBox=byId("postSessionGenerationError");errorBox.classList.add("hidden");errorBox.textContent="";
     const finish=beginSave(button,"Building Package...");try{
       const entries=[],presentation=byId("postSessionPresentation").files[0];if(presentation)entries.push({file:presentation,role:"Presentation",displayName:`${name} - Workshop Presentation.pdf`});
       const groupIds=selectedGroupIds();if(workshopId)await Database.saveWorkshopGroupLinks({workshopId,groupIds});
       button.textContent="Generating Assessment PDFs...";entries.push(...await buildAssessmentFiles(workshopId,groupIds,name));
+      const resourceIds=[...byId("postSessionResourceChoices").querySelectorAll('input:checked')].map(input=>input.value);
+      if(byId("postSessionIncludeReadme").checked){const savedPresentation=(workspace.packageFiles||[]).find(row=>active(row)&&String(row.ContextID)===contextId&&String(row.FileRole)==="Presentation");const presentationName=presentation?`${name} - Workshop Presentation.pdf`:(savedPresentation?.DisplayName||"");entries.push({file:buildReadmeFile(name,byId("postSessionDateLabel").value.trim(),presentationName,groupIds,resourceIds,workshopId),role:"Readme",displayName:"00 - READ ME FIRST.pdf"});}
       button.textContent="Saving Package Files...";await uploadPackageFiles(entries,contextId);
-      const resourceIds=[...byId("postSessionResourceChoices").querySelectorAll('input:checked')].map(input=>input.value),generationToken="PSG-"+crypto.randomUUID();
+      const generationToken="PSG-"+crypto.randomUUID();
       button.textContent="Creating ZIP...";
       await Database.generatePostSessionPackage({generationToken,workshopId,contextId,packageName:name,dateLabel:byId("postSessionDateLabel").value.trim(),groupIds,resourceIds,includeReadme:byId("postSessionIncludeReadme").checked});
       button.textContent="Confirming ZIP...";
       const generated=await poll(data=>{const operation=(data.operations||[]).find(row=>String(row.OperationToken)===generationToken);if(String(operation?.Status).toLowerCase()==="error")throw new Error(`Package generation failed: ${operation.Message||"Google Drive could not create the ZIP."}`);const history=(data.packages||[]).find(row=>String(row.GenerationToken)===generationToken);if(history)return history;if(String(operation?.Status).toLowerCase()==="complete"&&operation.ResultUrl)return {ZipUrl:operation.ResultUrl};return null;},"Google Drive is still finalizing the ZIP. Use Refresh Package History in a moment; do not generate a duplicate package.",36);render();toast("Post-session package created.");window.open(generated.ZipUrl,"_blank","noopener");
-    }catch(err){toast(err.message||"Unable to generate package.");}finally{finish();}
+    }catch(err){const message=err.message||"Unable to generate package.";errorBox.innerHTML=`<strong>Package generation stopped.</strong><br>${safe(message)}`;errorBox.classList.remove("hidden");errorBox.scrollIntoView({behavior:"smooth",block:"center"});toast("Package generation stopped. The full error remains on this page.");}finally{finish();}
   };
 })();

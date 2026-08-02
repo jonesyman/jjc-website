@@ -2000,34 +2000,6 @@ function saveWorkshopGroupLinks(data) {
   return { success:true };
 }
 
-function readmePdfBlob(packageName, dateLabel, presentationName, assessmentItems, resourceItems) {
-  const doc = DocumentApp.create(packageName + " - READ ME FIRST");
-  const body = doc.getBody();
-  body.clear();
-  body.appendParagraph("POST-SESSION RESOURCE PACKAGE").setHeading(DocumentApp.ParagraphHeading.TITLE);
-  body.appendParagraph(packageName).setHeading(DocumentApp.ParagraphHeading.HEADING1);
-  if (dateLabel) body.appendParagraph(dateLabel);
-  body.appendParagraph("Thank you for participating in your Working Genius session. This package brings together the presentation, team assessment materials, and selected follow-up resources so your team can continue applying the framework.");
-  body.appendParagraph("WHERE TO BEGIN").setHeading(DocumentApp.ParagraphHeading.HEADING1);
-  ["Review the workshop presentation and revisit the key ideas from the session.", "Open the assessment PDF for the overall team and any relevant subgroup.", "Discuss the Team Map observations and choose one or two practical changes.", "Use the selected resources during meetings, hiring, planning, and team-development conversations."].forEach(text => body.appendListItem(text));
-  if (presentationName) { body.appendParagraph("WORKSHOP PRESENTATION").setHeading(DocumentApp.ParagraphHeading.HEADING1); body.appendParagraph(presentationName + " - A PDF copy of the presentation used during the session."); }
-  if (assessmentItems.length) {
-    body.appendParagraph("TEAM MAP ASSESSMENTS").setHeading(DocumentApp.ParagraphHeading.HEADING1);
-    assessmentItems.forEach(item => body.appendListItem(item.name + " - Includes the Team Map and Team Map Analysis for this team."));
-  }
-  if (resourceItems.length) {
-    body.appendParagraph("POST-SESSION RESOURCES").setHeading(DocumentApp.ParagraphHeading.HEADING1);
-    resourceItems.forEach(item => body.appendListItem(item.title + " - " + (item.description || "A Working Genius reference for continued team application.")));
-  }
-  body.appendParagraph("SUGGESTED NEXT STEPS").setHeading(DocumentApp.ParagraphHeading.HEADING1);
-  ["Complete or revisit the Team Playbook.", "Establish a small set of Team Norms.", "Use the collaboration and meeting guides in regular work.", "Revisit the Team Map when roles, staffing, or priorities change."].forEach(text => body.appendListItem(text));
-  doc.saveAndClose();
-  const file = DriveApp.getFileById(doc.getId());
-  const blob = file.getAs(MimeType.PDF).setName("00 - READ ME FIRST.pdf");
-  file.setTrashed(true);
-  return blob;
-}
-
 function safePackageName(value) {
   return String(value || "Post-Session Resources").replace(/[\\/:*?\"<>|]+/g, "-").replace(/\s+/g, " ").trim();
 }
@@ -2045,12 +2017,16 @@ function generatePostSessionPackage(data) {
   const contextId = String(data.contextId || data.workshopId || "");
   const packageFiles = getRows("PostSessionPackageFiles").filter(row => isActiveAssessmentRow(row) && String(row.ContextID) === contextId);
   const blobs = [];
+  const readme = packageFiles.find(row => String(row.FileRole) === "Readme");
   const presentation = packageFiles.find(row => String(row.FileRole) === "Presentation");
   if (presentation) blobs.push(DriveApp.getFileById(presentation.FileId).getBlob().setName("01 - Workshop Presentation/" + safePackageName(presentation.DisplayName || presentation.FileName)));
   const assessments = packageFiles.filter(row => String(row.FileRole).indexOf("Assessment:") === 0 && (String(row.FileRole) === "Assessment:Overall" || selectedGroupIds.indexOf(String(row.FileRole).replace("Assessment:", "")) >= 0));
   assessments.forEach(row => blobs.push(DriveApp.getFileById(row.FileId).getBlob().setName("02 - Team Map Assessments/" + safePackageName(row.DisplayName || row.FileName))));
   resources.forEach(row => blobs.push(DriveApp.getFileById(row.FileId).getBlob().setName("03 - Post-Session Resources/" + safePackageName(row.FileName || row.Title))));
-  if (data.includeReadme !== false) blobs.unshift(readmePdfBlob(name, data.dateLabel || "", presentation ? presentation.DisplayName : "", assessments.map(row => ({name:row.DisplayName || row.FileName})), resources.map(row => ({title:row.Title,description:row.Description}))));
+  if (data.includeReadme !== false) {
+    if (!readme) throw new Error("The custom README PDF was not received. Refresh the page and try again.");
+    blobs.unshift(DriveApp.getFileById(readme.FileId).getBlob().setName("00 - READ ME FIRST.pdf"));
+  }
   if (!blobs.length) throw new Error("Select or upload at least one package item.");
   const zip = Utilities.zip(blobs, name + " - Post-Session Resources.zip");
   const file = postSessionFolder("Generated Packages").createFile(zip);

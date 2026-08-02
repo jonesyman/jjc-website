@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.01.05 — 2026-08-01
+
+- Post-Session Packages now wait for the saved assessment-group library before rendering workshop associations.
+- Custom README PDFs are generated in the browser and uploaded with the package, removing the Google Docs creation-permission requirement.
+- Package-generation errors remain visible in the builder until the next attempt, making full error details readable and recoverable.
+
 ## 2026.08.01.04 — 2026-08-01
 
 - Batched generated assessment-PDF confirmation to eliminate repeated Drive waits during package creation.
