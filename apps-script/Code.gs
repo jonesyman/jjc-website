@@ -18,6 +18,7 @@ const ASSESSMENT_IMPORT_HEADERS = ["AssessmentImportID", "WorkshopID", "GroupNam
 const ASSESSMENT_RESULT_HEADERS = ["AssessmentResultID", "AssessmentImportID", "WorkshopID", "PersonID", "FirstName", "LastName", "DisplayName", "GroupName", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "SortOrder", "ImportedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_HISTORY_HEADERS = ["AssessmentImportEventID", "AssessmentImportID", "WorkshopID", "UploadMode", "OriginalFileName", "UploadedDate", "UploadedParticipantCount", "NewParticipantCount", "UpdatedParticipantCount", "UnchangedParticipantCount", "DuplicateIgnoredCount", "ConflictCount", "PreviousTotalCount", "FinalTotalCount", "GroupNameBefore", "GroupNameAfter", "LeaderBefore", "LeaderAfter", "Notes"];
 const ASSESSMENT_PERSON_HEADERS = ["PersonID", "FirstName", "LastName", "DisplayName", "NameKey", "Genius1", "Genius2", "Competency1", "Competency2", "Frustration1", "Frustration2", "CreatedDate", "UpdatedDate", "Active", "SourceType"];
+const ASSESSMENT_PERSON_HISTORY_HEADERS = ["PersonHistoryID", "PersonID", "PreviousFirstName", "PreviousLastName", "UpdatedFirstName", "UpdatedLastName", "ChangedDate", "ChangeType"];
 const ASSESSMENT_GROUP_HEADERS = ["GroupID", "GroupName", "ClientID", "Organization", "Sector", "Industry", "TeamFunction", "Description", "CreatedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_GROUP_MEMBER_HEADERS = ["GroupMemberID", "GroupID", "PersonID", "IsLeader", "AddedDate", "UpdatedDate", "Active"];
 const ASSESSMENT_DUPLICATE_HEADERS = ["DuplicateReviewID", "PersonID1", "PersonID2", "Status", "ResolutionDate", "Notes"];
@@ -302,6 +303,7 @@ function doPost(e) {
 
     if (action === "saveAssessmentGroup") return jsonResponse(saveAssessmentGroup(body.data || {}));
     if (action === "saveAdHocAssessment") return jsonResponse(saveAdHocAssessment(body.data || {}));
+    if (action === "updateAssessmentPersonName") return jsonResponse(updateAssessmentPersonName(body.data || {}));
     if (action === "deleteAssessmentGroup") return jsonResponse(deleteAssessmentGroup(body.data || {}));
     if (action === "restoreAssessmentGroup") return jsonResponse(restoreAssessmentGroup(body.data || {}));
     if (action === "addPeopleToWorkshopAssessment") return jsonResponse(addPeopleToWorkshopAssessment(body.data || {}));
@@ -546,6 +548,7 @@ function personFromAssessmentResult(row, personId, now) {
 
 function ensureCanonicalAssessmentData() {
   ensureSheetWithHeaders("AssessmentPeople", ASSESSMENT_PERSON_HEADERS);
+  ensureSheetWithHeaders("AssessmentPersonHistory", ASSESSMENT_PERSON_HISTORY_HEADERS);
   ensureSheetWithHeaders("AssessmentGroups", ASSESSMENT_GROUP_HEADERS);
   ensureSheetWithHeaders("AssessmentGroupMembers", ASSESSMENT_GROUP_MEMBER_HEADERS);
   ensureSheetWithHeaders("AssessmentDuplicateReviews", ASSESSMENT_DUPLICATE_HEADERS);
@@ -616,6 +619,38 @@ function getAssessmentWorkspace() {
     }
   });
   return { people: people, groups: groups, deletedGroups: deletedGroups, memberships: memberships, workshopMembers: workshopMembers, duplicates: duplicates };
+}
+
+function updateAssessmentPersonName(data) {
+  const personId = String(data.personId || "").trim();
+  const firstName = String(data.firstName || "").trim();
+  const lastName = String(data.lastName || "").trim();
+  if (!personId || !firstName || !lastName) throw new Error("First and last name are required.");
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    ensureCanonicalAssessmentData();
+    const info = getRowById("AssessmentPeople", "PersonID", personId);
+    if (!info || !isActiveAssessmentRow(info.row)) throw new Error("Individual assessment record not found.");
+    const nameKey = assessmentNameKey(firstName, lastName);
+    const duplicate = getRows("AssessmentPeople").filter(isActiveAssessmentRow).find(person => String(person.PersonID) !== personId && String(person.NameKey || assessmentNameKey(person.FirstName, person.LastName)) === nameKey && assessmentFingerprint(person) === assessmentFingerprint(info.row));
+    if (duplicate) throw new Error("Another individual has this same name and assessment. Review the possible duplicate instead of renaming this record.");
+    const previousFirstName = String(info.row.FirstName || "");
+    const previousLastName = String(info.row.LastName || "");
+    const displayName = (firstName + " " + lastName).trim();
+    const now = new Date().toISOString();
+    updateRowFields("AssessmentPeople", info.rowNumber, { FirstName:firstName, LastName:lastName, DisplayName:displayName, NameKey:nameKey, UpdatedDate:now });
+    getRows("AssessmentResults").filter(row => isActiveAssessmentRow(row) && String(row.PersonID) === personId).forEach(row => {
+      const resultInfo = getRowById("AssessmentResults", "AssessmentResultID", row.AssessmentResultID);
+      if (resultInfo) updateRowFields("AssessmentResults", resultInfo.rowNumber, { FirstName:firstName, LastName:lastName, DisplayName:displayName, UpdatedDate:now });
+      const importInfo = row.AssessmentImportID ? getRowById("AssessmentImports", "AssessmentImportID", row.AssessmentImportID) : null;
+      if (importInfo && String(importInfo.row.LeaderAssessmentResultID) === String(row.AssessmentResultID)) updateRowFields("AssessmentImports", importInfo.rowNumber, { LeaderFirstName:firstName, LeaderLastName:lastName, LeaderUpdatedDate:now, UpdatedDate:now });
+    });
+    appendRow("AssessmentPersonHistory", { PersonHistoryID:"APH-" + Utilities.getUuid(), PersonID:personId, PreviousFirstName:previousFirstName, PreviousLastName:previousLastName, UpdatedFirstName:firstName, UpdatedLastName:lastName, ChangedDate:now, ChangeType:"NameCorrection" });
+    return { success:true, personId:personId, displayName:displayName };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function saveAdHocAssessment(data) {

@@ -286,6 +286,20 @@ generatePostSessionPackage(data) {
         throw new Error("Google Sheets did not confirm the individual assessment.");
     },
 
+    async updateAssessmentPersonName(data) {
+        await this.postNoCors("updateAssessmentPersonName", data);
+        let lastError = null;
+        for (let attempt = 1; attempt <= 8; attempt++) {
+            await this.wait(attempt * 500);
+            try {
+                const workspace = await this.getAssessmentWorkspace();
+                const person = workspace?.people?.find(row => String(row.PersonID) === String(data.personId));
+                if (person && String(person.FirstName) === String(data.firstName).trim() && String(person.LastName) === String(data.lastName).trim()) return workspace;
+            } catch (error) { lastError = error; }
+        }
+        throw new Error(`Google Sheets did not confirm the name correction.${lastError ? " " + lastError.message : ""}`);
+    },
+
     async saveAssessmentGroup(data) {
         await this.postNoCors("saveAssessmentGroup", data);
         let lastError = null;

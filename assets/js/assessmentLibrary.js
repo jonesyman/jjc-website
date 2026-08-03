@@ -304,9 +304,44 @@ function renderAssessmentPeople() {
   assessmentLibraryMemberships().forEach(item => { groupCounts[String(item.PersonID)] = (groupCounts[String(item.PersonID)] || 0) + 1; });
   const people = assessmentLibraryPeople().filter(person => !query || `${assessmentPersonName(person)} ${person.Genius1} ${person.Genius2} ${person.Competency1} ${person.Competency2} ${person.Frustration1} ${person.Frustration2}`.toLowerCase().includes(query)).sort((a, b) => `${a.LastName}|${a.FirstName}`.localeCompare(`${b.LastName}|${b.FirstName}`));
   const list = document.getElementById("libraryPeopleList");
-  list.innerHTML = people.map(person => `<article class="record-card"><div class="record-title">${esc(assessmentPersonName(person))}</div><div class="small"><strong>Genius:</strong> <span class="team-genius-label">${esc(person.Genius1)}, ${esc(person.Genius2)}</span></div><div class="small"><strong>Competency:</strong> <span class="team-competency-label">${esc(person.Competency1)}, ${esc(person.Competency2)}</span></div><div class="small"><strong>Frustration:</strong> <span class="team-frustration-label">${esc(person.Frustration1)}, ${esc(person.Frustration2)}</span></div><div class="tiny muted">${workshopCounts[String(person.PersonID)]?.size || 0} workshop${workshopCounts[String(person.PersonID)]?.size === 1 ? "" : "s"} • ${groupCounts[String(person.PersonID)] || 0} custom group${groupCounts[String(person.PersonID)] === 1 ? "" : "s"}</div><div class="actions"><button class="button secondary small-btn" onclick="addPersonIdToAssessmentGroup('${jsEsc(person.PersonID)}')">Add to Current Group</button></div></article>`).join("");
+  list.innerHTML = people.map(person => `<article class="record-card"><div class="record-title">${esc(assessmentPersonName(person))}</div><div class="small"><strong>Genius:</strong> <span class="team-genius-label">${esc(person.Genius1)}, ${esc(person.Genius2)}</span></div><div class="small"><strong>Competency:</strong> <span class="team-competency-label">${esc(person.Competency1)}, ${esc(person.Competency2)}</span></div><div class="small"><strong>Frustration:</strong> <span class="team-frustration-label">${esc(person.Frustration1)}, ${esc(person.Frustration2)}</span></div><div class="tiny muted">${workshopCounts[String(person.PersonID)]?.size || 0} workshop${workshopCounts[String(person.PersonID)]?.size === 1 ? "" : "s"} • ${groupCounts[String(person.PersonID)] || 0} custom group${groupCounts[String(person.PersonID)] === 1 ? "" : "s"}</div><div class="actions"><button class="button secondary small-btn" onclick="editAssessmentPersonName('${jsEsc(person.PersonID)}')">Edit Name</button><button class="button secondary small-btn" onclick="addPersonIdToAssessmentGroup('${jsEsc(person.PersonID)}')">Add to Current Group</button></div></article>`).join("");
   document.getElementById("libraryPeopleEmpty").classList.toggle("hidden", people.length > 0);
   prepareMobileActionMenus(list);
+}
+
+function editAssessmentPersonName(personId) {
+  const person = assessmentPersonById(personId);
+  if (!person) return toast("Individual record not found.");
+  const workshopIds = new Set((assessmentLibraryState.workshopMembers || []).filter(item => String(item.PersonID) === String(personId)).map(item => String(item.WorkshopID)));
+  const memberships = assessmentLibraryMemberships().filter(item => String(item.PersonID) === String(personId));
+  document.getElementById("editAssessmentPersonId").value = person.PersonID;
+  document.getElementById("editAssessmentFirstName").value = person.FirstName || "";
+  document.getElementById("editAssessmentLastName").value = person.LastName || "";
+  document.getElementById("editAssessmentPersonImpact").textContent = `This correction will update ${workshopIds.size} workshop${workshopIds.size === 1 ? "" : "s"} and ${memberships.length} saved group${memberships.length === 1 ? "" : "s"}. Assessment selections, memberships, and leader status will not change.`;
+  document.getElementById("editAssessmentPersonAssignments").innerHTML = `<div><strong>Genius</strong><br>${esc(person.Genius1)}, ${esc(person.Genius2)}</div><div><strong>Competency</strong><br>${esc(person.Competency1)}, ${esc(person.Competency2)}</div><div><strong>Frustration</strong><br>${esc(person.Frustration1)}, ${esc(person.Frustration2)}</div>`;
+  document.getElementById("editAssessmentPersonBackdrop").classList.add("open");
+  setTimeout(() => document.getElementById("editAssessmentFirstName").focus(), 0);
+}
+
+function closeAssessmentPersonEditor() {
+  document.getElementById("editAssessmentPersonBackdrop").classList.remove("open");
+}
+
+async function saveAssessmentPersonName(button) {
+  const personId = document.getElementById("editAssessmentPersonId").value;
+  const firstName = document.getElementById("editAssessmentFirstName").value.trim();
+  const lastName = document.getElementById("editAssessmentLastName").value.trim();
+  if (!firstName || !lastName) return toast("Enter both the first and last name.");
+  const finish = beginSave(button, "Saving Name...");
+  if (!finish) return;
+  try {
+    assessmentLibraryState = await Database.updateAssessmentPersonName({ personId, firstName, lastName });
+    assessmentLibraryLoaded = true;
+    closeAssessmentPersonEditor();
+    renderAssessmentLibrary();
+    toast("Name corrected everywhere this individual appears.");
+  } catch (error) { toast(error.message || "Unable to correct the individual name."); }
+  finally { finish(); }
 }
 
 function addPersonIdToAssessmentGroup(personId) {

@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.02.01 — 2026-08-02
+
+- Added an Edit Name action to individual assessment records in Assessments & Groups.
+- Name corrections now synchronize the canonical person, every linked workshop result, and cached leader names without changing assessment selections, memberships, or leader assignments.
+- Added duplicate protection and an `AssessmentPersonHistory` audit trail for previous and corrected names.
+
 ## 2026.08.01.06 — 2026-08-01
 
 - Suppressed obsolete Google Docs permission errors saved by package attempts made before client-side README generation was introduced.

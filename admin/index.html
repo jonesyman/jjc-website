@@ -899,7 +899,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.08.01.06</strong><br>
+        Version <strong id="appVersionLabel">2026.08.02.01</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1488,6 +1488,17 @@ Sanger, CA 93657"></textarea>
     </div>
   </div>
 
+  <div id="editAssessmentPersonBackdrop" class="dialog-backdrop no-print" onclick="if(event.target===this) closeAssessmentPersonEditor()">
+    <div class="send-dialog" role="dialog" aria-modal="true" aria-labelledby="editAssessmentPersonTitle">
+      <div class="section-title"><div><h2 id="editAssessmentPersonTitle">Edit Individual Name</h2><p class="tiny muted">Correct spelling or capitalization without changing this person’s assessment.</p></div><button class="button ghost small-btn" type="button" onclick="closeAssessmentPersonEditor()">Close</button></div>
+      <input id="editAssessmentPersonId" type="hidden">
+      <div class="form-row"><div class="field"><label for="editAssessmentFirstName">First Name</label><input id="editAssessmentFirstName" autocomplete="given-name"></div><div class="field"><label for="editAssessmentLastName">Last Name</label><input id="editAssessmentLastName" autocomplete="family-name"></div></div>
+      <div id="editAssessmentPersonImpact" class="notice small"></div>
+      <div id="editAssessmentPersonAssignments" class="client-detail-summary"></div>
+      <div class="send-dialog-actions"><button class="button secondary" type="button" onclick="closeAssessmentPersonEditor()">Cancel</button><button class="button" type="button" onclick="saveAssessmentPersonName(this)">Save Name Correction</button></div>
+    </div>
+  </div>
+
   <div id="emailTemplatePreviewBackdrop" class="dialog-backdrop email-template-preview-backdrop no-print" onclick="if(event.target===this) closeEmailTemplatePreview()">
     <div id="emailTemplatePreviewDialog" class="send-dialog email-template-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="emailPreviewName" aria-describedby="emailPreviewHelp">
       <div class="section-title">
@@ -1625,7 +1636,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.08.01.06";
+    const APP_VERSION = "2026.08.02.01";
 
     const K = {
       clients: "jjc_clients",
@@ -4437,6 +4448,7 @@ Sanger, CA 93657"></textarea>
       if (document.getElementById("analyticsDrilldownBackdrop").classList.contains("open")) return closeAnalyticsDrilldown();
       if (document.getElementById("workshopPeopleBackdrop").classList.contains("open")) return closeWorkshopPeopleDialog();
       if (document.getElementById("adHocAssessmentBackdrop").classList.contains("open")) return closeAdHocAssessmentDialog();
+      if (document.getElementById("editAssessmentPersonBackdrop").classList.contains("open")) return closeAssessmentPersonEditor();
       if (document.getElementById("sendDialogBackdrop").classList.contains("open")) return closeSendDialog();
       if (document.getElementById("assessmentDialogBackdrop").classList.contains("open")) return closeAssessmentDialog();
       if (document.getElementById("sidebar").classList.contains("open")) closeSidebar();
