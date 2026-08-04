@@ -27,7 +27,7 @@ const TEAM_MAP_ANALYSIS_HEADERS = ["ContextKey", "ContextType", "ContextID", "Ov
 const POST_SESSION_RESOURCE_HEADERS = ["ResourceID", "Title", "Category", "Description", "FileName", "FileId", "MimeType", "DefaultSelected", "Active", "UploadToken", "CreatedDate", "UpdatedDate"];
 const WORKSHOP_GROUP_LINK_HEADERS = ["LinkID", "WorkshopID", "GroupID", "Active", "CreatedDate", "UpdatedDate"];
 const PACKAGE_FILE_HEADERS = ["PackageFileID", "ContextType", "ContextID", "FileRole", "DisplayName", "FileName", "FileId", "MimeType", "UploadToken", "Active", "CreatedDate", "UpdatedDate"];
-const PACKAGE_HISTORY_HEADERS = ["PackageID", "WorkshopID", "PackageName", "Mode", "SelectedGroupIDs", "SelectedResourceIDs", "ZipFileId", "ZipUrl", "GenerationToken", "CreatedDate"];
+const PACKAGE_HISTORY_HEADERS = ["PackageID", "WorkshopID", "PackageName", "Mode", "SelectedGroupIDs", "SelectedResourceIDs", "ZipFileId", "ZipUrl", "GenerationToken", "CreatedDate", "Active", "DeletedDate"];
 const POST_SESSION_OPERATION_HEADERS = ["OperationToken", "OperationType", "Status", "Message", "ResultUrl", "CreatedDate", "UpdatedDate"];
 const TEAM_MAP_ANALYSIS_DEFAULT_SETTINGS = {
   AnalysisEnabled:true, MissingGeniusThresholdPercent:15, UnderrepresentedGeniusThresholdPercent:15,
@@ -320,6 +320,8 @@ function doPost(e) {
     if (action === "uploadPostSessionPackageFile") return jsonResponse(uploadPostSessionPackageFile(body.data || {}));
     if (action === "saveWorkshopGroupLinks") return jsonResponse(saveWorkshopGroupLinks(body.data || {}));
     if (action === "generatePostSessionPackage") return jsonResponse(generatePostSessionPackage(body.data || {}));
+    if (action === "deletePostSessionPackage") return jsonResponse(setPostSessionPackageActive(body.data || {}, false));
+    if (action === "restorePostSessionPackage") return jsonResponse(setPostSessionPackageActive(body.data || {}, true));
 
     if (action === "deleteWorkshop") {
       deleteRowById(SHEET_NAMES.workshops, "WorkshopID", (body.data || {}).id);
@@ -1915,13 +1917,28 @@ function postSessionFolder(name) {
 
 function getPostSessionWorkspace() {
   ensurePostSessionSheets();
+  const allPackages = getRows("PostSessionPackages");
   return {
     resources: getRows("PostSessionResources"),
     workshopGroupLinks: getRows("WorkshopGroupLinks").filter(isActiveAssessmentRow),
     packageFiles: getRows("PostSessionPackageFiles").filter(isActiveAssessmentRow),
-    packages: getRows("PostSessionPackages").slice(-50).reverse(),
+    packages: allPackages.filter(isActiveAssessmentRow).slice(-50).reverse(),
+    deletedPackages: allPackages.filter(row => !isActiveAssessmentRow(row)).slice(-25).reverse(),
     operations: getRows("PostSessionOperations").slice(-100).reverse()
   };
+}
+
+function setPostSessionPackageActive(data, active) {
+  ensurePostSessionSheets();
+  const packageId = String(data.packageId || "").trim();
+  const info = getRowById("PostSessionPackages", "PackageID", packageId);
+  if (!info) throw new Error("Post-session package not found.");
+  if (info.row.ZipFileId) {
+    try { DriveApp.getFileById(info.row.ZipFileId).setTrashed(!active); }
+    catch (error) { throw new Error(active ? "The ZIP could not be restored from Google Drive Trash." : "The ZIP could not be moved to Google Drive Trash."); }
+  }
+  updateRowFields("PostSessionPackages", info.rowNumber, { Active:active, DeletedDate:active ? "" : new Date().toISOString() });
+  return { success:true, packageId:packageId, active:active };
 }
 
 function decodedUploadBlob(data) {
@@ -2066,7 +2083,7 @@ function generatePostSessionPackage(data) {
   const zip = Utilities.zip(blobs, name + " - Post-Session Resources.zip");
   const file = postSessionFolder("Generated Packages").createFile(zip);
   const now = new Date().toISOString();
-  appendRow("PostSessionPackages", { PackageID:"PSP-" + Utilities.getUuid(), WorkshopID:data.workshopId || "", PackageName:name, Mode:data.workshopId ? "Workshop" : "Standalone", SelectedGroupIDs:JSON.stringify(selectedGroupIds), SelectedResourceIDs:JSON.stringify(Array.from(selectedResourceIds)), ZipFileId:file.getId(), ZipUrl:file.getUrl(), GenerationToken:data.generationToken || "", CreatedDate:now });
+  appendRow("PostSessionPackages", { PackageID:"PSP-" + Utilities.getUuid(), WorkshopID:data.workshopId || "", PackageName:name, Mode:data.workshopId ? "Workshop" : "Standalone", SelectedGroupIDs:JSON.stringify(selectedGroupIds), SelectedResourceIDs:JSON.stringify(Array.from(selectedResourceIds)), ZipFileId:file.getId(), ZipUrl:file.getUrl(), GenerationToken:data.generationToken || "", CreatedDate:now, Active:true, DeletedDate:"" });
   setPostSessionOperation(operationToken, "Package", "Complete", "ZIP package created", file.getUrl());
   return { success:true, url:file.getUrl() };
   } catch (error) {

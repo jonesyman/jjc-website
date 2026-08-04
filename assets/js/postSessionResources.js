@@ -1,5 +1,5 @@
 (function(){
-  let workspace={resources:[],workshopGroupLinks:[],packageFiles:[],packages:[],operations:[]};
+  let workspace={resources:[],workshopGroupLinks:[],packageFiles:[],packages:[],deletedPackages:[],operations:[]};
   let loaded=false;
   let pendingGroupId="";
 
@@ -88,8 +88,9 @@
 
   function renderHistory(){
     const pending=(workspace.operations||[]).filter(row=>{const message=String(row.Message||"");return String(row.OperationType)==="Package"&&String(row.Status).toLowerCase()!=="complete"&&!/DocumentApp\.create|auth\/documents/i.test(message);}).slice(0,5).map(row=>`<div class="record-card"><div class="record-title">${String(row.Status).toLowerCase()==="error"?"Package generation needs attention":"Package is still processing"}</div><div class="tiny muted">${safe(row.Message||"")}</div><span class="status-badge">${safe(row.Status||"Processing")}</span></div>`).join("");
-    const packages=(workspace.packages||[]).map(row=>`<div class="record-card"><div class="record-title">${safe(row.PackageName)}</div><div class="tiny muted">${safe(row.Mode||"")} • ${safe(row.CreatedDate?new Date(row.CreatedDate).toLocaleString():"")}</div><div class="actions"><a class="button small-btn" href="${safe(row.ZipUrl)}" target="_blank" rel="noopener">Open ZIP</a></div></div>`).join("");
+    const packages=(workspace.packages||[]).map(row=>`<div class="record-card"><div class="record-title">${safe(row.PackageName)}</div><div class="tiny muted">${safe(row.Mode||"")} • ${safe(row.CreatedDate?new Date(row.CreatedDate).toLocaleString():"")}</div><div class="actions"><a class="button small-btn" href="${safe(row.ZipUrl)}" target="_blank" rel="noopener">Open ZIP</a><button class="button danger small-btn" type="button" onclick="deletePostSessionPackage('${safe(row.PackageID)}')">Delete Package</button></div></div>`).join("");
     byId("postSessionPackageHistory").innerHTML=pending+packages||'<p class="muted small">Generated packages will appear here.</p>';
+    const deleted=workspace.deletedPackages||[];byId("deletedPostSessionPackages").classList.toggle("hidden",!deleted.length);byId("deletedPostSessionPackageHistory").innerHTML=deleted.map(row=>`<div class="record-card"><div class="record-title">${safe(row.PackageName)}</div><div class="tiny muted">Deleted ${safe(row.DeletedDate?new Date(row.DeletedDate).toLocaleString():"")}</div><div class="actions"><button class="button secondary small-btn" type="button" onclick="restorePostSessionPackage('${safe(row.PackageID)}',this)">Restore Package</button></div></div>`).join("");
   }
 
   async function poll(predicate,message,attempts=30){
@@ -130,6 +131,9 @@
   };
 
   window.archivePostSessionResource=async function(id){if(!confirm("Archive this resource? Existing packages will not be changed."))return;await Database.setPostSessionResourceActive({resourceId:id,active:false});await refresh(true);toast("Resource archived.");};
+
+  window.deletePostSessionPackage=async function(packageId){if(!confirm("Delete this generated package? The ZIP will be moved to Google Drive Trash and can be restored from Recently Deleted Packages."))return;try{workspace=await Database.deletePostSessionPackage(packageId);loaded=true;render();toast("Package moved to Google Drive Trash.");}catch(error){toast(error.message||"Unable to delete the package.");}};
+  window.restorePostSessionPackage=async function(packageId,button){const finish=beginSave(button,"Restoring...");if(!finish)return;try{workspace=await Database.restorePostSessionPackage(packageId);loaded=true;render();toast("Package restored.");}catch(error){toast(error.message||"Unable to restore the package.");}finally{finish();}};
 
   window.savePostSessionGroupLinks=async function(button){
     const workshopId=byId("postSessionWorkshop").value;if(!workshopId)return toast("Choose a workshop first.");

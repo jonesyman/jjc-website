@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.03.01 — 2026-08-03
+
+- Added Delete Package to Post-Session Package History.
+- Deleted package ZIPs move to Google Drive Trash and disappear from active history.
+- Added a Recently Deleted Packages section with recovery through Restore Package.
+
 ## 2026.08.02.01 — 2026-08-02
 
 - Added an Edit Name action to individual assessment records in Assessments & Groups.

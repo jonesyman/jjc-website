@@ -144,6 +144,18 @@ saveWorkshopGroupLinks(data) {
 generatePostSessionPackage(data) {
   return this.postNoCors("generatePostSessionPackage", data);
 },
+
+async deletePostSessionPackage(packageId) {
+  await this.postNoCors("deletePostSessionPackage", { packageId });
+  for (let attempt=1;attempt<=8;attempt++) { await this.wait(attempt*500); const workspace=await this.getPostSessionWorkspace(); if (!(workspace.packages||[]).some(row=>String(row.PackageID)===String(packageId))) return workspace; }
+  throw new Error("Google Drive did not confirm package deletion.");
+},
+
+async restorePostSessionPackage(packageId) {
+  await this.postNoCors("restorePostSessionPackage", { packageId });
+  for (let attempt=1;attempt<=8;attempt++) { await this.wait(attempt*500); const workspace=await this.getPostSessionWorkspace(); if ((workspace.packages||[]).some(row=>String(row.PackageID)===String(packageId))) return workspace; }
+  throw new Error("Google Drive did not confirm package restoration.");
+},
     
     //----------------------------------------------------
     // Rates
