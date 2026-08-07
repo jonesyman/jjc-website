@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.06.01 — 2026-08-06
+
+- Added a one-page Individual Working Genius Results roster between the Team Map and Team Map Analysis pages.
+- The roster lists every participant's two Geniuses, two Competencies, and two Frustrations, and automatically adjusts row density or uses two table columns for larger teams.
+- Added the W, I, D, G, E, and T letter badges beside the full Genius names on the primary Team Map.
+- Included the new roster page in automatically generated Post-Session Package assessment PDFs.
+
 ## 2026.08.03.01 — 2026-08-03
 
 - Added Delete Package to Post-Session Package History.

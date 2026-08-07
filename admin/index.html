@@ -510,6 +510,25 @@
     .team-map-name { overflow:hidden; white-space:nowrap; font-weight:600; }
     .team-map-leader { font-weight:600; }
     .team-map-footer { border-top:1px solid #cbd5e1; margin-top:10px; padding-top:7px; display:flex; justify-content:space-between; gap:14px; color:#64748b; font-size:8.5px; line-height:1.35; }
+    .team-map-roster-sheet { box-sizing:border-box; width:8.5in; height:11in; margin:24px auto 0; padding:.42in .48in .34in; background:#fff; color:#172033; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-roster-table { width:100%; flex:1; min-height:0; border:1px solid #cbd5e1; border-radius:12px; border-spacing:0; overflow:hidden; table-layout:fixed; }
+    .team-map-roster-tables { display:grid; grid-template-columns:1fr; gap:10px; flex:1; min-height:0; }
+    .team-map-roster-tables.two-column { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .team-map-roster-tables.two-column .team-map-roster-table th:first-child { width:31%; }
+    .team-map-roster-table th { padding:9px 8px; background:#243f72; color:#fff; font-size:10px; letter-spacing:.03em; text-align:center; }
+    .team-map-roster-table th:first-child { width:25%; text-align:left; }
+    .team-map-roster-table td { height:var(--roster-row-height,28px); padding:3px 8px; border-bottom:1px solid #dbe3ee; font-size:var(--roster-font-size,10px); vertical-align:middle; }
+    .team-map-roster-table td:not(:first-child) { text-align:center; }
+    .team-map-roster-table tbody tr:nth-child(even) { background:#f8fafc; }
+    .team-map-roster-table tbody tr:last-child td { border-bottom:0; }
+    .team-map-roster-name { font-weight:800; overflow-wrap:anywhere; }
+    .team-map-roster-leader { margin-left:5px; color:#64748b; font-size:.78em; font-weight:700; text-transform:uppercase; }
+    .team-map-roster-pair { display:flex; align-items:center; justify-content:center; gap:5px; white-space:nowrap; }
+    .team-map-roster-badge { display:inline-grid; place-items:center; width:var(--roster-badge-size,22px); height:var(--roster-badge-size,22px); border:2px solid currentColor; border-radius:50%; background:#fff; font-size:var(--roster-badge-font-size,10px); font-weight:900; }
+    .team-map-roster-genius { color:#15803d; }
+    .team-map-roster-competency { color:#a16207; }
+    .team-map-roster-frustration { color:#b91c1c; }
+    .team-map-roster-legend { display:flex; justify-content:center; flex-wrap:wrap; gap:5px 14px; margin-top:9px; color:#526077; font-size:8px; font-weight:700; }
     .team-map-concept-sheet { --team-map-name-size:9.5px; width:min(8.5in,100%); height:11in; margin:24px auto 0; padding:.55in .5in; box-shadow:0 22px 70px rgba(0,0,0,.2); background:#fff; color:#172033; display:flex; align-items:center; justify-content:center; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .team-map-concept-card { width:7.5in; height:7.5in; padding:.22in; border:1px solid #cbd5e1; border-radius:16px; background:#fff; display:flex; flex-direction:column; }
     .team-map-concept-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:0 2px 9px; border-bottom:3px solid #243f72; }
@@ -867,6 +886,7 @@
       #printView .invoice-totals { width:280px !important; margin-left:auto !important; }
       #printView .invoice-header, #printView .invoice-parties, #printView tr, #printView .invoice-totals, #printPaymentInstructions, #printInvoiceFooter { break-inside:avoid; page-break-inside:avoid; }
       #teamMapPreview .team-map-sheet { width:8.5in !important; min-width:8.5in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; }
+      #teamMapPreview .team-map-roster-sheet { width:8.5in !important; min-width:8.5in !important; height:11in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; break-before:page; page-break-before:always; }
       #teamMapPreview .team-map-analysis-sheet { box-sizing:border-box !important; width:8.5in !important; min-width:8.5in !important; height:11in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; break-before:page; page-break-before:always; }
     }
   </style>
@@ -899,7 +919,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.08.03.01</strong><br>
+        Version <strong id="appVersionLabel">2026.08.06.01</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1561,6 +1581,7 @@ Sanger, CA 93657"></textarea>
     <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="changeTeamMapLeader()">Change Leader</button><button class="button small-btn" onclick="printTeamMapPdf()">Print / Save as PDF</button></div></div>
     <details id="teamMapAnalysisEditor" class="team-map-analysis-editor no-print" open><summary><strong>Team Map Analysis Editor</strong> <span id="teamMapAnalysisStatus" class="tiny muted">Draft</span></summary><div id="teamMapAnalysisValidation"></div><div class="form-row" style="margin-top:12px;"><div class="field"><label>Overall Team Pattern</label><textarea data-analysis-field="OverallTeamPattern"></textarea></div><div class="field"><label>Most Significant Contribution</label><textarea data-analysis-field="MostSignificantStrength"></textarea></div><div class="field"><label>Primary Area to Explore</label><textarea data-analysis-field="MostSignificantRisk"></textarea></div><div class="field"><label>Competency and Sustainability Observation</label><textarea data-analysis-field="CompetencySustainabilityObservation"></textarea></div></div><div class="field"><label>Additional Consultant Notes</label><textarea data-analysis-field="AdditionalConsultantNotes"></textarea></div><div class="actions"><button class="button" type="button" onclick="generateTeamMapAnalysisSuggestions(false)">Generate Suggested Analysis</button><button class="button secondary" type="button" onclick="generateTeamMapAnalysisSuggestions(true)">Regenerate Suggestions</button><button class="button secondary" type="button" onclick="saveCurrentTeamMapAnalysis(this)">Save</button><button class="button ghost" type="button" onclick="resetTeamMapAnalysisToSuggestions()">Reset to Suggestions</button><button class="button small-btn" type="button" onclick="printTeamMapPdf()">Generate PDF</button></div></details>
     <div id="teamMapSheet" class="team-map-sheet"></div>
+    <div id="teamMapRosterSheet" class="team-map-roster-sheet"></div>
     <div id="teamMapAnalysisSheet" class="team-map-analysis-sheet"></div>
   </div>
 
@@ -1629,14 +1650,14 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/assessments.js"></script>
   <script src="../assets/js/teamMapAnalysis.js?v=7"></script>
   <script src="../assets/js/assessmentLibrary.js?v=6"></script>
-  <script src="../assets/js/postSessionResources.js?v=2"></script>
+  <script src="../assets/js/postSessionResources.js?v=3"></script>
   <script src="../assets/js/rates.js"></script>
   <script src="../assets/js/estimates.js?v=3"></script>
   <script src="../assets/js/invoices.js?v=2"></script>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.08.03.01";
+    const APP_VERSION = "2026.08.06.01";
 
     const K = {
       clients: "jjc_clients",
@@ -3279,7 +3300,7 @@ Sanger, CA 93657"></textarea>
       const title = teamMapContext?.title || workshop?.Organization || currentAssessmentData?.import?.GroupName || "Team";
       return teamMapContext?.groupId ? `${title} - Team Map` : `${title} - Assessment Results`;
     }
-    function printTeamMapPdf(){ if(currentTeamMapDistribution?.settings?.AnalysisEnabled===false)return printWithContextName(teamMapPrintName()); if(!currentTeamMapDistribution?.validation?.valid)return toast("Correct the invalid participant results before generating the PDF."); currentTeamMapAnalysis=analysisFromEditor(); renderTeamMapAnalysisPage(); printWithContextName(teamMapPrintName()); }
+    function printTeamMapPdf(){ renderTeamMapRosterPage(); if(currentTeamMapDistribution?.settings?.AnalysisEnabled===false)return printWithContextName(teamMapPrintName()); if(!currentTeamMapDistribution?.validation?.valid)return toast("Correct the invalid participant results before generating the PDF."); currentTeamMapAnalysis=analysisFromEditor(); renderTeamMapAnalysisPage(); printWithContextName(teamMapPrintName()); }
     function printCurrentDocumentPreview(){ printWithContextName(currentPrintFileName); }
     function renderTeamMapAnalysisPage(){ const sheet=document.getElementById("teamMapAnalysisSheet"); if(!sheet||!currentTeamMapDistribution)return; const d=currentTeamMapDistribution,s=d.settings; if(!s.AnalysisEnabled){sheet.classList.add("hidden");return;} sheet.classList.remove("hidden"); if(!d.validation.valid){sheet.innerHTML=`<div class="team-map-header"><h1 class="team-map-title">Team Map Analysis</h1></div><div class="analysis-validation"><strong>Analysis cannot be generated.</strong><ul>${d.validation.errors.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;return;} const observations=TeamMapAnalysis.generateTeamObservations(d), questions=TeamMapAnalysis.generateConsultantQuestions(d), analysis=currentTeamMapAnalysis||TeamMapAnalysis.suggestedAnalysis(d), workshop=workshops.find(w=>w.WorkshopID===assessmentWorkshopId)||{}, title=teamMapContext?.title||workshop.Organization||currentAssessmentData?.import?.GroupName||"Team", date=teamMapContext?.dateLabel||(workshop.WorkshopDate?formatDate(workshop.WorkshopDate):workshop.DateDescription||""), leader=d.leader?`${d.leader.FirstName||d.leader.firstName||""} ${d.leader.LastName||d.leader.lastName||""}`.trim():"Not selected"; const classification=m=>m.classifications[0]||"Monitor"; sheet.innerHTML=`<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Team Map Analysis</h1><div style="font-weight:900;">${esc(title)}</div></div></div><div class="team-map-meta">${esc(date)}<br>${d.actualTeamSize} actual participants<br>Leader: ${esc(leader)}</div></div>${d.actualTeamSize<s.MinimumTeamSizeForAnalysis?`<div class="analysis-validation"><strong>Limited sample:</strong> This team is below the configured minimum of ${s.MinimumTeamSizeForAnalysis}; interpret patterns cautiously.</div>`:""}<div class="analysis-summary-grid"><div class="analysis-summary-item"><strong>Actual team</strong><br>${d.actualTeamSize} people</div><div class="analysis-summary-item"><strong>Weighted team</strong><br>${d.weightedTeamSize} influence units</div><div class="analysis-summary-item"><strong>Leader weighting</strong><br>${d.leaderWeightingApplied?"Included":"Not included"}</div><div class="analysis-summary-item"><strong>Observations</strong><br>${observations.length} prioritized</div></div><table class="analysis-table"><thead><tr><th>Type</th><th>Actual G</th><th>Actual C</th><th>Actual F</th><th>Weighted G</th><th>Weighted F</th><th>Classification</th></tr></thead><tbody>${d.metrics.map(m=>`<tr><td><strong>${esc(m.type)}</strong></td><td>${m.actualGeniusCount} (${m.actualGeniusRate}%)</td><td>${m.actualCompetencyCount} (${m.actualCompetencyRate}%)</td><td>${m.actualFrustrationCount} (${m.actualFrustrationRate}%)</td><td>${m.weightedGeniusCount} (${m.weightedGeniusRate}%)</td><td>${m.weightedFrustrationCount} (${m.weightedFrustrationRate}%)</td><td>${esc(classification(m))}</td></tr>`).join("")}</tbody></table><section class="analysis-section"><h3>Key Team Observations</h3><ul class="analysis-observations">${observations.map(o=>`<li><strong>${esc(o.type)} - ${esc(o.label)}:</strong> ${esc(o.text)}</li>`).join("")||"<li>No automatic observation rose above the configured thresholds.</li>"}</ul></section><section class="analysis-section"><h3>Consultant Analysis</h3><div class="analysis-consultant-grid">${Object.entries(analysis).filter(([,v])=>v).map(([k,v])=>`<div class="analysis-consultant-item"><strong>${esc(k.replace(/([a-z])([A-Z])/g,"$1 $2"))}</strong><br>${esc(v)}</div>`).join("")}</div></section>${questions.length?`<section class="analysis-section"><h3>Discussion Questions</h3><ul class="analysis-observations">${questions.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></section>`:""}${s.IncludeMethodologyNote?`<div class="analysis-methodology"><strong>Methodology:</strong> Actual counts represent unique people. ${d.leaderWeightingApplied?"The selected leader receives one additional influence point in each of their two Geniuses and two Frustrations; Competencies are not weighted.":"Leader weighting is disabled."} These observations are cautious discussion prompts, not definitive conclusions or diagnoses.</div>`:""}`; }
 
@@ -3324,6 +3345,7 @@ Sanger, CA 93657"></textarea>
       currentTeamMapDistribution=TeamMapAnalysis.calculateTeamMapDistribution(currentAssessmentData.results,currentAssessmentData.import.LeaderAssessmentResultID,settings);
       const validation=document.getElementById("teamMapAnalysisValidation"); validation.innerHTML=currentTeamMapDistribution.validation.valid?"":`<div class="analysis-validation"><strong>Correct these participant results before generating the analysis PDF:</strong><ul>${currentTeamMapDistribution.validation.errors.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
       renderTeamMapPreview();
+      renderTeamMapRosterPage();
       await loadCurrentTeamMapAnalysis();
       renderTeamMapAnalysisPage();
       previewReturnFocus = document.activeElement;
@@ -3373,7 +3395,40 @@ Sanger, CA 93657"></textarea>
       const mapRows = team.cards.map(card => teamMapPanel(card, team.leader, mode)).join("");
       document.getElementById("teamMapSheet").className = "team-map-sheet";
       document.getElementById("teamMapSheet").innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Working Genius Team Map</h1><div style="font-weight:900;">${esc(mapTitle)}</div></div></div><div class="team-map-meta">${esc(mapIdentifier)}<br>${esc(mapDate)}<br>${esc(mapSubtitle)}</div></div><div class="team-map-full-layout"><div class="team-map-full-axis-title">Stages of Work</div><div class="team-map-full-columns"><div class="team-map-full-column">Responsive</div><div class="team-map-full-column">Disruptive</div></div><div class="team-map-full-stages"><div class="team-map-full-stage">Ideation</div><div class="team-map-full-stage">Activation</div><div class="team-map-full-stage">Implementation</div></div><div class="team-map-grid">${mapRows}</div></div><div class="team-map-footer"><div><strong>Jeff Jones Consulting</strong><br>Generated ${generated}</div><div>The selected team leader is represented twice in Genius and Frustration areas to reflect the leader's influence on the team environment.</div></div>`;
+      renderTeamMapRosterPage();
       if (!document.getElementById("teamMapPreview").classList.contains("hidden")) requestAnimationFrame(fitTeamMapNames);
+    }
+
+    function renderTeamMapRosterPage() {
+      const sheet = document.getElementById("teamMapRosterSheet");
+      if (!sheet || !currentAssessmentData?.import) return;
+      const workshop = workshops.find(w => String(w.WorkshopID) === String(assessmentWorkshopId)) || {};
+      const title = teamMapContext?.title || workshop.Organization || currentAssessmentData.import.GroupName || "Team";
+      const date = teamMapContext?.dateLabel || (workshop.WorkshopDate ? formatDate(workshop.WorkshopDate) : workshop.DateDescription || "");
+      const leaderId = String(currentAssessmentData.import.LeaderAssessmentResultID || "");
+      const abbreviations = {Wonder:"W",Invention:"I",Discernment:"D",Galvanizing:"G",Enablement:"E",Tenacity:"T"};
+      const people = (currentAssessmentData.results || []).map(row => ({
+        id:String(row.AssessmentResultID || row.id || ""),
+        firstName:row.FirstName || row.firstName || "",
+        lastName:row.LastName || row.lastName || "",
+        genius:[row.Genius1 || row.genius1,row.Genius2 || row.genius2],
+        competency:[row.Competency1 || row.competency1,row.Competency2 || row.competency2],
+        frustration:[row.Frustration1 || row.frustration1,row.Frustration2 || row.frustration2]
+      })).sort((a,b)=>`${a.lastName}|${a.firstName}`.localeCompare(`${b.lastName}|${b.firstName}`));
+      const columnCount = people.length > 32 ? 2 : 1;
+      const rowsPerTable = Math.max(1,Math.ceil(people.length / columnCount));
+      const rowHeight = Math.max(14,Math.min(29,Math.floor(660 / rowsPerTable)));
+      const fontSize = Math.max(7,Math.min(10.5,rowHeight * .38));
+      const badgeSize = Math.max(15,Math.min(22,rowHeight - 5));
+      const badgeFontSize = Math.max(7,Math.min(10,badgeSize * .47));
+      const pair = (types,kind) => `<div class="team-map-roster-pair team-map-roster-${kind}">${types.filter(Boolean).map(type=>`<span class="team-map-roster-badge" title="${esc(type)}">${esc(abbreviations[type] || String(type).charAt(0))}</span>`).join("")}</div>`;
+      const table = rows => `<table class="team-map-roster-table"><thead><tr><th>Participant</th><th>Working Genius</th><th>Working Competency</th><th>Working Frustration</th></tr></thead><tbody>${rows.map(person=>`<tr><td class="team-map-roster-name">${esc(`${person.firstName} ${person.lastName}`.trim())}${person.id===leaderId?'<span class="team-map-roster-leader">Leader</span>':""}</td><td>${pair(person.genius,"genius")}</td><td>${pair(person.competency,"competency")}</td><td>${pair(person.frustration,"frustration")}</td></tr>`).join("")}</tbody></table>`;
+      const tables = columnCount === 1 ? table(people) : `${table(people.slice(0,rowsPerTable))}${table(people.slice(rowsPerTable))}`;
+      sheet.style.setProperty("--roster-row-height",`${rowHeight}px`);
+      sheet.style.setProperty("--roster-font-size",`${fontSize}px`);
+      sheet.style.setProperty("--roster-badge-size",`${badgeSize}px`);
+      sheet.style.setProperty("--roster-badge-font-size",`${badgeFontSize}px`);
+      sheet.innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Individual Working Genius Results</h1><div style="font-weight:900;">${esc(title)}</div></div></div><div class="team-map-meta">${esc(date)}<br>${people.length} participants</div></div><div class="team-map-roster-tables${columnCount===2?" two-column":""}">${tables}</div><div class="team-map-roster-legend">${Object.entries(abbreviations).map(([type,abbr])=>`<span><strong>${abbr}</strong> ${type}</span>`).join("")}</div>`;
     }
 
     function canvasRoundRect(context,x,y,width,height,radius,fill,stroke,lineWidth=2) {
@@ -3503,7 +3558,7 @@ Sanger, CA 93657"></textarea>
     }
 
     function teamMapPanel(card, leader, mode) {
-      return `<section class="team-map-panel"><div class="team-map-panel-title">${esc(card.type)}</div><div class="team-map-columns"><div class="team-map-column team-map-genius"><h4>Genius</h4>${teamMapNameList(card.geniusWeighted, leader, mode)}</div><div class="team-map-column team-map-frustration"><h4>Frustration</h4>${teamMapNameList(card.frustrationWeighted, leader, mode)}</div></div></section>`;
+      return `<section class="team-map-panel"><div class="team-map-panel-title"><span class="team-map-panel-abbr">${esc(card.abbreviation)}</span>${esc(card.type)}</div><div class="team-map-columns"><div class="team-map-column team-map-genius"><h4>Genius</h4>${teamMapNameList(card.geniusWeighted, leader, mode)}</div><div class="team-map-column team-map-frustration"><h4>Frustration</h4>${teamMapNameList(card.frustrationWeighted, leader, mode)}</div></div></section>`;
     }
 
     function teamMapConceptPanel(card, leader, mode) {
