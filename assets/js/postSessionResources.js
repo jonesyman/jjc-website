@@ -167,8 +167,8 @@
       if(!currentTeamMapDistribution.validation.valid)throw new Error(`${payload.title} has invalid assessment results and cannot be packaged.`);
       renderTeamMapPreview();renderTeamMapRosterPage();await loadCurrentTeamMapAnalysis();renderTeamMapAnalysisPage();
       preview.classList.remove("hidden");preview.style.position="fixed";preview.style.left="0";preview.style.top="0";preview.style.zIndex="-9999";preview.style.pointerEvents="none";preview.style.display="block";
-      await document.fonts?.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));fitTeamMapNames();
-      const sheets=[byId("teamMapSheet"),byId("teamMapRosterSheet"),byId("teamMapAnalysisSheet")].filter(sheet=>sheet&&!sheet.classList.contains("hidden"));
+      await document.fonts?.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));await new Promise(resolve=>setTimeout(resolve,500));fitTeamMapNames();fitTeamMapAnalysisPage();
+      const sheets=[byId("teamMapRosterSheet"),byId("teamMapSheet"),byId("teamMapAnalysisSheet")].filter(sheet=>sheet&&!sheet.classList.contains("hidden"));
       const pdf=new window.jspdf.jsPDF({orientation:"portrait",unit:"in",format:"letter",compress:true});
       for(let index=0;index<sheets.length;index++){const canvas=await html2canvas(sheets[index],{scale:2,useCORS:true,backgroundColor:"#ffffff",logging:false,scrollX:0,scrollY:0});if(index)pdf.addPage("letter","portrait");pdf.addImage(canvas.toDataURL("image/jpeg",.96),"JPEG",0,0,8.5,11,undefined,"FAST");}
       return pdf.output("blob");

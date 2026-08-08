@@ -482,7 +482,7 @@
     .ad-hoc-zone-count { display:block; margin:3px 0 9px; color:#8C96A6; font-size:11px; }
     .ad-hoc-zone-values { display:flex; flex-wrap:wrap; gap:6px; }
     .ad-hoc-zone-value { padding:5px 8px; border-radius:999px; background:#263860; color:#F8FAFC; font-size:11px; font-weight:600; }
-    .team-map-sheet { --team-map-name-size:13px; width:min(8.5in,100%); height:11in; margin:0 auto; background:#fff; color:#172033; padding:.42in .48in .34in; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-sheet { --team-map-name-size:15px; width:min(8.5in,100%); height:11in; margin:24px auto 0; background:#fff; color:#172033; padding:.42in .48in .34in; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .team-map-header { display:flex; justify-content:space-between; align-items:center; gap:20px; border-bottom:4px solid #243f72; padding-bottom:12px; margin-bottom:14px; }
     .team-map-logo { width:62px; height:62px; object-fit:contain; }
     .team-map-title { color:#243f72; margin:0; font-size:27px; }
@@ -499,18 +499,18 @@
     .team-map-panel-title { display:flex; align-items:center; justify-content:center; gap:8px; background:#243f72; color:white; padding:7px 10px; font-size:16px; font-weight:900; }
     .team-map-panel-abbr { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; background:white; color:#243f72; }
     .team-map-columns { display:grid; grid-template-columns:1fr 1fr; flex:1; }
-    .team-map-column { padding:8px 10px; min-width:0; min-height:0; overflow:hidden; }
+    .team-map-column { padding:5px; min-width:0; min-height:0; overflow:hidden; }
     .team-map-column + .team-map-column { border-left:1px solid #cbd5e1; }
-    .team-map-column h4 { margin:0 0 6px; font-size:12px; text-align:center; }
+    .team-map-column h4 { margin:0 0 2px; font-size:12px; text-align:center; }
     .team-map-genius h4 { color:#15803d; }
     .team-map-frustration h4 { color:#b91c1c; }
     .team-map-genius .team-map-names { color:#15803d; }
     .team-map-frustration .team-map-names { color:#b91c1c; }
-    .team-map-names { list-style:none; padding:0; margin:0; display:grid; gap:3px; font-size:var(--team-map-name-size); line-height:1.18; }
-    .team-map-name { overflow:hidden; white-space:nowrap; font-weight:600; }
+    .team-map-names { list-style:none; padding:0; margin:0; display:grid; gap:0; font-size:var(--team-map-name-size); line-height:1; }
+    .team-map-name { overflow:hidden; white-space:nowrap; font-family:"Arial Narrow",Arial,sans-serif; font-weight:700; letter-spacing:-.35px; }
     .team-map-leader { font-weight:600; }
     .team-map-footer { border-top:1px solid #cbd5e1; margin-top:10px; padding-top:7px; display:flex; justify-content:space-between; gap:14px; color:#64748b; font-size:8.5px; line-height:1.35; }
-    .team-map-roster-sheet { box-sizing:border-box; width:8.5in; height:11in; margin:24px auto 0; padding:.42in .48in .34in; background:#fff; color:#172033; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-roster-sheet { box-sizing:border-box; width:8.5in; height:11in; margin:0 auto; padding:.42in .48in .34in; background:#fff; color:#172033; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     .team-map-roster-table { width:100%; flex:1; min-height:0; border:1px solid #cbd5e1; border-radius:12px; border-spacing:0; overflow:hidden; table-layout:fixed; }
     .team-map-roster-tables { display:grid; grid-template-columns:1fr; gap:10px; flex:1; min-height:0; }
     .team-map-roster-tables.two-column { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -549,28 +549,29 @@
     .team-map-concept-grid .team-map-column { padding:6px 8px; }
     .team-map-concept-grid .team-map-column h4 { margin-bottom:4px; font-size:10px; }
     .team-map-concept-grid .team-map-names { gap:2px; line-height:1.12; }
-    .team-map-names.team-map-names-two-column { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--team-map-name-rows),auto); grid-auto-flow:column; column-gap:7px; }
+    .team-map-names.team-map-names-two-column { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--team-map-name-rows),auto); grid-auto-flow:column; column-gap:2px; }
     .team-map-analysis-editor { max-width:900px; margin:0 auto 16px; padding:16px; border-radius:15px; background:#fff; color:#172033; }
     .team-map-analysis-editor textarea { min-height:84px; color:#172033; background:#fff; border-color:#cbd5e1; }
-    .team-map-analysis-sheet { box-sizing:border-box; width:8.5in; min-height:11in; margin:24px auto 0; padding:.42in .48in .34in; background:#fff; color:#172033; font-weight:500; box-shadow:0 22px 70px rgba(0,0,0,.2); break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-analysis-sheet { --analysis-font-size:10px; box-sizing:border-box; width:8.5in; height:11in; min-height:11in; margin:24px auto 0; padding:.42in .48in .34in; overflow:hidden; background:#fff; color:#172033; font-weight:500; box-shadow:0 22px 70px rgba(0,0,0,.2); break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-analysis-sheet .team-map-meta { font-size:calc(var(--analysis-font-size) + 1px); }
     .analysis-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:12px 0; }
     .analysis-summary-item { padding:9px; border:1px solid #cbd5e1; border-radius:10px; background:#f8fafc; font-size:10px; }
-    .analysis-table { width:100%; margin-top:12px; border:1px solid #cbd5e1; border-radius:10px; border-spacing:0; overflow:hidden; table-layout:fixed; font-size:10px; }
-    .analysis-table th,.analysis-table td { padding:7px 10px; border-bottom:1px solid #dbe3ee; text-align:center; vertical-align:middle; }
-    .analysis-table th { background:#243f72; color:#fff; font-size:9px; letter-spacing:.03em; text-transform:uppercase; }
+    .analysis-table { width:100%; margin-top:12px; border:1px solid #cbd5e1; border-radius:10px; border-spacing:0; overflow:hidden; table-layout:fixed; font-size:var(--analysis-font-size); }
+    .analysis-table th,.analysis-table td { padding:5px 8px; border-bottom:1px solid #dbe3ee; text-align:center; vertical-align:middle; }
+    .analysis-table th { background:#243f72; color:#fff; font-size:calc(var(--analysis-font-size) - 1px); letter-spacing:.03em; text-transform:uppercase; }
     .analysis-table th:first-child,.analysis-table td:first-child { width:28%; text-align:left; }
     .analysis-table tbody tr:nth-child(even) { background:#f8fafc; }
     .analysis-table tbody tr:last-child td { border-bottom:0; }
-    .analysis-section { margin-top:14px; break-inside:avoid; page-break-inside:avoid; }
-    .analysis-section h3 { margin:0 0 7px; color:#243f72; font-size:14px; }
-    .analysis-observations { margin:0; padding-left:18px; font-size:10px; line-height:1.4; }
-    .analysis-observations li { margin-bottom:6px; break-inside:avoid; }
-    .analysis-observation-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
-    .analysis-observation-card { min-height:88px; padding:9px 10px; border:1px solid #cbd5e1; border-radius:10px; background:#f8fafc; font-size:9px; line-height:1.38; break-inside:avoid; }
-    .analysis-observation-card h4 { display:flex; align-items:center; gap:7px; margin:0 0 5px; color:#243f72; font-size:11px; }
+    .analysis-section { margin-top:10px; break-inside:avoid; page-break-inside:avoid; }
+    .analysis-section h3 { margin:0 0 4px; color:#243f72; font-size:calc(var(--analysis-font-size) + 4px); }
+    .analysis-observations { margin:0; padding-left:18px; font-size:var(--analysis-font-size); line-height:1.4; }
+    .analysis-observations li { margin-bottom:4px; break-inside:avoid; }
+    .analysis-observation-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+    .analysis-observation-card { min-height:0; padding:7px 8px; border:1px solid #cbd5e1; border-radius:10px; background:#f8fafc; font-size:var(--analysis-font-size); line-height:1.35; break-inside:avoid; }
+    .analysis-observation-card h4 { display:flex; align-items:center; gap:7px; margin:0 0 3px; color:#243f72; font-size:calc(var(--analysis-font-size) + 2px); }
     .analysis-observation-abbr { display:grid; place-items:center; width:20px; height:20px; border-radius:50%; background:#243f72; color:#fff; font-size:10px; }
-    .analysis-consultant-list { margin:0; padding-left:18px; font-size:10px; line-height:1.45; }
-    .analysis-consultant-list li { margin-bottom:8px; break-inside:avoid; }
+    .analysis-consultant-list { margin:0; padding-left:18px; font-size:var(--analysis-font-size); line-height:1.45; }
+    .analysis-consultant-list li { margin-bottom:5px; break-inside:avoid; }
     .analysis-consultant-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .analysis-consultant-item { padding:8px; border:1px solid #dbe3ee; border-radius:9px; font-size:9px; line-height:1.35; break-inside:avoid; }
     .analysis-methodology { margin-top:12px; padding:8px 10px; border-radius:9px; background:#eef2f7; color:#526077; font-size:8px; line-height:1.35; }
@@ -885,8 +886,8 @@
       #printView .invoice-table th:first-child, #printView .invoice-table td:first-child { width:52%; }
       #printView .invoice-totals { width:280px !important; margin-left:auto !important; }
       #printView .invoice-header, #printView .invoice-parties, #printView tr, #printView .invoice-totals, #printPaymentInstructions, #printInvoiceFooter { break-inside:avoid; page-break-inside:avoid; }
-      #teamMapPreview .team-map-sheet { width:8.5in !important; min-width:8.5in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; }
-      #teamMapPreview .team-map-roster-sheet { width:8.5in !important; min-width:8.5in !important; height:11in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; break-before:page; page-break-before:always; }
+      #teamMapPreview .team-map-roster-sheet { width:8.5in !important; min-width:8.5in !important; height:11in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; }
+      #teamMapPreview .team-map-sheet { width:8.5in !important; min-width:8.5in !important; height:11in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; break-before:page; page-break-before:always; }
       #teamMapPreview .team-map-analysis-sheet { box-sizing:border-box !important; width:8.5in !important; min-width:8.5in !important; height:11in !important; min-height:11in !important; margin:0 !important; box-shadow:none !important; break-before:page; page-break-before:always; }
     }
   </style>
@@ -919,7 +920,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.08.06.01</strong><br>
+        Version <strong id="appVersionLabel">2026.08.08.01</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1580,8 +1581,8 @@ Sanger, CA 93657"></textarea>
   <div id="teamMapPreview" class="print-view hidden" aria-hidden="true">
     <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="changeTeamMapLeader()">Change Leader</button><button class="button small-btn" onclick="printTeamMapPdf()">Print / Save as PDF</button></div></div>
     <details id="teamMapAnalysisEditor" class="team-map-analysis-editor no-print" open><summary><strong>Team Map Analysis Editor</strong> <span id="teamMapAnalysisStatus" class="tiny muted">Draft</span></summary><div id="teamMapAnalysisValidation"></div><div class="form-row" style="margin-top:12px;"><div class="field"><label>Overall Team Pattern</label><textarea data-analysis-field="OverallTeamPattern"></textarea></div><div class="field"><label>Most Significant Contribution</label><textarea data-analysis-field="MostSignificantStrength"></textarea></div><div class="field"><label>Primary Area to Explore</label><textarea data-analysis-field="MostSignificantRisk"></textarea></div><div class="field"><label>Competency and Sustainability Observation</label><textarea data-analysis-field="CompetencySustainabilityObservation"></textarea></div></div><div class="field"><label>Additional Consultant Notes</label><textarea data-analysis-field="AdditionalConsultantNotes"></textarea></div><div class="actions"><button class="button" type="button" onclick="generateTeamMapAnalysisSuggestions(false)">Generate Suggested Analysis</button><button class="button secondary" type="button" onclick="generateTeamMapAnalysisSuggestions(true)">Regenerate Suggestions</button><button class="button secondary" type="button" onclick="saveCurrentTeamMapAnalysis(this)">Save</button><button class="button ghost" type="button" onclick="resetTeamMapAnalysisToSuggestions()">Reset to Suggestions</button><button class="button small-btn" type="button" onclick="printTeamMapPdf()">Generate PDF</button></div></details>
-    <div id="teamMapSheet" class="team-map-sheet"></div>
     <div id="teamMapRosterSheet" class="team-map-roster-sheet"></div>
+    <div id="teamMapSheet" class="team-map-sheet"></div>
     <div id="teamMapAnalysisSheet" class="team-map-analysis-sheet"></div>
   </div>
 
@@ -1657,7 +1658,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.08.06.01";
+    const APP_VERSION = "2026.08.08.01";
 
     const K = {
       clients: "jjc_clients",
@@ -3300,7 +3301,7 @@ Sanger, CA 93657"></textarea>
       const title = teamMapContext?.title || workshop?.Organization || currentAssessmentData?.import?.GroupName || "Team";
       return teamMapContext?.groupId ? `${title} - Team Map` : `${title} - Assessment Results`;
     }
-    function printTeamMapPdf(){ renderTeamMapRosterPage(); if(currentTeamMapDistribution?.settings?.AnalysisEnabled===false)return printWithContextName(teamMapPrintName()); if(!currentTeamMapDistribution?.validation?.valid)return toast("Correct the invalid participant results before generating the PDF."); currentTeamMapAnalysis=analysisFromEditor(); renderTeamMapAnalysisPage(); printWithContextName(teamMapPrintName()); }
+    function printTeamMapPdf(){ renderTeamMapRosterPage(); if(currentTeamMapDistribution?.settings?.AnalysisEnabled===false)return printWithContextName(teamMapPrintName()); if(!currentTeamMapDistribution?.validation?.valid)return toast("Correct the invalid participant results before generating the PDF."); currentTeamMapAnalysis=analysisFromEditor(); renderTeamMapAnalysisPage(); fitTeamMapAnalysisPage(); printWithContextName(teamMapPrintName()); }
     function printCurrentDocumentPreview(){ printWithContextName(currentPrintFileName); }
     function renderTeamMapAnalysisPage(){ const sheet=document.getElementById("teamMapAnalysisSheet"); if(!sheet||!currentTeamMapDistribution)return; const d=currentTeamMapDistribution,s=d.settings; if(!s.AnalysisEnabled){sheet.classList.add("hidden");return;} sheet.classList.remove("hidden"); if(!d.validation.valid){sheet.innerHTML=`<div class="team-map-header"><h1 class="team-map-title">Team Map Analysis</h1></div><div class="analysis-validation"><strong>Analysis cannot be generated.</strong><ul>${d.validation.errors.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;return;} const observations=TeamMapAnalysis.generateTeamObservations(d), questions=TeamMapAnalysis.generateConsultantQuestions(d), analysis=currentTeamMapAnalysis||TeamMapAnalysis.suggestedAnalysis(d), workshop=workshops.find(w=>w.WorkshopID===assessmentWorkshopId)||{}, title=teamMapContext?.title||workshop.Organization||currentAssessmentData?.import?.GroupName||"Team", date=teamMapContext?.dateLabel||(workshop.WorkshopDate?formatDate(workshop.WorkshopDate):workshop.DateDescription||""), leader=d.leader?`${d.leader.FirstName||d.leader.firstName||""} ${d.leader.LastName||d.leader.lastName||""}`.trim():"Not selected"; const classification=m=>m.classifications[0]||"Monitor"; sheet.innerHTML=`<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Team Map Analysis</h1><div style="font-weight:900;">${esc(title)}</div></div></div><div class="team-map-meta">${esc(date)}<br>${d.actualTeamSize} actual participants<br>Leader: ${esc(leader)}</div></div>${d.actualTeamSize<s.MinimumTeamSizeForAnalysis?`<div class="analysis-validation"><strong>Limited sample:</strong> This team is below the configured minimum of ${s.MinimumTeamSizeForAnalysis}; interpret patterns cautiously.</div>`:""}<div class="analysis-summary-grid"><div class="analysis-summary-item"><strong>Actual team</strong><br>${d.actualTeamSize} people</div><div class="analysis-summary-item"><strong>Weighted team</strong><br>${d.weightedTeamSize} influence units</div><div class="analysis-summary-item"><strong>Leader weighting</strong><br>${d.leaderWeightingApplied?"Included":"Not included"}</div><div class="analysis-summary-item"><strong>Observations</strong><br>${observations.length} prioritized</div></div><table class="analysis-table"><thead><tr><th>Type</th><th>Actual G</th><th>Actual C</th><th>Actual F</th><th>Weighted G</th><th>Weighted F</th><th>Classification</th></tr></thead><tbody>${d.metrics.map(m=>`<tr><td><strong>${esc(m.type)}</strong></td><td>${m.actualGeniusCount} (${m.actualGeniusRate}%)</td><td>${m.actualCompetencyCount} (${m.actualCompetencyRate}%)</td><td>${m.actualFrustrationCount} (${m.actualFrustrationRate}%)</td><td>${m.weightedGeniusCount} (${m.weightedGeniusRate}%)</td><td>${m.weightedFrustrationCount} (${m.weightedFrustrationRate}%)</td><td>${esc(classification(m))}</td></tr>`).join("")}</tbody></table><section class="analysis-section"><h3>Key Team Observations</h3><ul class="analysis-observations">${observations.map(o=>`<li><strong>${esc(o.type)} - ${esc(o.label)}:</strong> ${esc(o.text)}</li>`).join("")||"<li>No automatic observation rose above the configured thresholds.</li>"}</ul></section><section class="analysis-section"><h3>Consultant Analysis</h3><div class="analysis-consultant-grid">${Object.entries(analysis).filter(([,v])=>v).map(([k,v])=>`<div class="analysis-consultant-item"><strong>${esc(k.replace(/([a-z])([A-Z])/g,"$1 $2"))}</strong><br>${esc(v)}</div>`).join("")}</div></section>${questions.length?`<section class="analysis-section"><h3>Discussion Questions</h3><ul class="analysis-observations">${questions.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></section>`:""}${s.IncludeMethodologyNote?`<div class="analysis-methodology"><strong>Methodology:</strong> Actual counts represent unique people. ${d.leaderWeightingApplied?"The selected leader receives one additional influence point in each of their two Geniuses and two Frustrations; Competencies are not weighted.":"Leader weighting is disabled."} These observations are cautious discussion prompts, not definitive conclusions or diagnoses.</div>`:""}`; }
 
@@ -3338,6 +3339,7 @@ Sanger, CA 93657"></textarea>
       }).join("");
       const consultantItems = Object.entries(consultantLabels).filter(([key])=>analysis[key]).map(([key,label])=>`<li><strong>${esc(label)}:</strong> ${esc(analysis[key])}</li>`).join("");
       sheet.innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Team Map Analysis</h1><div style="font-weight:900;">${esc(title)}</div></div></div><div class="team-map-meta">${esc(date)}<br>${d.actualTeamSize} actual participants<br>Leader: ${esc(leader)}</div></div>${d.actualTeamSize<s.MinimumTeamSizeForAnalysis?`<div class="analysis-validation"><strong>Limited sample:</strong> This team is below the configured minimum of ${s.MinimumTeamSizeForAnalysis}; interpret patterns cautiously.</div>`:""}<table class="analysis-table"><thead><tr><th>Working Genius Type</th><th>Genius</th><th>Competency</th><th>Frustration</th></tr></thead><tbody>${d.metrics.map(m=>`<tr><td><strong>${esc(m.type)}</strong></td><td>${m.actualGeniusCount} &nbsp; (${m.actualGeniusRate}%)</td><td>${m.actualCompetencyCount} &nbsp; (${m.actualCompetencyRate}%)</td><td>${m.actualFrustrationCount} &nbsp; (${m.actualFrustrationRate}%)</td></tr>`).join("")}</tbody></table><section class="analysis-section"><h3>Key Team Observations</h3><div class="analysis-observation-grid">${observationCards}</div></section><section class="analysis-section"><h3>Consultant Analysis</h3><ul class="analysis-consultant-list">${consultantItems}</ul></section>${questions.length?`<section class="analysis-section"><h3>Discussion Questions</h3><ul class="analysis-observations">${questions.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></section>`:""}${s.IncludeMethodologyNote?`<div class="analysis-methodology"><strong>Methodology:</strong> Actual counts represent unique people. ${d.leaderWeightingApplied?"The selected leader receives one additional influence point in each of their two Geniuses and two Frustrations; Competencies are not weighted.":"Leader weighting is disabled."} These observations are cautious discussion prompts, not definitive conclusions or diagnoses.</div>`:""}`;
+      requestAnimationFrame(fitTeamMapAnalysisPage);
     };
 
     async function openTeamMapPreview() {
@@ -3353,7 +3355,10 @@ Sanger, CA 93657"></textarea>
       preview.classList.remove("hidden");
       preview.setAttribute("aria-hidden", "false");
       document.documentElement.classList.add("team-map-preview-open");
-      requestAnimationFrame(fitTeamMapNames);
+      await document.fonts?.ready;
+      await new Promise(resolve=>setTimeout(resolve,500));
+      fitTeamMapNames();
+      fitTeamMapAnalysisPage();
       preview.scrollTo({ top:0, left:0 });
       setTimeout(() => document.getElementById("closeTeamMapPreviewButton").focus(), 0);
     }
@@ -3522,7 +3527,7 @@ Sanger, CA 93657"></textarea>
 
     function fitTeamMapNames() {
       const sheets = [document.getElementById("teamMapSheet")];
-      const maximumSize = 13;
+      const maximumSize = 15;
       const minimumSize = 8;
       const step = 0.5;
       sheets.forEach(sheet => {
@@ -3540,7 +3545,7 @@ Sanger, CA 93657"></textarea>
         lists.forEach(list => {
           const column=list.closest(".team-map-column"), firstName=list.querySelector(".team-map-name");
           if(!column||!firstName)return;
-          const capacity=isConceptSheet?9:11;
+          const capacity=isConceptSheet?9:13;
           list.dataset.firstColumnCapacity=String(capacity);
           if(list.children.length>capacity){
             list.classList.add("team-map-names-two-column");
@@ -3555,6 +3560,20 @@ Sanger, CA 93657"></textarea>
         }
         sheet.dataset.nameFontSize = String(size);
       });
+    }
+
+    function fitTeamMapAnalysisPage() {
+      const sheet = document.getElementById("teamMapAnalysisSheet");
+      if (!sheet || sheet.classList.contains("hidden") || !sheet.innerHTML) return;
+      const maximumSize = 12.5, minimumSize = 9, step = .25;
+      let size = maximumSize;
+      const setSize = () => { sheet.style.setProperty("--analysis-font-size",`${size}px`); void sheet.offsetHeight; };
+      setSize();
+      while (size > minimumSize && sheet.scrollHeight > sheet.clientHeight + 1) {
+        size = Math.max(minimumSize,size-step);
+        setSize();
+      }
+      sheet.dataset.analysisFontSize = String(size);
     }
 
     function teamMapPanel(card, leader, mode) {

@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.08.01 — 2026-08-08
+
+- Reordered Assessment Results PDFs so Individual Working Genius Results is page 1, the Working Genius Team Map is page 2, and Team Map Analysis remains page 3.
+- Increased full Team Map names to a 15 px target and delayed the second name column until after 13 entries.
+- Added adaptive Team Map Analysis typography that starts larger and reduces only as needed to keep the complete analysis on one page.
+
 ## 2026.08.06.01 — 2026-08-06
 
 - Added a one-page Individual Working Genius Results roster between the Team Map and Team Map Analysis pages.
