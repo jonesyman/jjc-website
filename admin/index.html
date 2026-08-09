@@ -507,7 +507,7 @@
     .team-map-genius .team-map-names { color:#15803d; }
     .team-map-frustration .team-map-names { color:#b91c1c; }
     .team-map-names { list-style:none; padding:0; margin:0; display:grid; gap:0; font-size:var(--team-map-name-size); line-height:1; }
-    .team-map-name { overflow:hidden; white-space:nowrap; font-family:"Arial Narrow",Arial,sans-serif; font-weight:700; letter-spacing:-.35px; }
+    .team-map-name { overflow:hidden; white-space:nowrap; font-family:"Montserrat",Arial,sans-serif; font-weight:600; letter-spacing:-1px; }
     .team-map-leader { font-weight:600; }
     .team-map-footer { border-top:1px solid #cbd5e1; margin-top:10px; padding-top:7px; display:flex; justify-content:space-between; gap:14px; color:#64748b; font-size:8.5px; line-height:1.35; }
     .team-map-roster-sheet { box-sizing:border-box; width:8.5in; height:11in; margin:0 auto; padding:.42in .48in .34in; background:#fff; color:#172033; box-shadow:0 22px 70px rgba(0,0,0,.2); display:flex; flex-direction:column; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
@@ -552,26 +552,29 @@
     .team-map-names.team-map-names-two-column { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--team-map-name-rows),auto); grid-auto-flow:column; column-gap:2px; }
     .team-map-analysis-editor { max-width:900px; margin:0 auto 16px; padding:16px; border-radius:15px; background:#fff; color:#172033; }
     .team-map-analysis-editor textarea { min-height:84px; color:#172033; background:#fff; border-color:#cbd5e1; }
-    .team-map-analysis-sheet { --analysis-font-size:10px; box-sizing:border-box; width:8.5in; height:11in; min-height:11in; margin:24px auto 0; padding:.42in .48in .34in; overflow:hidden; background:#fff; color:#172033; font-weight:500; box-shadow:0 22px 70px rgba(0,0,0,.2); break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-analysis-sheet { --analysis-font-size:12px; box-sizing:border-box; width:8.5in; height:11in; min-height:11in; margin:24px auto 0; padding:.34in .34in .28in; overflow:hidden; background:#fff; color:#172033; font-weight:550; box-shadow:0 22px 70px rgba(0,0,0,.2); break-before:page; page-break-before:always; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .team-map-analysis-sheet .team-map-header { margin-bottom:6px; padding-bottom:6px; }
     .team-map-analysis-sheet .team-map-meta { font-size:calc(var(--analysis-font-size) + 1px); }
     .analysis-summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:12px 0; }
     .analysis-summary-item { padding:9px; border:1px solid #cbd5e1; border-radius:10px; background:#f8fafc; font-size:10px; }
-    .analysis-table { width:100%; margin-top:12px; border:1px solid #cbd5e1; border-radius:10px; border-spacing:0; overflow:hidden; table-layout:fixed; font-size:var(--analysis-font-size); }
+    .analysis-table { width:100%; margin-top:6px; border:1px solid #cbd5e1; border-radius:10px; border-spacing:0; overflow:hidden; table-layout:fixed; font-size:var(--analysis-font-size); }
     .analysis-table th,.analysis-table td { padding:5px 8px; border-bottom:1px solid #dbe3ee; text-align:center; vertical-align:middle; }
     .analysis-table th { background:#243f72; color:#fff; font-size:calc(var(--analysis-font-size) - 1px); letter-spacing:.03em; text-transform:uppercase; }
     .analysis-table th:first-child,.analysis-table td:first-child { width:28%; text-align:left; }
     .analysis-table tbody tr:nth-child(even) { background:#f8fafc; }
     .analysis-table tbody tr:last-child td { border-bottom:0; }
-    .analysis-section { margin-top:10px; break-inside:avoid; page-break-inside:avoid; }
+    .analysis-section { margin-top:6px; break-inside:avoid; page-break-inside:avoid; }
     .analysis-section h3 { margin:0 0 4px; color:#243f72; font-size:calc(var(--analysis-font-size) + 4px); }
-    .analysis-observations { margin:0; padding-left:18px; font-size:var(--analysis-font-size); line-height:1.4; }
+    .analysis-observations { margin:0; padding-left:18px; font-size:var(--analysis-font-size); line-height:1.3; }
     .analysis-observations li { margin-bottom:4px; break-inside:avoid; }
-    .analysis-observation-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
-    .analysis-observation-card { min-height:0; padding:7px 8px; border:1px solid #cbd5e1; border-radius:10px; background:#f8fafc; font-size:var(--analysis-font-size); line-height:1.35; break-inside:avoid; }
+    .analysis-observation-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; }
+    .analysis-observation-card { min-height:0; padding:6px 7px; border:1px solid #cbd5e1; border-radius:10px; background:#f8fafc; font-size:var(--analysis-font-size); line-height:1.25; break-inside:avoid; }
     .analysis-observation-card h4 { display:flex; align-items:center; gap:7px; margin:0 0 3px; color:#243f72; font-size:calc(var(--analysis-font-size) + 2px); }
     .analysis-observation-abbr { display:grid; place-items:center; width:20px; height:20px; border-radius:50%; background:#243f72; color:#fff; font-size:10px; }
-    .analysis-consultant-list { margin:0; padding-left:18px; font-size:var(--analysis-font-size); line-height:1.45; }
+    .analysis-consultant-list { margin:0; padding-left:18px; font-size:var(--analysis-font-size); line-height:1.3; }
     .analysis-consultant-list li { margin-bottom:5px; break-inside:avoid; }
+    .analysis-bottom-grid { display:grid; grid-template-columns:1.08fr .92fr; gap:12px; align-items:start; }
+    .analysis-bottom-grid .analysis-section { min-width:0; }
     .analysis-consultant-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .analysis-consultant-item { padding:8px; border:1px solid #dbe3ee; border-radius:9px; font-size:9px; line-height:1.35; break-inside:avoid; }
     .analysis-methodology { margin-top:12px; padding:8px 10px; border-radius:9px; background:#eef2f7; color:#526077; font-size:8px; line-height:1.35; }
@@ -920,7 +923,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.08.08.01</strong><br>
+        Version <strong id="appVersionLabel">2026.08.08.02</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1658,7 +1661,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.08.08.01";
+    const APP_VERSION = "2026.08.08.02";
 
     const K = {
       clients: "jjc_clients",
@@ -3338,8 +3341,7 @@ Sanger, CA 93657"></textarea>
         return `<article class="analysis-observation-card"><h4><span class="analysis-observation-abbr">${abbreviations[m.type]}</span>${esc(m.type)}</h4>${o ? `<strong>${esc(o.label)}</strong><p>${esc(o.text)}</p>` : "<p>No automatic observation rose above the configured thresholds for this type.</p>"}</article>`;
       }).join("");
       const consultantItems = Object.entries(consultantLabels).filter(([key])=>analysis[key]).map(([key,label])=>`<li><strong>${esc(label)}:</strong> ${esc(analysis[key])}</li>`).join("");
-      sheet.innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Team Map Analysis</h1><div style="font-weight:900;">${esc(title)}</div></div></div><div class="team-map-meta">${esc(date)}<br>${d.actualTeamSize} actual participants<br>Leader: ${esc(leader)}</div></div>${d.actualTeamSize<s.MinimumTeamSizeForAnalysis?`<div class="analysis-validation"><strong>Limited sample:</strong> This team is below the configured minimum of ${s.MinimumTeamSizeForAnalysis}; interpret patterns cautiously.</div>`:""}<table class="analysis-table"><thead><tr><th>Working Genius Type</th><th>Genius</th><th>Competency</th><th>Frustration</th></tr></thead><tbody>${d.metrics.map(m=>`<tr><td><strong>${esc(m.type)}</strong></td><td>${m.actualGeniusCount} &nbsp; (${m.actualGeniusRate}%)</td><td>${m.actualCompetencyCount} &nbsp; (${m.actualCompetencyRate}%)</td><td>${m.actualFrustrationCount} &nbsp; (${m.actualFrustrationRate}%)</td></tr>`).join("")}</tbody></table><section class="analysis-section"><h3>Key Team Observations</h3><div class="analysis-observation-grid">${observationCards}</div></section><section class="analysis-section"><h3>Consultant Analysis</h3><ul class="analysis-consultant-list">${consultantItems}</ul></section>${questions.length?`<section class="analysis-section"><h3>Discussion Questions</h3><ul class="analysis-observations">${questions.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></section>`:""}${s.IncludeMethodologyNote?`<div class="analysis-methodology"><strong>Methodology:</strong> Actual counts represent unique people. ${d.leaderWeightingApplied?"The selected leader receives one additional influence point in each of their two Geniuses and two Frustrations; Competencies are not weighted.":"Leader weighting is disabled."} These observations are cautious discussion prompts, not definitive conclusions or diagnoses.</div>`:""}`;
-      requestAnimationFrame(fitTeamMapAnalysisPage);
+      sheet.innerHTML = `<div class="team-map-header"><div style="display:flex;align-items:center;gap:13px;"><img class="team-map-logo" src="../assets/images/JJC_Logo.png" alt="Jeff Jones Consulting"><div><h1 class="team-map-title">Team Map Analysis</h1><div style="font-weight:900;">${esc(title)}</div></div></div><div class="team-map-meta">${esc(date)}<br>${d.actualTeamSize} actual participants<br>Leader: ${esc(leader)}</div></div>${d.actualTeamSize<s.MinimumTeamSizeForAnalysis?`<div class="analysis-validation"><strong>Limited sample:</strong> This team is below the configured minimum of ${s.MinimumTeamSizeForAnalysis}; interpret patterns cautiously.</div>`:""}<table class="analysis-table"><thead><tr><th>Working Genius Type</th><th>Genius</th><th>Competency</th><th>Frustration</th></tr></thead><tbody>${d.metrics.map(m=>`<tr><td><strong>${esc(m.type)}</strong></td><td>${m.actualGeniusCount} &nbsp; (${m.actualGeniusRate}%)</td><td>${m.actualCompetencyCount} &nbsp; (${m.actualCompetencyRate}%)</td><td>${m.actualFrustrationCount} &nbsp; (${m.actualFrustrationRate}%)</td></tr>`).join("")}</tbody></table><section class="analysis-section"><h3>Key Team Observations</h3><div class="analysis-observation-grid">${observationCards}</div></section><div class="analysis-bottom-grid"><section class="analysis-section"><h3>Consultant Analysis</h3><ul class="analysis-consultant-list">${consultantItems}</ul></section>${questions.length?`<section class="analysis-section"><h3>Discussion Questions</h3><ul class="analysis-observations">${questions.map(q=>`<li>${esc(q)}</li>`).join("")}</ul></section>`:""}</div>${s.IncludeMethodologyNote?`<div class="analysis-methodology"><strong>Methodology:</strong> Actual counts represent unique people. ${d.leaderWeightingApplied?"The selected leader receives one additional influence point in each of their two Geniuses and two Frustrations; Competencies are not weighted.":"Leader weighting is disabled."} These observations are cautious discussion prompts, not definitive conclusions or diagnoses.</div>`:""}`;
     };
 
     async function openTeamMapPreview() {
@@ -3355,10 +3357,7 @@ Sanger, CA 93657"></textarea>
       preview.classList.remove("hidden");
       preview.setAttribute("aria-hidden", "false");
       document.documentElement.classList.add("team-map-preview-open");
-      await document.fonts?.ready;
-      await new Promise(resolve=>setTimeout(resolve,500));
-      fitTeamMapNames();
-      fitTeamMapAnalysisPage();
+      await settleTeamMapPdfLayout();
       preview.scrollTo({ top:0, left:0 });
       setTimeout(() => document.getElementById("closeTeamMapPreviewButton").focus(), 0);
     }
@@ -3565,15 +3564,29 @@ Sanger, CA 93657"></textarea>
     function fitTeamMapAnalysisPage() {
       const sheet = document.getElementById("teamMapAnalysisSheet");
       if (!sheet || sheet.classList.contains("hidden") || !sheet.innerHTML) return;
-      const maximumSize = 12.5, minimumSize = 9, step = .25;
+      const maximumSize = 12, minimumSize = 10, step = .25;
       let size = maximumSize;
       const setSize = () => { sheet.style.setProperty("--analysis-font-size",`${size}px`); void sheet.offsetHeight; };
+      const contentOverflows = () => {
+        const last = sheet.lastElementChild;
+        if (!last) return false;
+        return last.getBoundingClientRect().bottom > sheet.getBoundingClientRect().bottom - 27 + 1;
+      };
       setSize();
-      while (size > minimumSize && sheet.scrollHeight > sheet.clientHeight + 1) {
+      while (size > minimumSize && contentOverflows()) {
         size = Math.max(minimumSize,size-step);
         setSize();
       }
       sheet.dataset.analysisFontSize = String(size);
+    }
+
+    async function settleTeamMapPdfLayout() {
+      await document.fonts?.ready;
+      for (const delay of [100,300,600]) {
+        await new Promise(resolve=>setTimeout(resolve,delay));
+        fitTeamMapNames();
+        fitTeamMapAnalysisPage();
+      }
     }
 
     function teamMapPanel(card, leader, mode) {

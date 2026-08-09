@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.08.02 — 2026-08-08
+
+- Restored the original Montserrat typeface for Team Map names while retaining the 15 px target and 13-name first-column capacity.
+- Reworked the Team Map Analysis layout to hold a reliable 12 px body size, with Consultant Analysis and Discussion Questions sharing the available width.
+- Increased the Analysis page's default text weight for clearer printed output.
+
 ## 2026.08.08.01 — 2026-08-08
 
 - Reordered Assessment Results PDFs so Individual Working Genius Results is page 1, the Working Genius Team Map is page 2, and Team Map Analysis remains page 3.
