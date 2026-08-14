@@ -96,14 +96,13 @@ window.TeamMapAnalysis = (() => {
     return {genius:rounded[0],competency:rounded[1],frustration:rounded[2]};
   }
   function facilitatorTypeAnalysis(metric,settings) {
-    const content=FACILITATOR_CONTENT[metric.type], rates=normalizedInfluenceRates(metric), genius=distributionDirection(rates.genius,settings.UnderrepresentedGeniusThresholdPercent,settings.HighlyRepresentedGeniusThresholdPercent), frustration=distributionDirection(rates.frustration,settings.UnderrepresentedGeniusThresholdPercent,settings.HighFrustrationThresholdPercent);
-    const competencyHeavy=rates.competency>=settings.CompetencyHeavyThresholdPercent&&genius!=="high"&&frustration!=="high";
-    const candidates=[];
-    if(genius==="high")candidates.push({subject:metric.type,area:"Genius",color:"green",status:"Overuse",note:content.geniusHigh,rate:rates.genius,severity:Math.abs(rates.genius-33)});
-    else if(genius==="low")candidates.push({subject:metric.type,area:"Genius",color:"green",status:"Missing / low Genius",note:content.geniusLow,rate:rates.genius,severity:Math.abs(rates.genius-33)});
-    if(frustration==="high")candidates.push({subject:metric.type,area:"Frustration",color:"red",status:"High Frustration",note:content.frustrationHigh,rate:rates.frustration,severity:Math.abs(rates.frustration-33)});
-    if(competencyHeavy)candidates.push({subject:metric.type,area:"Competency",color:"yellow",status:"Competency-heavy",note:content.competency,rate:rates.competency,severity:Math.abs(rates.competency-33)});
-    const highlight=candidates.sort((a,b)=>b.severity-a.severity)[0]||null;
+    const content=FACILITATOR_CONTENT[metric.type], rates=normalizedInfluenceRates(metric), {genius:g,competency:c,frustration:f}=rates;
+    let highlight=null;
+    if(f>=55)highlight={subject:metric.type,area:"Frustration",color:"red",status:"Frustration-dominant",note:content.frustrationHigh,rate:f,severity:f-33,rationale:`${f}% Frustration is the clear majority and crosses the red threshold.`};
+    else if(f>=45&&f>=g+10)highlight={subject:metric.type,area:"Frustration",color:"orange",status:"Frustration-leaning",note:content.frustrationHigh,rate:f,severity:f-33,rationale:`${f}% Frustration is elevated and exceeds Genius by ${f-g} points, but is below the red threshold.`};
+    else if(g>=60)highlight={subject:metric.type,area:"Genius",color:"green",status:"Genius-dominant",note:content.geniusHigh,rate:g,severity:g-33,rationale:`${g}% Genius is the clear majority and crosses the green threshold.`};
+    else if(g>=45&&c>=30&&f<=25)highlight={subject:metric.type,area:"Genius",color:"green-yellow",status:"Genius / Competency leaning",note:content.geniusHigh,rate:g,severity:g-33,rationale:`${g}% Genius and ${c}% Competency show a positive lean without elevated Frustration (${f}%).`};
+    else if(c>=55&&g<45&&f<45)highlight={subject:metric.type,area:"Competency",color:"yellow",status:"Competency-dominant",note:content.competency,rate:c,severity:c-33,rationale:`${c}% Competency is the clear majority while neither Genius (${g}%) nor Frustration (${f}%) dominates.`};
     return {type:metric.type,abbreviation:metric.type[0],status:highlight?.status||"Balance",note:highlight?.note||content.balanced,highlights:highlight?[highlight]:[],rates};
   }
   function aggregateDimension(distribution,label,types,shareTarget) {
@@ -124,8 +123,8 @@ window.TeamMapAnalysis = (() => {
     const dominantDimensionHighlight=(items,minimum,target)=>{
       const candidates=[];
       items.forEach(item=>{
-        if(item.geniusRate>=minimum)candidates.push({subject:item.label,area:"Genius",color:"green",rate:item.geniusRate,severity:item.geniusRate-target});
-        if(item.frustrationRate>=minimum)candidates.push({subject:item.label,area:"Frustration",color:"red",rate:item.frustrationRate,severity:item.frustrationRate-target});
+        if(item.geniusRate>=minimum)candidates.push({subject:item.label,area:"Genius",color:item.geniusRate>=55?"green":"green-yellow",rate:item.geniusRate,severity:item.geniusRate-target,rationale:`${item.geniusRate}% Genius is the strongest stage-level concentration.`});
+        if(item.frustrationRate>=minimum)candidates.push({subject:item.label,area:"Frustration",color:item.frustrationRate>=55?"red":"orange",rate:item.frustrationRate,severity:item.frustrationRate-target,rationale:`${item.frustrationRate}% Frustration is the strongest stage-level concentration.`});
       });
       return candidates.sort((a,b)=>b.severity-a.severity).slice(0,1);
     };
@@ -134,10 +133,10 @@ window.TeamMapAnalysis = (() => {
       const memberHighlights=orientation.types.map(type=>typeAnalyses.find(item=>item.type===type)?.highlights?.[0]).filter(Boolean);
       if(memberHighlights.length!==orientation.types.length)return [];
       const color=memberHighlights[0].color;
-      if(!["green","red","yellow"].includes(color)||memberHighlights.some(item=>item.color!==color))return [];
-      const area=color==="green"?"Genius":color==="red"?"Frustration":"Competency";
-      const rate=color==="green"?orientation.geniusRate:color==="red"?orientation.frustrationRate:Math.round(memberHighlights.reduce((sum,item)=>sum+item.rate,0)/memberHighlights.length);
-      return [{subject:orientation.label,area,color,rate,severity:0}];
+      if(!["green","green-yellow","yellow","orange","red"].includes(color)||memberHighlights.some(item=>item.color!==color))return [];
+      const area=["green","green-yellow"].includes(color)?"Genius":["red","orange"].includes(color)?"Frustration":"Competency";
+      const rate=["green","green-yellow"].includes(color)?orientation.geniusRate:["red","orange"].includes(color)?orientation.frustrationRate:Math.round(memberHighlights.reduce((sum,item)=>sum+item.rate,0)/memberHighlights.length);
+      return [{subject:orientation.label,area,color,rate,severity:0,rationale:`All three ${orientation.label} types independently received the same ${color.replace("-"," / ")} recommendation.`}];
     });
     const highlightGroups={types:typeHighlights,stages:stageHighlights,orientations:orientationHighlights};
     return {valid:true,highlights:[...typeHighlights,...stageHighlights,...orientationHighlights],highlightGroups,typeAnalyses,stages,orientations};
@@ -145,7 +144,8 @@ window.TeamMapAnalysis = (() => {
   function facilitatorNotesText(distribution,title="Team") {
     const analysis=generateFacilitatorAnalysis(distribution);
     if(!analysis.valid)return `Unable to generate facilitator notes for ${title}:\n${analysis.errors.join("\n")}`;
-    const highlightLine=item=>`- ${item.subject}: outline ${item.area} in ${item.color[0].toUpperCase()+item.color.slice(1)}`;
+    const colorLabel=color=>color.split("-").map(word=>word[0].toUpperCase()+word.slice(1)).join(" / ");
+    const highlightLine=item=>`- ${item.subject}: outline ${item.area} in ${colorLabel(item.color)} — ${item.rationale||`${item.rate}% is the most prominent distribution.`}`;
     const highlightSection=(label,items)=>[label,...(items.length?items.map(highlightLine):["- No highlight recommended."])];
     const typeLines=analysis.typeAnalyses.map(item=>`[${item.abbreviation}] ${item.type.toUpperCase()} — ${item.status}: ${item.note} Distribution: ${item.rates.genius}% Genius, ${item.rates.competency}% Competency, ${item.rates.frustration}% Frustration.`);
     const stageLines=analysis.stages.map(stage=>`[${stage.label.toUpperCase()}] (${stage.types.map(type=>type[0]).join("/")}): Genius ${stage.geniusStatus} (${stage.geniusRate}%); Frustration ${stage.frustrationStatus} (${stage.frustrationRate}%). Watch how the team handles ${stage.purpose}.`);

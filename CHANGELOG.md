@@ -2,6 +2,13 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.13.01 — 2026-08-13
+
+- Made Individual Working Genius Results letter badges scale with team size: larger for small teams while retaining the compact LVCC sizing for larger teams.
+- Added Genius + Competency and Competency + Frustration counts and actual-team percentages to the Team Map Analysis table.
+- Replaced forced slide-note highlights with a conservative five-color dominance model: Green, Green / Yellow, Yellow, Orange, and Red, with no highlight for balanced distributions.
+- Added a percentage-based rationale to every suggested type, stage, and Responsive / Disruptive highlight.
+
 ## 2026.08.08.02 — 2026-08-08
 
 - Restored the original Montserrat typeface for Team Map names while retaining the 15 px target and 13-name first-column capacity.
