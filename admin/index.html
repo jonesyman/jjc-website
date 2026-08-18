@@ -928,7 +928,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.08.13.01</strong><br>
+        Version <strong id="appVersionLabel">2026.08.18.01</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1585,6 +1585,18 @@ Sanger, CA 93657"></textarea>
     </div>
   </div>
 
+  <div id="teamDynamicsBackdrop" class="dialog-backdrop no-print">
+    <div class="send-dialog team-dynamics-dialog" role="dialog" aria-modal="true" aria-labelledby="teamDynamicsTitle">
+      <div class="dialog-header team-dynamics-header">
+        <div><span class="team-dynamics-kicker">Interactive mockup</span><h2 id="teamDynamicsTitle">Team Dynamics</h2><p id="teamDynamicsMeta" class="tiny muted"></p></div>
+        <button id="closeTeamDynamicsButton" class="button ghost small-btn" type="button" onclick="closeTeamDynamicsWorkspace()">Close</button>
+      </div>
+      <div class="team-dynamics-data-note"><strong>Uses existing assessment data.</strong> Nothing entered here is saved, and no participant information is duplicated.</div>
+      <div id="teamDynamicsTabs" class="team-dynamics-tabs" role="tablist" aria-label="Team Dynamics views"></div>
+      <div id="teamDynamicsContent" class="team-dynamics-content"></div>
+    </div>
+  </div>
+
   <!-- PRINT VIEW -->
   <div id="teamMapPreview" class="print-view hidden" aria-hidden="true">
     <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="changeTeamMapLeader()">Change Leader</button><button class="button small-btn" onclick="printTeamMapPdf()">Print / Save as PDF</button></div></div>
@@ -1666,7 +1678,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.08.13.01";
+    const APP_VERSION = "2026.08.18.01";
 
     const K = {
       clients: "jjc_clients",
@@ -2414,7 +2426,7 @@ Sanger, CA 93657"></textarea>
         el.className = "record-card";
         const workshopWhen = w.WorkshopDate ? formatDate(w.WorkshopDate) : (w.DateDescription || "Date not recorded");
         const classification=[w.Sector,w.Industry,w.TeamFunction].filter(Boolean).join(" • ");
-        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div><div class="tiny muted">${classification ? esc(classification) : '<span class="status-badge">Needs classification</span>'}</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button><button class="button secondary small-btn" onclick="openResourcePackageBuilder('${jsEsc(w.WorkshopID)}')">Resource Package</button><button class="button secondary small-btn" onclick="openWorkshopFacilitatorAnalysis('${jsEsc(w.WorkshopID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadWorkshopCondensedTeamMap('${jsEsc(w.WorkshopID)}',this)">Download Map</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
+        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div><div class="tiny muted">${classification ? esc(classification) : '<span class="status-badge">Needs classification</span>'}</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button><button class="button secondary small-btn" onclick="openTeamDynamicsForWorkshop('${jsEsc(w.WorkshopID)}')">Team Dynamics <span class="prototype-badge">Mockup</span></button><button class="button secondary small-btn" onclick="openResourcePackageBuilder('${jsEsc(w.WorkshopID)}')">Resource Package</button><button class="button secondary small-btn" onclick="openWorkshopFacilitatorAnalysis('${jsEsc(w.WorkshopID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadWorkshopCondensedTeamMap('${jsEsc(w.WorkshopID)}',this)">Download Map</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
         if (!isArchived(w)) {
           const emailButton = document.createElement("button");
           emailButton.className = "button secondary small-btn";
@@ -2942,6 +2954,80 @@ Sanger, CA 93657"></textarea>
         }
       };
     }
+
+    const TEAM_DYNAMICS_TYPES = ["Wonder","Invention","Discernment","Galvanizing","Enablement","Tenacity"];
+    const TEAM_DYNAMICS_LETTERS = {Wonder:"W",Invention:"I",Discernment:"D",Galvanizing:"G",Enablement:"E",Tenacity:"T"};
+    const TEAM_DYNAMICS_STAGES = [
+      {name:"Ideation",types:["Wonder","Invention"],prompt:"What are we noticing, and what new options should we consider?"},
+      {name:"Activation",types:["Discernment","Galvanizing"],prompt:"What is worth pursuing, and how will we build commitment?"},
+      {name:"Implementation",types:["Enablement","Tenacity"],prompt:"What support is needed, and how will we carry this through?"}
+    ];
+    let teamDynamicsState = null, teamDynamicsReturnFocus = null;
+
+    function teamDynamicsPerson(row,index) {
+      const pair=(label)=>[row[label+"1"],row[label+"2"]].map(value=>String(value||"").trim()).filter(Boolean);
+      const genius=pair("Genius"), frustration=pair("Frustration");
+      let competency=pair("Competency");
+      if(competency.length!==2) competency=TEAM_DYNAMICS_TYPES.filter(type=>!genius.includes(type)&&!frustration.includes(type));
+      return {id:String(row.AssessmentResultID||row.PersonID||index),name:String(row.DisplayName||`${row.FirstName||""} ${row.LastName||""}`).trim()||`Participant ${index+1}`,genius,competency,frustration};
+    }
+    function teamDynamicsRates(types) {
+      const metrics=teamDynamicsState.distribution.metrics.filter(metric=>types.includes(metric.type));
+      const avg=key=>Math.round(metrics.reduce((sum,item)=>sum+item[key],0)/Math.max(1,metrics.length));
+      return {g:avg("actualGeniusRate"),c:avg("actualCompetencyRate"),f:avg("actualFrustrationRate")};
+    }
+    function teamDynamicsBars(metric) {
+      return `<div class="dynamics-bars">${[["Genius",metric.actualGeniusRate,"genius"],["Competency",metric.actualCompetencyRate,"competency"],["Frustration",metric.actualFrustrationRate,"frustration"]].map(([label,value,kind])=>`<div class="dynamics-bar-row"><span>${label}</span><span class="dynamics-bar-track"><span class="dynamics-bar-fill ${kind}" style="display:block;width:${value}%"></span></span><strong>${value}%</strong></div>`).join("")}</div>`;
+    }
+    function teamDynamicsStageCard(stage) {
+      const rates=teamDynamicsRates(stage.types), people=teamDynamicsState.people.filter(person=>person.genius.some(type=>stage.types.includes(type))).map(person=>person.name);
+      return `<article class="dynamics-card"><h3>${esc(stage.name)}</h3><div class="tiny muted">${stage.types.map(type=>TEAM_DYNAMICS_LETTERS[type]).join(" / ")}</div><div class="dynamics-stage-flow" style="--g:${rates.g}%;--c:${rates.c}%"></div><div class="dynamics-legend"><span><i class="dynamics-dot" style="background:#178447"></i>${rates.g}% G</span><span><i class="dynamics-dot" style="background:#d6a42c"></i>${rates.c}% C</span><span><i class="dynamics-dot" style="background:#d34545"></i>${rates.f}% F</span></div><p class="small">${esc(stage.prompt)}</p><div class="dynamics-name-list"><strong>Natural energy:</strong> ${people.length?esc(people.join(", ")):"No one in this roster"}</div></article>`;
+    }
+    function renderTeamDynamicsOverview() {
+      const d=teamDynamicsState.distribution, leader=d.leader?String(d.leader.DisplayName||`${d.leader.FirstName||""} ${d.leader.LastName||""}`).trim():"Not selected";
+      return `<div class="dynamics-hero"><section class="dynamics-panel"><h3>Team at a glance</h3><p>This workspace translates the selected roster into several facilitation lenses. Every view below recalculates from the same source assessment.</p><div class="dynamics-callout"><strong>Start here:</strong> notice the strongest concentration, then inspect workflow and risk before drawing a conclusion.</div></section><section class="dynamics-panel"><div class="dynamics-stat">${d.actualTeamSize}</div><strong>participants</strong><p class="tiny muted">Leader: ${esc(leader)}</p></section></div><div class="dynamics-six-grid">${d.metrics.map(metric=>`<article class="dynamics-card"><div class="dynamics-type-title"><span class="dynamics-letter">${TEAM_DYNAMICS_LETTERS[metric.type]}</span>${esc(metric.type)}</div>${teamDynamicsBars(metric)}<p class="tiny muted">${esc(metric.classifications[0]||"No prominent signal")}</p></article>`).join("")}</div>`;
+    }
+    function renderTeamDynamicsPairings() {
+      const people=teamDynamicsState.people, options=people.map(person=>`<option value="${esc(person.id)}">${esc(person.name)}</option>`).join("");
+      if(!teamDynamicsState.pairA) teamDynamicsState.pairA=people[0]?.id||"";
+      if(!teamDynamicsState.pairB) teamDynamicsState.pairB=people[1]?.id||people[0]?.id||"";
+      const a=people.find(person=>person.id===teamDynamicsState.pairA)||people[0], b=people.find(person=>person.id===teamDynamicsState.pairB)||people[1]||people[0];
+      const sharedG=a&&b?a.genius.filter(type=>b.genius.includes(type)):[], sharedF=a&&b?a.frustration.filter(type=>b.frustration.includes(type)):[];
+      const coverage=a&&b?[...new Set([...a.genius,...b.genius])]:[];
+      const handoffs=a&&b?a.genius.filter(type=>b.competency.includes(type)).concat(b.genius.filter(type=>a.competency.includes(type))):[];
+      return `<div class="dynamics-pair-selectors"><label class="field">Person one<select onchange="updateTeamDynamicsPair('pairA',this.value)">${options}</select></label><div class="dynamics-vs">WITH</div><label class="field">Person two<select onchange="updateTeamDynamicsPair('pairB',this.value)">${options}</select></label></div><div class="dynamics-risk-grid"><article class="dynamics-card"><h3>Combined genius coverage</h3><p>${coverage.length?coverage.map(type=>`<span class="status-badge">${TEAM_DYNAMICS_LETTERS[type]} ${esc(type)}</span>`).join(" "):"No combined coverage"}</p><p class="tiny muted">Together they naturally energize ${coverage.length} of the six kinds of work.</p></article><article class="dynamics-card"><h3>Shared experience</h3><p><strong>Shared Genius:</strong> ${sharedG.join(", ")||"None"}</p><p><strong>Shared Frustration:</strong> ${sharedF.join(", ")||"None"}</p></article><article class="dynamics-card"><h3>Potential handoffs</h3><p>${handoffs.length?esc([...new Set(handoffs)].join(", ")):"No direct Genius-to-Competency handoff stands out."}</p><p class="tiny muted">Use this as a conversation prompt, not a prediction.</p></article></div><div class="dynamics-callout"><strong>Debrief question:</strong> Where does this pairing create energy for one another, and where do they need an explicit handoff or a third teammate?</div>`;
+    }
+    function renderTeamDynamicsWorkflow() { return `<div class="dynamics-stage-grid">${TEAM_DYNAMICS_STAGES.map(teamDynamicsStageCard).join("")}</div><div class="dynamics-callout"><strong>Facilitation move:</strong> compare the three stages with one another. A percentage is most useful as a relative pattern—not as a grade.</div>`; }
+    function renderTeamDynamicsRisks() {
+      const observations=TeamMapAnalysis.generateTeamObservations(teamDynamicsState.distribution), people=teamDynamicsState.people;
+      const concentration=TEAM_DYNAMICS_TYPES.map(type=>({type,people:people.filter(person=>person.genius.includes(type))})).filter(item=>item.people.length<=1);
+      return `<div class="dynamics-risk-grid">${observations.slice(0,6).map(item=>`<article class="dynamics-card ${/frustration|missing|absent/i.test(item.label)?"dynamics-risk-high":"dynamics-risk-watch"}"><div class="dynamics-type-title"><span class="dynamics-letter">${TEAM_DYNAMICS_LETTERS[item.type]}</span>${esc(item.type)}</div><h3>${esc(item.label)}</h3><p class="small">${esc(item.text)}</p></article>`).join("")||'<article class="dynamics-card"><h3>No threshold-level signal</h3><p>The current settings did not identify an automatic risk.</p></article>'}</div><section class="dynamics-panel" style="margin-top:14px"><h3>Coverage concentration</h3>${concentration.length?concentration.map(item=>`<p><strong>${esc(item.type)}:</strong> ${item.people.length?`carried naturally by ${esc(item.people[0].name)} alone`:"no participant has this as a Genius"}</p>`).join(""):"<p>No Genius is concentrated in one person or absent.</p>"}</section>`;
+    }
+    function renderTeamDynamicsMeetings() {
+      return `<div class="dynamics-meeting-grid">${TEAM_DYNAMICS_STAGES.map(stage=>{const people=teamDynamicsState.people.filter(person=>person.genius.some(type=>stage.types.includes(type))).map(person=>person.name);return `<article class="dynamics-card"><h3>${esc(stage.name)} conversation</h3><p class="small">${esc(stage.prompt)}</p><div class="dynamics-name-list"><strong>Invite visible contribution from:</strong><br>${people.length?esc(people.join(", ")):"No natural Genius coverage—assign the role intentionally."}</div></article>`}).join("")}</div><div class="dynamics-callout"><strong>Whole-team handoff question:</strong> What must be true before we move from this stage of work into the next one?</div>`;
+    }
+    function renderTeamDynamics() {
+      if(!teamDynamicsState)return;
+      const tabs=[{id:"overview",label:"Overview"},{id:"pairings",label:"Pairings"},{id:"workflow",label:"Workflow"},{id:"risks",label:"Risks"},{id:"meetings",label:"Meetings"}];
+      document.getElementById("teamDynamicsTabs").innerHTML=tabs.map(tab=>`<button type="button" role="tab" aria-selected="${teamDynamicsState.tab===tab.id}" class="team-dynamics-tab ${teamDynamicsState.tab===tab.id?"active":""}" onclick="setTeamDynamicsTab('${tab.id}')">${tab.label}</button>`).join("");
+      const renderers={overview:renderTeamDynamicsOverview,pairings:renderTeamDynamicsPairings,workflow:renderTeamDynamicsWorkflow,risks:renderTeamDynamicsRisks,meetings:renderTeamDynamicsMeetings};
+      document.getElementById("teamDynamicsContent").innerHTML=renderers[teamDynamicsState.tab]();
+      if(teamDynamicsState.tab==="pairings"){document.querySelectorAll("#teamDynamicsContent select")[0].value=teamDynamicsState.pairA;document.querySelectorAll("#teamDynamicsContent select")[1].value=teamDynamicsState.pairB;}
+    }
+    function showTeamDynamicsWorkspace(payload) {
+      const distribution=TeamMapAnalysis.calculateTeamMapDistribution(payload.assessment.results,payload.assessment.import.LeaderAssessmentResultID,settings);
+      if(!distribution.validation.valid)return toast(distribution.validation.errors.join(" "));
+      teamDynamicsReturnFocus=document.activeElement;
+      teamDynamicsState={payload,distribution,people:payload.assessment.results.map(teamDynamicsPerson),tab:"overview",pairA:"",pairB:""};
+      document.getElementById("teamDynamicsTitle").textContent=`${payload.title} — Team Dynamics`;
+      document.getElementById("teamDynamicsMeta").textContent=`${distribution.actualTeamSize} participants • live mockup using this ${payload.context?.groupId?"saved group":"workshop"}`;
+      renderTeamDynamics();document.getElementById("teamDynamicsBackdrop").classList.add("open");setTimeout(()=>document.getElementById("closeTeamDynamicsButton").focus(),0);
+    }
+    async function openTeamDynamicsForWorkshop(workshopId){try{showTeamDynamicsWorkspace(await workshopTeamMapPayload(workshopId));}catch(error){toast(error.message||"Unable to open Team Dynamics.");}}
+    function openTeamDynamicsForGroup(groupId){try{showTeamDynamicsWorkspace(assessmentGroupTeamMapPayload(groupId));}catch(error){toast(error.message||"Unable to open Team Dynamics.");}}
+    function setTeamDynamicsTab(tab){if(!teamDynamicsState)return;teamDynamicsState.tab=tab;renderTeamDynamics();}
+    function updateTeamDynamicsPair(key,value){if(!teamDynamicsState)return;teamDynamicsState[key]=value;renderTeamDynamics();}
+    function closeTeamDynamicsWorkspace(){document.getElementById("teamDynamicsBackdrop").classList.remove("open");teamDynamicsState=null;if(teamDynamicsReturnFocus?.focus)teamDynamicsReturnFocus.focus();teamDynamicsReturnFocus=null;}
 
     function showFacilitatorAnalysis(payload) {
       const distribution = TeamMapAnalysis.calculateTeamMapDistribution(payload.assessment.results, payload.assessment.import.LeaderAssessmentResultID, settings);
@@ -4537,6 +4623,7 @@ Sanger, CA 93657"></textarea>
       if (trapWorkshopPeopleFocus(event)) return;
       if (event.key !== "Escape") return;
       if (document.getElementById("emailTemplatePreviewBackdrop").classList.contains("open")) return closeEmailTemplatePreview();
+      if (document.getElementById("teamDynamicsBackdrop").classList.contains("open")) return closeTeamDynamicsWorkspace();
       if (!document.getElementById("teamMapPreview").classList.contains("hidden")) return closeTeamMapPreview();
       if (!document.getElementById("printView").classList.contains("hidden")) return closePrintView();
       if (document.getElementById("analyticsDrilldownBackdrop").classList.contains("open")) return closeAnalyticsDrilldown();

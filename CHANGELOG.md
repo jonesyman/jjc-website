@@ -2,6 +2,12 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.18.01 — 2026-08-18
+
+- Added a read-only Team Dynamics mockup for workshops and saved assessment groups using their existing participant results.
+- Added interactive Overview, Pairings, Workflow, Risks, and Meetings views without duplicating or reauthoring assessment data.
+- Kept the prototype isolated from saved records, PDFs, and the Google Apps Script backend while supporting desktop and mobile layouts.
+
 ## 2026.08.13.01 — 2026-08-13
 
 - Made Individual Working Genius Results letter badges scale with team size: larger for small teams while retaining the compact LVCC sizing for larger teams.
