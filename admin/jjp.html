@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#10281f">
   <title>JJP 3D Printing Admin</title>
-  <link rel="stylesheet" href="../assets/css/jjp-admin.css?v=2026072503">
+  <link rel="stylesheet" href="../assets/css/jjp-admin.css?v=2026081804">
 </head>
 <body>
   <div id="loadingStatus" class="loading-status hidden" role="status" aria-live="polite">
@@ -30,7 +30,7 @@
         <button data-view="costs">Additional Costs</button>
         <button data-view="settings">Settings</button>
       </nav>
-      <div class="sidebar-footer"><a href="./index.html">← Consulting Admin</a><span>JJP Version 2026.07.25.03</span></div>
+      <div class="sidebar-footer"><a href="./index.html">← Consulting Admin</a><span>JJP Version 2026.08.18.04</span></div>
     </aside>
     <button id="sidebarBackdrop" class="sidebar-backdrop" aria-label="Close navigation"></button>
 
@@ -93,6 +93,7 @@
               <label>Business name<input name="BusinessName"></label>
               <label>Business email<input name="BusinessEmail" type="email"></label>
               <label>Business phone<input name="BusinessPhone"></label>
+              <label>Checks payable to<input name="ChecksPayableTo" placeholder="Jeff Jones"></label>
               <label>Default labor rate<input name="DefaultLaborRate" type="number" min="0" step=".01"></label>
               <label>Default machine rate<input name="DefaultMachineRate" type="number" min="0" step=".01"></label>
               <label>Default failure buffer %<input name="DefaultFailureBufferPercent" type="number" min="0" step=".1"></label>
@@ -182,7 +183,7 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="../assets/js/jjpApi.js?v=2026072503"></script>
-  <script src="../assets/js/jjpAdmin.js?v=2026072503"></script>
+  <script src="../assets/js/jjpApi.js?v=2026081804"></script>
+  <script src="../assets/js/jjpAdmin.js?v=2026081804"></script>
 </body>
 </html>

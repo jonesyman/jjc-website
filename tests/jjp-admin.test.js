@@ -67,6 +67,23 @@ test("private pricing workbench drives a sparse customer PDF", () => {
   assert.ok(admin.includes("does not cover the calculated production cost"));
 });
 
+test("quotes and invoices use dynamic check payment information", () => {
+  assert.ok(html.includes('name="ChecksPayableTo"'));
+  assert.ok(backend.includes('ChecksPayableTo: ["Jeff Jones"'));
+  assert.ok(backend.includes('"Checks payable to: " + payee'));
+  assert.ok(backend.includes('settings.BusinessAddress'));
+  assert.ok(backend.includes("appendPaymentInformation_(body, record.Type, settings)"));
+
+  const paymentFunction = backend.match(/function paymentInformation_\(documentType, settings\) \{[\s\S]*?\n\}/)[0];
+  const paymentInformation = new Function(`${paymentFunction}; return paymentInformation_;`)();
+  ["QUOTE", "INVOICE"].forEach(type => {
+    const output = paymentInformation(type, { ChecksPayableTo: "Jeff Jones", BusinessAddress: "123 Main St\nClovis, CA 93612" });
+    assert.equal(output.visible, true, `${type} payment information should be visible`);
+    assert.equal(output.payableLine, "Checks payable to: Jeff Jones");
+    assert.equal(output.address, "123 Main St\nClovis, CA 93612");
+  });
+});
+
 test("mobile navigation and JJP branding are present", () => {
   assert.match(html, /JJP_Logo\.png/);
   assert.match(html, /viewport-fit=cover/);

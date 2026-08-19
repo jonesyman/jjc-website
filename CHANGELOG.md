@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.08.18.04 — 2026-08-18
+
+- Added dynamic payment information to both JJP quote and invoice PDFs.
+- Added a Settings field for the check payee name and reused the configured business mailing address.
+
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
 ## 2026.08.18.03 — 2026-08-18

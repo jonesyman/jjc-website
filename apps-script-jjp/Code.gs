@@ -22,6 +22,7 @@ const JJP_DEFAULT_SETTINGS = Object.freeze({
   BusinessEmail: ["", "Primary business email"],
   BusinessPhone: ["", "Primary business phone"],
   BusinessAddress: ["", "Business mailing address"],
+  ChecksPayableTo: ["Jeff Jones", "Name shown in check payment information"],
   PaymentInstructions: ["Payment due according to the terms shown on this invoice.", "Invoice payment instructions"],
   DefaultLaborRate: ["30.00", "Default labor and assembly rate per hour"],
   DefaultMachineRate: ["2.00", "Default machine wear and electricity rate per hour"],
@@ -351,6 +352,7 @@ function generatePdf_(documentId) {
     body.appendParagraph("PROJECT NOTES").setBold(true).setForegroundColor("#145c3b");
     body.appendParagraph(String(record.Notes));
   }
+  appendPaymentInformation_(body, record.Type, settings);
   if (record.Type === "INVOICE" && settings.PaymentInstructions) {
     body.appendParagraph("PAYMENT INSTRUCTIONS").setBold(true).setForegroundColor("#145c3b");
     body.appendParagraph(String(settings.PaymentInstructions));
@@ -371,6 +373,26 @@ function generatePdf_(documentId) {
   record.UpdatedDate = isoNow_();
   upsert_("Documents", "DocumentID", record);
   return { ok: true, id: documentId, url: pdfFile.getUrl(), fileId: pdfFile.getId() };
+}
+
+function paymentInformation_(documentType, settings) {
+  const supported = documentType === "QUOTE" || documentType === "INVOICE";
+  const payee = String((settings && settings.ChecksPayableTo) || "").trim();
+  const address = String((settings && settings.BusinessAddress) || "").trim();
+  return {
+    visible: supported && Boolean(payee || address),
+    heading: "PAYMENT INFORMATION",
+    payableLine: payee ? "Checks payable to: " + payee : "",
+    address: address
+  };
+}
+
+function appendPaymentInformation_(body, documentType, settings) {
+  const payment = paymentInformation_(documentType, settings);
+  if (!payment.visible) return;
+  body.appendParagraph(payment.heading).setBold(true).setForegroundColor("#145c3b");
+  if (payment.payableLine) body.appendParagraph(payment.payableLine).setBold(true);
+  if (payment.address) body.appendParagraph(payment.address);
 }
 
 function insertLogo_(cell, settings) {
