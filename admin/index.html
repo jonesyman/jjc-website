@@ -919,6 +919,7 @@
         <button data-view-btn="workshops">📅 Workshops</button>
         <button data-view-btn="email-templates">✉️ Email Templates</button>
         <button data-view-btn="assessment-library">🧩 Assessments & Groups</button>
+        <button data-view-btn="team-builder">🧭 Team Builder</button>
         <button data-view-btn="invoices">💵 Invoices</button>
         <button data-view-btn="assessments">📊 Assessment Analytics</button>
         <button data-view-btn="post-session">📦 Post-Session Packages</button>
@@ -928,7 +929,7 @@
       </nav>
 
       <div class="sidebar-version">
-        Version <strong id="appVersionLabel">2026.08.18.01</strong><br>
+        Version <strong id="appVersionLabel">2026.08.18.02</strong><br>
         Settings sync enabled
       </div>
     </aside>
@@ -1118,6 +1119,29 @@
               <div class="section-title"><h3>Individual Assessments</h3><span id="analyticsMatchCount" class="tiny muted"></span></div>
               <div id="analyticsResults" class="analytics-results"></div>
               <p id="analyticsEmpty" class="muted small hidden">No assessment results match these filters.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- TEAM BUILDER -->
+        <section id="view-team-builder" class="view">
+          <div class="team-builder-shell">
+            <div class="team-builder-context card">
+              <div>
+                <span class="team-dynamics-kicker">Interactive team workspace</span>
+                <h2 id="teamDynamicsTitle">Team Builder</h2>
+                <p id="teamDynamicsMeta" class="small muted">Choose an existing workshop or saved group. No assessment data is duplicated.</p>
+              </div>
+              <div class="team-builder-picker">
+                <label for="teamBuilderContextSelect">Workshop or saved group</label>
+                <select id="teamBuilderContextSelect" onchange="selectTeamBuilderContext(this.value)"><option value="">Choose a team...</option></select>
+              </div>
+            </div>
+            <div class="team-dynamics-data-note"><strong>Fixed Working Genius sequence:</strong> every view follows W-I-D-G-E-T. Analytical importance is communicated without rearranging the six types.</div>
+            <div id="teamDynamicsEmpty" class="card"><h3>Select a team to begin</h3><p class="muted">Open Team Builder from a workshop or saved group to load it automatically, or choose one above.</p></div>
+            <div id="teamDynamicsWorkspace" class="hidden">
+              <div id="teamDynamicsTabs" class="team-dynamics-tabs" role="tablist" aria-label="Team Builder views"></div>
+              <div id="teamDynamicsContent" class="team-dynamics-content"></div>
             </div>
           </div>
         </section>
@@ -1585,18 +1609,6 @@ Sanger, CA 93657"></textarea>
     </div>
   </div>
 
-  <div id="teamDynamicsBackdrop" class="dialog-backdrop no-print">
-    <div class="send-dialog team-dynamics-dialog" role="dialog" aria-modal="true" aria-labelledby="teamDynamicsTitle">
-      <div class="dialog-header team-dynamics-header">
-        <div><span class="team-dynamics-kicker">Interactive mockup</span><h2 id="teamDynamicsTitle">Team Dynamics</h2><p id="teamDynamicsMeta" class="tiny muted"></p></div>
-        <button id="closeTeamDynamicsButton" class="button ghost small-btn" type="button" onclick="closeTeamDynamicsWorkspace()">Close</button>
-      </div>
-      <div class="team-dynamics-data-note"><strong>Uses existing assessment data.</strong> Nothing entered here is saved, and no participant information is duplicated.</div>
-      <div id="teamDynamicsTabs" class="team-dynamics-tabs" role="tablist" aria-label="Team Dynamics views"></div>
-      <div id="teamDynamicsContent" class="team-dynamics-content"></div>
-    </div>
-  </div>
-
   <!-- PRINT VIEW -->
   <div id="teamMapPreview" class="print-view hidden" aria-hidden="true">
     <div class="print-toolbar no-print"><strong>Graphical Team Map Preview</strong><span class="team-map-mobile-note">This preview preserves the letter-size layout. Swipe horizontally to inspect it, then use Print / Save as PDF.</span><div class="actions" style="margin:0;"><label class="archive-toggle">Names <select id="teamMapNameMode" onchange="renderTeamMapPreview()"><option value="initial">First name + last initial</option><option value="full">Full name</option></select></label><button id="closeTeamMapPreviewButton" class="button secondary small-btn" onclick="closeTeamMapPreview()">Close Preview</button><button class="button secondary small-btn" onclick="changeTeamMapLeader()">Change Leader</button><button class="button small-btn" onclick="printTeamMapPdf()">Print / Save as PDF</button></div></div>
@@ -1678,7 +1690,7 @@ Sanger, CA 93657"></textarea>
   <script src="../assets/js/emailTemplates.js?v=1"></script>
 
   <script>
-    const APP_VERSION = "2026.08.18.01";
+    const APP_VERSION = "2026.08.18.02";
 
     const K = {
       clients: "jjc_clients",
@@ -1879,12 +1891,13 @@ Sanger, CA 93657"></textarea>
       document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
       document.getElementById("view-" + view).classList.add("active");
       document.querySelectorAll("[data-view-btn]").forEach(btn => btn.classList.toggle("active", btn.dataset.viewBtn === view));
-      const viewTitles = { assessments: "Assessment Analytics", "assessment-library": "Assessments & Groups", "email-templates": "Email Templates", "post-session": "Post-Session Packages", tutorial: "Tutorial & Best Practices" };
+      const viewTitles = { assessments: "Assessment Analytics", "assessment-library": "Assessments & Groups", "team-builder":"Team Builder", "email-templates": "Email Templates", "post-session": "Post-Session Packages", tutorial: "Tutorial & Best Practices" };
       document.getElementById("pageTitle").textContent = viewTitles[view] || view.charAt(0).toUpperCase() + view.slice(1);
       closeSidebar();
       location.hash = view;
       if (view === "assessments") loadAssessmentAnalytics();
       if (view === "assessment-library") loadAssessmentLibrary();
+      if (view === "team-builder") loadTeamBuilderLanding();
       if (view === "email-templates") loadEmailTemplates();
       if (view === "post-session") loadPostSessionWorkspace();
     }
@@ -2426,7 +2439,7 @@ Sanger, CA 93657"></textarea>
         el.className = "record-card";
         const workshopWhen = w.WorkshopDate ? formatDate(w.WorkshopDate) : (w.DateDescription || "Date not recorded");
         const classification=[w.Sector,w.Industry,w.TeamFunction].filter(Boolean).join(" • ");
-        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div><div class="tiny muted">${classification ? esc(classification) : '<span class="status-badge">Needs classification</span>'}</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button><button class="button secondary small-btn" onclick="openTeamDynamicsForWorkshop('${jsEsc(w.WorkshopID)}')">Team Dynamics <span class="prototype-badge">Mockup</span></button><button class="button secondary small-btn" onclick="openResourcePackageBuilder('${jsEsc(w.WorkshopID)}')">Resource Package</button><button class="button secondary small-btn" onclick="openWorkshopFacilitatorAnalysis('${jsEsc(w.WorkshopID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadWorkshopCondensedTeamMap('${jsEsc(w.WorkshopID)}',this)">Download Map</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
+        el.innerHTML = `<div class="record-title">${esc(w.Organization)}</div><div class="tiny muted">${esc(w.WorkshopID)} • ${esc(workshopWhen)}${w.StartTime ? " • " + esc(formatTime(w.StartTime)) : ""}</div><span class="status-badge">${esc(status)}</span><span class="status-badge">${esc(financial)}</span>${isArchived(w) ? '<span class="status-badge">Archived</span>' : ''}<div class="tiny muted">${esc(w.Type || "Workshop")} • ${esc(w.DeliveryFormat || "Format not set")} • ${esc(w.Participants || 0)} participants</div><div class="tiny muted">${classification ? esc(classification) : '<span class="status-badge">Needs classification</span>'}</div>${w.PrimaryContact || w.ContactEmail ? `<div class="tiny muted">${esc(w.PrimaryContact || "No contact")} ${w.ContactEmail ? "• " + esc(w.ContactEmail) : ""}</div>` : ""}<div class="actions">${isArchived(w) ? `<button class="button secondary small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',false)">Restore</button><button class="button danger small-btn" onclick="permanentlyDeleteRecord('workshop','${jsEsc(w.WorkshopID)}')">Delete Permanently</button>` : `<button class="button secondary small-btn" onclick="editWorkshop('${jsEsc(w.WorkshopID)}')">Edit</button><button class="button secondary small-btn" onclick="openAssessmentDialog('${jsEsc(w.WorkshopID)}')">Assessment Results</button><button class="button secondary small-btn" onclick="openTeamDynamicsForWorkshop('${jsEsc(w.WorkshopID)}')">Team Builder</button><button class="button secondary small-btn" onclick="openResourcePackageBuilder('${jsEsc(w.WorkshopID)}')">Resource Package</button><button class="button secondary small-btn" onclick="openWorkshopFacilitatorAnalysis('${jsEsc(w.WorkshopID)}')">Slide Notes</button><button class="button secondary small-btn" onclick="downloadWorkshopCondensedTeamMap('${jsEsc(w.WorkshopID)}',this)">Download Map</button>${w.EstimateID ? `<button class="button secondary small-btn" onclick="openLinkedEstimate('${jsEsc(w.EstimateID)}')">Open Estimate</button>` : `<button class="button small-btn" onclick="createEstimateFromWorkshop('${jsEsc(w.WorkshopID)}')">Create Estimate</button>`}${w.InvoiceID ? `<button class="button secondary small-btn" onclick="openLinkedInvoice('${jsEsc(w.InvoiceID)}')">Open Invoice</button>` : ""}<button class="button ghost small-btn" onclick="setRecordArchived('workshop','${jsEsc(w.WorkshopID)}',true)">Archive</button>`}</div>`;
         if (!isArchived(w)) {
           const emailButton = document.createElement("button");
           emailButton.className = "button secondary small-btn";
@@ -2992,42 +3005,76 @@ Sanger, CA 93657"></textarea>
       if(!teamDynamicsState.pairA) teamDynamicsState.pairA=people[0]?.id||"";
       if(!teamDynamicsState.pairB) teamDynamicsState.pairB=people[1]?.id||people[0]?.id||"";
       const a=people.find(person=>person.id===teamDynamicsState.pairA)||people[0], b=people.find(person=>person.id===teamDynamicsState.pairB)||people[1]||people[0];
-      const sharedG=a&&b?a.genius.filter(type=>b.genius.includes(type)):[], sharedF=a&&b?a.frustration.filter(type=>b.frustration.includes(type)):[];
-      const coverage=a&&b?[...new Set([...a.genius,...b.genius])]:[];
+      const sharedG=a&&b?TEAM_DYNAMICS_TYPES.filter(type=>a.genius.includes(type)&&b.genius.includes(type)):[], sharedF=a&&b?TEAM_DYNAMICS_TYPES.filter(type=>a.frustration.includes(type)&&b.frustration.includes(type)):[];
+      const coverage=a&&b?TEAM_DYNAMICS_TYPES.filter(type=>a.genius.includes(type)||b.genius.includes(type)):[];
       const handoffs=a&&b?a.genius.filter(type=>b.competency.includes(type)).concat(b.genius.filter(type=>a.competency.includes(type))):[];
       return `<div class="dynamics-pair-selectors"><label class="field">Person one<select onchange="updateTeamDynamicsPair('pairA',this.value)">${options}</select></label><div class="dynamics-vs">WITH</div><label class="field">Person two<select onchange="updateTeamDynamicsPair('pairB',this.value)">${options}</select></label></div><div class="dynamics-risk-grid"><article class="dynamics-card"><h3>Combined genius coverage</h3><p>${coverage.length?coverage.map(type=>`<span class="status-badge">${TEAM_DYNAMICS_LETTERS[type]} ${esc(type)}</span>`).join(" "):"No combined coverage"}</p><p class="tiny muted">Together they naturally energize ${coverage.length} of the six kinds of work.</p></article><article class="dynamics-card"><h3>Shared experience</h3><p><strong>Shared Genius:</strong> ${sharedG.join(", ")||"None"}</p><p><strong>Shared Frustration:</strong> ${sharedF.join(", ")||"None"}</p></article><article class="dynamics-card"><h3>Potential handoffs</h3><p>${handoffs.length?esc([...new Set(handoffs)].join(", ")):"No direct Genius-to-Competency handoff stands out."}</p><p class="tiny muted">Use this as a conversation prompt, not a prediction.</p></article></div><div class="dynamics-callout"><strong>Debrief question:</strong> Where does this pairing create energy for one another, and where do they need an explicit handoff or a third teammate?</div>`;
     }
-    function renderTeamDynamicsWorkflow() { return `<div class="dynamics-stage-grid">${TEAM_DYNAMICS_STAGES.map(teamDynamicsStageCard).join("")}</div><div class="dynamics-callout"><strong>Facilitation move:</strong> compare the three stages with one another. A percentage is most useful as a relative pattern—not as a grade.</div>`; }
+    function renderTeamDynamicsWorkflow() {
+      const people=teamDynamicsState.people, responsive=["Wonder","Discernment","Enablement"], disruptive=["Invention","Galvanizing","Tenacity"];
+      const doubleResponsive=people.filter(person=>person.genius.every(type=>responsive.includes(type))), doubleDisruptive=people.filter(person=>person.genius.every(type=>disruptive.includes(type))), balanced=people.filter(person=>person.genius.some(type=>responsive.includes(type))&&person.genius.some(type=>disruptive.includes(type)));
+      const total=Math.max(1,people.length*2), responsiveSelections=people.reduce((sum,person)=>sum+person.genius.filter(type=>responsive.includes(type)).length,0), responsiveRate=Math.round(responsiveSelections/total*100), disruptiveRate=100-responsiveRate;
+      const nameList=items=>items.length?esc(items.map(person=>person.name).join(", ")):"None";
+      const topology=teamDynamicsState.distribution.metrics.map((metric,index)=>`${index?'<div class="dynamics-topology-arrow">→</div>':""}<div class="dynamics-topology-node"><span class="dynamics-letter">${TEAM_DYNAMICS_LETTERS[metric.type]}</span><strong>${esc(metric.type)}</strong><small>${metric.actualGeniusRate}% G · ${metric.actualFrustrationRate}% F</small></div>`).join("");
+      return `<section class="dynamics-panel"><h3>Topology of Work Execution</h3><p class="small muted">The sequence is fixed: work moves from noticing and creating through evaluation, mobilization, support, and completion.</p><div class="dynamics-topology">${topology}</div></section><section class="dynamics-panel" style="margin-top:14px"><h3>Team Operational Style Balance</h3><div class="dynamics-balance"><div class="dynamics-balance-responsive"><strong>Responsive — W, D, E</strong><div class="dynamics-stat">${responsiveRate}%</div><span class="tiny muted">of Genius selections</span></div><div class="dynamics-balance-disruptive"><strong>Disruptive — I, G, T</strong><div class="dynamics-stat" style="color:#e08735">${disruptiveRate}%</div><span class="tiny muted">of Genius selections</span></div></div><div class="dynamics-operator-grid"><article class="dynamics-card dynamics-operator-card"><h3>Double Responsives</h3><p class="dynamics-stat">${doubleResponsive.length}</p><p class="dynamics-name-list">${nameList(doubleResponsive)}</p><p class="tiny muted">Both Geniuses are W, D, or E. They may naturally notice, evaluate, and respond to needs.</p></article><article class="dynamics-card dynamics-operator-card balanced"><h3>Balanced Operators</h3><p class="dynamics-stat">${balanced.length}</p><p class="dynamics-name-list">${nameList(balanced)}</p><p class="tiny muted">One Genius is Responsive and one is Disruptive, naturally bridging operational styles.</p></article><article class="dynamics-card dynamics-operator-card disruptive"><h3>Double Disruptors</h3><p class="dynamics-stat" style="color:#e08735">${doubleDisruptive.length}</p><p class="dynamics-name-list">${nameList(doubleDisruptive)}</p><p class="tiny muted">Both Geniuses are I, G, or T. They may naturally create movement and challenge the current state.</p></article></div></section><div class="dynamics-callout"><strong>Facilitation question:</strong> Where does this team need a clearer handoff between Responsive awareness and Disruptive movement?</div>`;
+    }
+    function renderTeamDynamicsPhases() {
+      return `<div class="dynamics-stage-grid">${TEAM_DYNAMICS_STAGES.map(teamDynamicsStageCard).join("")}</div><section class="dynamics-panel" style="margin-top:14px"><h3>Stage hand-offs</h3><div class="dynamics-topology">${TEAM_DYNAMICS_TYPES.map((type,index)=>`${index?'<div class="dynamics-topology-arrow">→</div>':""}<div class="dynamics-topology-node"><span class="dynamics-letter">${TEAM_DYNAMICS_LETTERS[type]}</span><strong>${type}</strong></div>`).join("")}</div><p class="small muted">Compare the stages relative to one another. Percentages describe the available energy and resistance; they are not performance grades.</p></section>`;
+    }
     function renderTeamDynamicsRisks() {
-      const observations=TeamMapAnalysis.generateTeamObservations(teamDynamicsState.distribution), people=teamDynamicsState.people;
+      const generated=TeamMapAnalysis.generateTeamObservations(teamDynamicsState.distribution), observations=TEAM_DYNAMICS_TYPES.map(type=>generated.find(item=>item.type===type)).filter(Boolean), people=teamDynamicsState.people;
       const concentration=TEAM_DYNAMICS_TYPES.map(type=>({type,people:people.filter(person=>person.genius.includes(type))})).filter(item=>item.people.length<=1);
       return `<div class="dynamics-risk-grid">${observations.slice(0,6).map(item=>`<article class="dynamics-card ${/frustration|missing|absent/i.test(item.label)?"dynamics-risk-high":"dynamics-risk-watch"}"><div class="dynamics-type-title"><span class="dynamics-letter">${TEAM_DYNAMICS_LETTERS[item.type]}</span>${esc(item.type)}</div><h3>${esc(item.label)}</h3><p class="small">${esc(item.text)}</p></article>`).join("")||'<article class="dynamics-card"><h3>No threshold-level signal</h3><p>The current settings did not identify an automatic risk.</p></article>'}</div><section class="dynamics-panel" style="margin-top:14px"><h3>Coverage concentration</h3>${concentration.length?concentration.map(item=>`<p><strong>${esc(item.type)}:</strong> ${item.people.length?`carried naturally by ${esc(item.people[0].name)} alone`:"no participant has this as a Genius"}</p>`).join(""):"<p>No Genius is concentrated in one person or absent.</p>"}</section>`;
     }
     function renderTeamDynamicsMeetings() {
-      return `<div class="dynamics-meeting-grid">${TEAM_DYNAMICS_STAGES.map(stage=>{const people=teamDynamicsState.people.filter(person=>person.genius.some(type=>stage.types.includes(type))).map(person=>person.name);return `<article class="dynamics-card"><h3>${esc(stage.name)} conversation</h3><p class="small">${esc(stage.prompt)}</p><div class="dynamics-name-list"><strong>Invite visible contribution from:</strong><br>${people.length?esc(people.join(", ")):"No natural Genius coverage—assign the role intentionally."}</div></article>`}).join("")}</div><div class="dynamics-callout"><strong>Whole-team handoff question:</strong> What must be true before we move from this stage of work into the next one?</div>`;
+      const meetings=[
+        {title:"Quarterly Off-site",types:["Wonder","Invention"],sub:"Ideation — W / I",color:"#0284c7",purpose:"Step above daily work to examine needs, possibilities, and new directions."},
+        {title:"Strategic Ad Hoc",types:["Discernment"],sub:"Decisions — D",color:"#3b82f6",purpose:"Evaluate a specific choice, refine the options, and determine what is sound."},
+        {title:"Weekly Tactical",types:["Galvanizing"],sub:"Activation — G",color:"#d97706",purpose:"Create shared commitment, clarify what matters now, and mobilize action."},
+        {title:"Daily Stand-up",types:["Enablement","Tenacity"],sub:"Implementation — E / T",color:"#059669",purpose:"Coordinate support, remove obstacles, confirm ownership, and finish the work."}
+      ];
+      const names=(people,empty)=>people.length?esc(people.map(person=>person.name).join(", ")):empty;
+      return `<div class="dynamics-meeting-grid">${meetings.map(meeting=>{const essential=teamDynamicsState.people.filter(person=>person.genius.some(type=>meeting.types.includes(type))), optional=teamDynamicsState.people.filter(person=>!essential.includes(person)&&person.competency.some(type=>meeting.types.includes(type))), protect=teamDynamicsState.people.filter(person=>person.frustration.some(type=>meeting.types.includes(type)));return `<article class="dynamics-card dynamics-meeting-card" style="--meeting-color:${meeting.color}"><span class="dynamics-meeting-accent"></span><h3>${meeting.title}</h3><div class="tiny muted">${meeting.sub}</div><p class="small">${meeting.purpose}</p><div class="dynamics-meeting-role essential"><strong>Essential Drivers</strong><span class="dynamics-name-list">${names(essential,"Missing Genius coverage—assign the role intentionally.")}</span></div><div class="dynamics-meeting-role"><strong>Optional / As Needed</strong><span class="dynamics-name-list">${names(optional,"No additional competency coverage.")}</span></div><div class="dynamics-meeting-role protect"><strong>Protect Their Energy</strong><span class="dynamics-name-list">${names(protect,"No one has the relevant work as a Frustration.")}</span></div></article>`}).join("")}</div><div class="dynamics-callout"><strong>Use the attendance guidance thoughtfully:</strong> “Protect Their Energy” means clarify purpose, role, and duration—not automatically exclude someone from the meeting.</div>`;
+    }
+    function teamDynamicsFutureProfiles(){
+      const metrics=Object.fromEntries(teamDynamicsState.distribution.metrics.map(metric=>[metric.type,metric])), profiles=[];
+      TEAM_DYNAMICS_TYPES.forEach((first,index)=>TEAM_DYNAMICS_TYPES.slice(index+1).forEach(second=>{const types=[first,second], raw=types.reduce((sum,type)=>sum+(100-metrics[type].actualGeniusRate)+(metrics[type].actualFrustrationRate*.5),0), stage=TEAM_DYNAMICS_STAGES.find(item=>types.every(type=>item.types.includes(type)))?.name||"Cross-stage";profiles.push({types,code:types.map(type=>TEAM_DYNAMICS_LETTERS[type]).join(""),raw,stage});}));
+      const max=Math.max(...profiles.map(item=>item.raw),1);profiles.forEach(item=>item.score=Math.round(item.raw/max*100));return profiles;
+    }
+    function renderTeamDynamicsFutureRole(){
+      const profiles=teamDynamicsFutureProfiles(), best=profiles.reduce((winner,item)=>item.raw>winner.raw?item:winner,profiles[0]), metric=type=>teamDynamicsState.distribution.metrics.find(item=>item.type===type);
+      return `<div class="dynamics-future-summary"><section class="dynamics-panel"><span class="team-dynamics-kicker">Strongest coverage addition</span><div class="dynamics-pair-badge">${best.types.map(type=>`<span class="dynamics-letter">${TEAM_DYNAMICS_LETTERS[type]}</span>`).join("")}</div><h3>${best.types.join(" + ")}</h3><p class="small">This pairing currently provides the strongest combined relief for low Genius availability and high Frustration exposure.</p><p class="tiny muted">${best.stage} coverage · ${best.types.map(type=>`${type}: ${metric(type).actualGeniusRate}% G / ${metric(type).actualFrustrationRate}% F`).join(" · ")}</p></section><section class="dynamics-panel"><h3>How to use this</h3><p>This is a role-coverage conversation, not a hiring decision or a prediction of job performance. Consider the work the role actually requires, experience, values, team needs, and equitable hiring practices alongside Working Genius.</p><div class="dynamics-callout"><strong>Explore:</strong> If this pairing joined the team, where would it add sustainable energy—and what existing strengths might become more concentrated?</div></section></div><div class="dynamics-profile-grid">${profiles.map(profile=>`<article class="dynamics-card dynamics-profile-card ${profile===best?"recommended":""}"><div class="dynamics-type-title"><span>${profile.code}</span> ${profile.types.join(" + ")}</div><div class="dynamics-score-meter"><span style="width:${profile.score}%"></span></div><div class="tiny muted">${profile.stage} · coverage-need indicator ${profile.score}</div>${profile===best?'<span class="status-badge">Strongest current addition</span>':""}</article>`).join("")}</div><p class="dynamics-canonical-note">All 15 pairings remain displayed in canonical W-I-D-G-E-T combination order. The indicator highlights coverage need without rearranging the pairings.</p>`;
     }
     function renderTeamDynamics() {
       if(!teamDynamicsState)return;
-      const tabs=[{id:"overview",label:"Overview"},{id:"pairings",label:"Pairings"},{id:"workflow",label:"Workflow"},{id:"risks",label:"Risks"},{id:"meetings",label:"Meetings"}];
+      const tabs=[{id:"overview",label:"Overview"},{id:"workflow",label:"Workflow"},{id:"phases",label:"Phases"},{id:"meetings",label:"Meetings"},{id:"pairings",label:"Pairings"},{id:"risks",label:"Risks"},{id:"future",label:"Future Role Coverage"}];
       document.getElementById("teamDynamicsTabs").innerHTML=tabs.map(tab=>`<button type="button" role="tab" aria-selected="${teamDynamicsState.tab===tab.id}" class="team-dynamics-tab ${teamDynamicsState.tab===tab.id?"active":""}" onclick="setTeamDynamicsTab('${tab.id}')">${tab.label}</button>`).join("");
-      const renderers={overview:renderTeamDynamicsOverview,pairings:renderTeamDynamicsPairings,workflow:renderTeamDynamicsWorkflow,risks:renderTeamDynamicsRisks,meetings:renderTeamDynamicsMeetings};
+      const renderers={overview:renderTeamDynamicsOverview,workflow:renderTeamDynamicsWorkflow,phases:renderTeamDynamicsPhases,meetings:renderTeamDynamicsMeetings,pairings:renderTeamDynamicsPairings,risks:renderTeamDynamicsRisks,future:renderTeamDynamicsFutureRole};
       document.getElementById("teamDynamicsContent").innerHTML=renderers[teamDynamicsState.tab]();
       if(teamDynamicsState.tab==="pairings"){document.querySelectorAll("#teamDynamicsContent select")[0].value=teamDynamicsState.pairA;document.querySelectorAll("#teamDynamicsContent select")[1].value=teamDynamicsState.pairB;}
     }
     function showTeamDynamicsWorkspace(payload) {
       const distribution=TeamMapAnalysis.calculateTeamMapDistribution(payload.assessment.results,payload.assessment.import.LeaderAssessmentResultID,settings);
       if(!distribution.validation.valid)return toast(distribution.validation.errors.join(" "));
-      teamDynamicsReturnFocus=document.activeElement;
       teamDynamicsState={payload,distribution,people:payload.assessment.results.map(teamDynamicsPerson),tab:"overview",pairA:"",pairB:""};
-      document.getElementById("teamDynamicsTitle").textContent=`${payload.title} — Team Dynamics`;
-      document.getElementById("teamDynamicsMeta").textContent=`${distribution.actualTeamSize} participants • live mockup using this ${payload.context?.groupId?"saved group":"workshop"}`;
-      renderTeamDynamics();document.getElementById("teamDynamicsBackdrop").classList.add("open");setTimeout(()=>document.getElementById("closeTeamDynamicsButton").focus(),0);
+      document.getElementById("teamDynamicsTitle").textContent=payload.title;
+      document.getElementById("teamDynamicsMeta").textContent=`${distribution.actualTeamSize} participants • ${payload.context?.groupId?"saved group":"workshop"} • calculated from current assessment records`;
+      document.getElementById("teamDynamicsEmpty").classList.add("hidden");document.getElementById("teamDynamicsWorkspace").classList.remove("hidden");
+      const key=payload.context?.groupId?`g:${payload.context.groupId}`:`w:${payload.workshopId}`;sessionStorage.setItem("jjcTeamBuilderContext",key);document.getElementById("teamBuilderContextSelect").value=key;
+      renderTeamDynamics();
     }
-    async function openTeamDynamicsForWorkshop(workshopId){try{showTeamDynamicsWorkspace(await workshopTeamMapPayload(workshopId));}catch(error){toast(error.message||"Unable to open Team Dynamics.");}}
-    function openTeamDynamicsForGroup(groupId){try{showTeamDynamicsWorkspace(assessmentGroupTeamMapPayload(groupId));}catch(error){toast(error.message||"Unable to open Team Dynamics.");}}
+    async function loadTeamBuilderLanding(){
+      if(!assessmentLibraryLoaded)await loadAssessmentLibrary();
+      const select=document.getElementById("teamBuilderContextSelect");if(!select)return;
+      const current=teamDynamicsState?(teamDynamicsState.payload.context?.groupId?`g:${teamDynamicsState.payload.context.groupId}`:`w:${teamDynamicsState.payload.workshopId}`):"";
+      select.innerHTML='<option value="">Choose a team...</option><optgroup label="Workshops">'+workshops.filter(item=>!isArchived(item)).map(item=>`<option value="w:${esc(item.WorkshopID)}">${esc(item.Organization||item.WorkshopID)}</option>`).join("")+'</optgroup><optgroup label="Saved Groups">'+assessmentLibraryGroups().map(group=>`<option value="g:${esc(group.GroupID)}">${esc(group.GroupName)}</option>`).join("")+'</optgroup>';
+      if(current){select.value=current;return;}const saved=sessionStorage.getItem("jjcTeamBuilderContext");if(saved&&[...select.options].some(option=>option.value===saved))selectTeamBuilderContext(saved);
+    }
+    async function selectTeamBuilderContext(value){if(!value)return;const [kind,id]=value.split(":");try{if(kind==="w")showTeamDynamicsWorkspace(await workshopTeamMapPayload(id));else showTeamDynamicsWorkspace(assessmentGroupTeamMapPayload(id));}catch(error){toast(error.message||"Unable to load Team Builder.");}}
+    async function openTeamDynamicsForWorkshop(workshopId){showView("team-builder");try{showTeamDynamicsWorkspace(await workshopTeamMapPayload(workshopId));}catch(error){toast(error.message||"Unable to open Team Builder.");}}
+    async function openTeamDynamicsForGroup(groupId){if(!assessmentLibraryLoaded)await loadAssessmentLibrary();showView("team-builder");try{showTeamDynamicsWorkspace(assessmentGroupTeamMapPayload(groupId));}catch(error){toast(error.message||"Unable to open Team Builder.");}}
     function setTeamDynamicsTab(tab){if(!teamDynamicsState)return;teamDynamicsState.tab=tab;renderTeamDynamics();}
     function updateTeamDynamicsPair(key,value){if(!teamDynamicsState)return;teamDynamicsState[key]=value;renderTeamDynamics();}
-    function closeTeamDynamicsWorkspace(){document.getElementById("teamDynamicsBackdrop").classList.remove("open");teamDynamicsState=null;if(teamDynamicsReturnFocus?.focus)teamDynamicsReturnFocus.focus();teamDynamicsReturnFocus=null;}
 
     function showFacilitatorAnalysis(payload) {
       const distribution = TeamMapAnalysis.calculateTeamMapDistribution(payload.assessment.results, payload.assessment.import.LeaderAssessmentResultID, settings);
@@ -4623,7 +4670,6 @@ Sanger, CA 93657"></textarea>
       if (trapWorkshopPeopleFocus(event)) return;
       if (event.key !== "Escape") return;
       if (document.getElementById("emailTemplatePreviewBackdrop").classList.contains("open")) return closeEmailTemplatePreview();
-      if (document.getElementById("teamDynamicsBackdrop").classList.contains("open")) return closeTeamDynamicsWorkspace();
       if (!document.getElementById("teamMapPreview").classList.contains("hidden")) return closeTeamMapPreview();
       if (!document.getElementById("printView").classList.contains("hidden")) return closePrintView();
       if (document.getElementById("analyticsDrilldownBackdrop").classList.contains("open")) return closeAnalyticsDrilldown();

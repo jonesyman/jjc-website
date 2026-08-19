@@ -2,6 +2,14 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.18.02 — 2026-08-18
+
+- Replaced the Team Dynamics dialog mockup with a dedicated full-page Team Builder that can load an existing workshop or saved group.
+- Added full Workflow, Phases, Meetings, Pairings, Risks, and Future Role Coverage views derived from current assessment records.
+- Added Responsive, Disruptive, Double Responsive, Double Disruptor, and Balanced Operator calculations plus the W-I-D-G-E-T work-execution topology.
+- Added four meeting formats with Essential Drivers, Optional / As Needed, and Protect Their Energy guidance.
+- Enforced W-I-D-G-E-T as the fixed display sequence throughout Team Builder, including the canonical display of all 15 future-role pairings.
+
 ## 2026.08.18.01 — 2026-08-18
 
 - Added a read-only Team Dynamics mockup for workshops and saved assessment groups using their existing participant results.
