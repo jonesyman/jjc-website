@@ -2,6 +2,14 @@
 
 Notable application releases are recorded here. Git history remains the detailed source for individual fixes.
 
+## 2026.08.18.03 — 2026-08-18
+
+- Replaced the Team Builder Pairings tab with a People view that provides a Profile and Debrief toggle for every participant.
+- Reworked the Workflow topology into paired Genius and Frustration columns that make balance and imbalance visible across W-I-D-G-E-T.
+- Added a branded Team Builder PDF builder with all content selected by default and granular controls for Overview, Workflow, Phases, Meetings, People, Risks, and Future Role Coverage.
+- Added a print preview and context-based Team Builder PDF filename without changing saved assessment data or the Apps Script backend.
+- Removed the unnecessary fixed-sequence explanatory banner from the Team Builder page.
+
 ## 2026.08.18.02 — 2026-08-18
 
 - Replaced the Team Dynamics dialog mockup with a dedicated full-page Team Builder that can load an existing workshop or saved group.
